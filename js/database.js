@@ -1,7 +1,7 @@
 // js/database.js
 // SupermarketPOS
 // Database Layer
-// Backup / Restore Preparation
+// Backup / Restore
 // Version: 1
 
 'use strict';
@@ -29,17 +29,13 @@ export function openDatabase() {
                 DB_VERSION
             );
 
-
-        // --------------------------------------------------------------------
-        // Database Upgrade / First Creation
-        // --------------------------------------------------------------------
-
         request.onupgradeneeded = event => {
 
             const db =
                 event.target.result;
 
 
+            // ----------------------------------------------------------------
             // Products
             // ----------------------------------------------------------------
 
@@ -87,6 +83,7 @@ export function openDatabase() {
             }
 
 
+            // ----------------------------------------------------------------
             // Sales
             // ----------------------------------------------------------------
 
@@ -116,6 +113,7 @@ export function openDatabase() {
             }
 
 
+            // ----------------------------------------------------------------
             // Sale Items
             // ----------------------------------------------------------------
 
@@ -164,36 +162,17 @@ export function openDatabase() {
         };
 
 
-        // --------------------------------------------------------------------
-        // Success
-        // --------------------------------------------------------------------
-
         request.onsuccess = event => {
 
             const db =
                 event.target.result;
 
 
-            console.log(
-                'SupermarketPOS: دیتابیس با موفقیت باز شد.'
-            );
-
-
             resolve(db);
         };
 
 
-        // --------------------------------------------------------------------
-        // Error
-        // --------------------------------------------------------------------
-
         request.onerror = () => {
-
-            console.error(
-                'SupermarketPOS: خطا در باز کردن دیتابیس.',
-                request.error
-            );
-
 
             reject(
                 request.error ||
@@ -203,10 +182,6 @@ export function openDatabase() {
             );
         };
 
-
-        // --------------------------------------------------------------------
-        // Blocked
-        // --------------------------------------------------------------------
 
         request.onblocked = () => {
 
@@ -226,12 +201,6 @@ export async function initializeDatabase() {
 
     const db =
         await openDatabase();
-
-
-    console.log(
-        'SupermarketPOS: دیتابیس آماده استفاده است.'
-    );
-
 
     return db;
 }
@@ -576,9 +545,7 @@ export function deleteProduct(
                     request.onsuccess =
                         () => {
 
-                            resolve(
-                                true
-                            );
+                            resolve(true);
                         };
 
 
@@ -612,12 +579,8 @@ export function deleteProduct(
 
 
 // ============================================================================
-// BACKUP - Get All Products
+// BACKUP
 // ============================================================================
-//
-// این تابع فعلاً فقط داده‌های کالاها را برای سیستم Backup آماده می‌کند.
-// هیچ اطلاعاتی را حذف یا تغییر نمی‌دهد.
-//
 
 export async function getProductsForBackup() {
 
@@ -626,6 +589,7 @@ export async function getProductsForBackup() {
 
 
     return {
+
         version: 1,
 
         type: 'SupermarketPOS',
@@ -633,6 +597,261 @@ export async function getProductsForBackup() {
         createdAt:
             new Date().toISOString(),
 
-        products: products
+        products:
+            products
     };
+}
+
+
+// ============================================================================
+// RESTORE - MERGE
+// ============================================================================
+//
+// کالاهای موجود در فایل Backup با کالاهای فعلی ادغام می‌شوند.
+//
+// قانون:
+// - اگر بارکد وجود نداشته باشد → کالا اضافه می‌شود.
+// - اگر بارکد وجود داشته باشد → اطلاعات کالا به‌روزرسانی می‌شود.
+// - کالاهای فعلی که در Backup نیستند → حذف نمی‌شوند.
+//
+// ============================================================================
+
+export async function restoreProductsMerge(
+    backupProducts
+) {
+
+    if (
+        !Array.isArray(
+            backupProducts
+        )
+    ) {
+
+        throw new Error(
+            'فایل پشتیبان معتبر نیست.'
+        );
+    }
+
+
+    const db =
+        await openDatabase();
+
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const transaction =
+                db.transaction(
+                    'products',
+                    'readwrite'
+                );
+
+
+            const store =
+                transaction.objectStore(
+                    'products'
+                );
+
+
+            let added = 0;
+
+            let updated = 0;
+
+            let skipped = 0;
+
+
+            backupProducts.forEach(
+                backupProduct => {
+
+                    try {
+
+                        if (
+                            !backupProduct ||
+                            !backupProduct.barcode
+                        ) {
+
+                            skipped++;
+
+                            return;
+                        }
+
+
+                        const barcode =
+                            String(
+                                backupProduct.barcode
+                            ).trim();
+
+
+                        if (!barcode) {
+
+                            skipped++;
+
+                            return;
+                        }
+
+
+                        const index =
+                            store.index(
+                                'barcode'
+                            );
+
+
+                        const request =
+                            index.get(
+                                barcode
+                            );
+
+
+                        request.onsuccess =
+                            () => {
+
+                                const existing =
+                                    request.result;
+
+
+                                const now =
+                                    new Date()
+                                        .toISOString();
+
+
+                                const product = {
+
+                                    barcode:
+                                        barcode,
+
+                                    name:
+                                        backupProduct.name ||
+                                        'بدون نام',
+
+                                    category:
+                                        backupProduct.category ||
+                                        '',
+
+                                    salePrice:
+                                        Number(
+                                            backupProduct.salePrice
+                                        ) || 0,
+
+                                    stock:
+                                        Number(
+                                            backupProduct.stock
+                                        ) || 0,
+
+                                    createdAt:
+                                        existing &&
+                                        existing.createdAt
+                                            ? existing.createdAt
+                                            : (
+                                                backupProduct.createdAt ||
+                                                now
+                                            ),
+
+                                    updatedAt:
+                                        now
+                                };
+
+
+                                if (existing) {
+
+                                    product.id =
+                                        existing.id;
+
+
+                                    const updateRequest =
+                                        store.put(
+                                            product
+                                        );
+
+
+                                    updateRequest.onsuccess =
+                                        () => {
+
+                                            updated++;
+                                        };
+
+
+                                } else {
+
+                                    const addRequest =
+                                        store.add(
+                                            product
+                                        );
+
+
+                                    addRequest.onsuccess =
+                                        () => {
+
+                                            added++;
+                                        };
+                                }
+                            };
+
+
+                        request.onerror =
+                            () => {
+
+                                skipped++;
+                            };
+
+
+                    } catch (error) {
+
+                        skipped++;
+                    }
+                }
+            );
+
+
+            transaction.oncomplete =
+                () => {
+
+                    db.close();
+
+
+                    resolve({
+
+                        added:
+                            added,
+
+                        updated:
+                            updated,
+
+                        skipped:
+                            skipped,
+
+                        total:
+                            backupProducts.length
+                    });
+                };
+
+
+            transaction.onerror =
+                () => {
+
+                    db.close();
+
+
+                    reject(
+                        transaction.error ||
+                        new Error(
+                            'خطا در بازیابی اطلاعات.'
+                        )
+                    );
+                };
+
+
+            transaction.onabort =
+                () => {
+
+                    db.close();
+
+
+                    reject(
+                        transaction.error ||
+                        new Error(
+                            'عملیات بازیابی لغو شد.'
+                        )
+                    );
+                };
+        }
+    );
 }
