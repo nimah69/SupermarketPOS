@@ -1,12 +1,13 @@
 // js/app.js
 // SupermarketPOS
-// Product Form Fix - Stage 4
+// Product List - Stage 4
 
 'use strict';
 
 import {
     initializeDatabase,
-    addProduct
+    addProduct,
+    getAllProducts
 } from './database.js';
 
 // ============================================================================
@@ -79,8 +80,7 @@ function showDatabaseStatus(message, success = true) {
             ? '#a7f3d0'
             : '#fecaca';
 
-    status.textContent =
-        message;
+    status.textContent = message;
 }
 
 // ============================================================================
@@ -120,7 +120,7 @@ function setupHeaderStatus() {
 }
 
 // ============================================================================
-// Hide Screens
+// Hide Secondary Screens
 // ============================================================================
 
 function hideSecondaryScreens() {
@@ -203,13 +203,10 @@ function openSalesScreen() {
         sales =
             createSalesScreen();
 
-        main.appendChild(
-            sales
-        );
+        main.appendChild(sales);
     }
 
-    sales.style.display =
-        'block';
+    sales.style.display = 'block';
 }
 
 // ============================================================================
@@ -302,7 +299,7 @@ function createSalesScreen() {
 // Products
 // ============================================================================
 
-function openProductsScreen() {
+async function openProductsScreen() {
 
     const main =
         document.querySelector('main');
@@ -339,13 +336,15 @@ function openProductsScreen() {
         products =
             createProductsScreen();
 
-        main.appendChild(
-            products
-        );
+        main.appendChild(products);
     }
 
     products.style.display =
         'block';
+
+    await loadProducts(
+        products
+    );
 }
 
 // ============================================================================
@@ -535,21 +534,10 @@ function createProductsScreen() {
 
         </div>
 
-        <div class="products-placeholder">
-
-            <div class="placeholder-icon">
-                📦
-            </div>
-
-            <h3>
-                هنوز کالایی نمایش داده نشده است
-            </h3>
-
-            <p>
-                در مرحله بعد کالاها را در این قسمت نمایش می‌دهیم.
-            </p>
-
-        </div>
+        <div
+            id="products-list"
+            class="products-list"
+        ></div>
 
         <button
             type="button"
@@ -573,12 +561,9 @@ function createProductsScreen() {
             'click',
             () => {
 
-                /*
-                 * قبل از خروج، پیام فرم را
-                 * کاملاً پاک می‌کنیم.
-                 */
-
-                clearProductMessage(screen);
+                clearProductMessage(
+                    screen
+                );
 
                 showHomeScreen();
             }
@@ -586,6 +571,269 @@ function createProductsScreen() {
     }
 
     return screen;
+}
+
+// ============================================================================
+// Load Products
+// ============================================================================
+
+async function loadProducts(screen) {
+
+    const list =
+        screen.querySelector(
+            '#products-list'
+        );
+
+    if (!list) {
+        return;
+    }
+
+    list.innerHTML = `
+
+        <div class="products-loading">
+
+            <div class="placeholder-icon">
+                ⏳
+            </div>
+
+            <p>
+                در حال خواندن کالاها...
+            </p>
+
+        </div>
+    `;
+
+    try {
+
+        const products =
+            await getAllProducts();
+
+        renderProducts(
+            screen,
+            products
+        );
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: خطا در خواندن کالاها.',
+            error
+        );
+
+        list.innerHTML = `
+
+            <div class="products-empty products-error">
+
+                <div class="placeholder-icon">
+                    ⚠️
+                </div>
+
+                <h3>
+                    خطا در خواندن کالاها
+                </h3>
+
+                <p>
+                    اطلاعات کالاها قابل دریافت نیست.
+                </p>
+
+            </div>
+        `;
+    }
+}
+
+// ============================================================================
+// Render Products
+// ============================================================================
+
+function renderProducts(
+    screen,
+    products
+) {
+
+    const list =
+        screen.querySelector(
+            '#products-list'
+        );
+
+    if (!list) {
+        return;
+    }
+
+    list.innerHTML = '';
+
+    if (
+        !Array.isArray(products) ||
+        products.length === 0
+    ) {
+
+        list.innerHTML = `
+
+            <div class="products-empty">
+
+                <div class="placeholder-icon">
+                    📦
+                </div>
+
+                <h3>
+                    هنوز کالایی ثبت نشده است
+                </h3>
+
+                <p>
+                    برای شروع، اولین کالای فروشگاه را اضافه کنید.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+    const title =
+        document.createElement('div');
+
+    title.className =
+        'products-list-title';
+
+    title.innerHTML = `
+        <strong>
+            کالاهای ثبت‌شده
+        </strong>
+
+        <span>
+            ${products.length} کالا
+        </span>
+    `;
+
+    list.appendChild(title);
+
+    products.forEach(
+        product => {
+
+            list.appendChild(
+                createProductCard(
+                    product
+                )
+            );
+        }
+    );
+}
+
+// ============================================================================
+// Product Card
+// ============================================================================
+
+function createProductCard(product) {
+
+    const card =
+        document.createElement('article');
+
+    card.className =
+        'product-card';
+
+    const barcode =
+        product.barcode || '-';
+
+    const name =
+        product.name || 'بدون نام';
+
+    const category =
+        product.category || 'بدون دسته‌بندی';
+
+    const price =
+        Number(product.salePrice);
+
+    const stock =
+        Number(product.stock);
+
+    const safePrice =
+        Number.isFinite(price)
+            ? price.toLocaleString('fa-IR')
+            : '۰';
+
+    const safeStock =
+        Number.isFinite(stock)
+            ? stock.toLocaleString('fa-IR')
+            : '۰';
+
+    card.innerHTML = `
+
+        <div class="product-card-top">
+
+            <div class="product-card-icon">
+                📦
+            </div>
+
+            <div class="product-card-info">
+
+                <h3>
+                    ${escapeHTML(name)}
+                </h3>
+
+                <span>
+                    ${escapeHTML(category)}
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="product-card-details">
+
+            <div class="product-detail">
+
+                <span>
+                    بارکد
+                </span>
+
+                <strong>
+                    ${escapeHTML(barcode)}
+                </strong>
+
+            </div>
+
+            <div class="product-detail">
+
+                <span>
+                    قیمت فروش
+                </span>
+
+                <strong>
+                    ${safePrice}
+                    تومان
+                </strong>
+
+            </div>
+
+            <div class="product-detail">
+
+                <span>
+                    موجودی
+                </span>
+
+                <strong>
+                    ${safeStock}
+                </strong>
+
+            </div>
+
+        </div>
+    `;
+
+    return card;
+}
+
+// ============================================================================
+// Escape HTML
+// ============================================================================
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
 // ============================================================================
@@ -706,14 +954,16 @@ function setupProductForm(screen) {
     }
 
     // ------------------------------------------------------------------------
-    // Open Form
+    // Open
     // ------------------------------------------------------------------------
 
     addButton.addEventListener(
         'click',
         () => {
 
-            clearProductMessage(screen);
+            clearProductMessage(
+                screen
+            );
 
             form.style.display =
                 'block';
@@ -722,11 +972,6 @@ function setupProductForm(screen) {
                 screen.querySelector(
                     '#product-stock'
                 );
-
-            /*
-             * موجودی هنگام باز شدن فرم
-             * همیشه کاملاً خالی است.
-             */
 
             if (stockInput) {
                 stockInput.value = '';
@@ -744,12 +989,14 @@ function setupProductForm(screen) {
     );
 
     // ------------------------------------------------------------------------
-    // Close Form
+    // Close
     // ------------------------------------------------------------------------
 
     function closeForm() {
 
-        clearProductMessage(screen);
+        clearProductMessage(
+            screen
+        );
 
         form.style.display =
             'none';
@@ -772,7 +1019,7 @@ function setupProductForm(screen) {
     }
 
     // ------------------------------------------------------------------------
-    // Save Product
+    // Save
     // ------------------------------------------------------------------------
 
     if (saveButton) {
@@ -840,11 +1087,6 @@ function setupProductForm(screen) {
 
                 const price =
                     Number(priceText);
-
-                /*
-                 * اگر موجودی خالی باشد،
-                 * آن را صفر در نظر می‌گیریم.
-                 */
 
                 const stock =
                     stockText === ''
@@ -962,11 +1204,6 @@ function setupProductForm(screen) {
                         true
                     );
 
-                    /*
-                     * بعد از ذخیره موفق،
-                     * فیلدها کاملاً خالی می‌شوند.
-                     */
-
                     barcodeInput.value =
                         '';
 
@@ -983,6 +1220,14 @@ function setupProductForm(screen) {
                         '';
 
                     barcodeInput.focus();
+
+                    // --------------------------------------------------------
+                    // Refresh Product List
+                    // --------------------------------------------------------
+
+                    await loadProducts(
+                        screen
+                    );
 
                 } catch (error) {
 
