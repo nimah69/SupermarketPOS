@@ -1,6 +1,6 @@
 // js/database.js
 // SupermarketPOS
-// Database Layer - Stage 2
+// Database Layer - Stage 3
 // Version: 1
 
 'use strict';
@@ -312,6 +312,83 @@ export async function addProduct(product) {
                 transaction.error ||
                 new Error(
                     'تراکنش افزودن کالا لغو شد.'
+                )
+            );
+        };
+    });
+}
+
+
+// ============================================================================
+// Get All Products
+// ============================================================================
+
+export async function getAllProducts() {
+
+    const db =
+        await openDatabase();
+
+
+    return new Promise((resolve, reject) => {
+
+        const transaction =
+            db.transaction(
+                'products',
+                'readonly'
+            );
+
+
+        const store =
+            transaction.objectStore(
+                'products'
+            );
+
+
+        const request =
+            store.getAll();
+
+
+        request.onsuccess = event => {
+
+            const products =
+                event.target.result || [];
+
+
+            console.log(
+                'SupermarketPOS: تعداد کالاهای خوانده‌شده:',
+                products.length
+            );
+
+
+            resolve(
+                products
+            );
+        };
+
+
+        request.onerror = () => {
+
+            console.error(
+                'SupermarketPOS: خطا در خواندن کالاها.',
+                request.error
+            );
+
+
+            reject(
+                request.error ||
+                new Error(
+                    'خطا در خواندن کالاها'
+                )
+            );
+        };
+
+
+        transaction.onabort = () => {
+
+            reject(
+                transaction.error ||
+                new Error(
+                    'تراکنش خواندن کالاها لغو شد.'
                 )
             );
         };
