@@ -5,12 +5,17 @@
 
 'use strict';
 
+import {
+    initializeDatabase
+} from './database.js';
+
 // ============================================================================
 // Application State
 // ============================================================================
 
 const APP_STATE = {
-    initialized: false
+    initialized: false,
+    databaseReady: false
 };
 
 // ============================================================================
@@ -400,10 +405,39 @@ function setupNavigation() {
 }
 
 // ============================================================================
+// Database
+// ============================================================================
+
+async function setupDatabase() {
+
+    try {
+
+        await initializeDatabase();
+
+        APP_STATE.databaseReady = true;
+
+        console.log(
+            'SupermarketPOS: اتصال به دیتابیس موفق بود.'
+        );
+
+    } catch (error) {
+
+        APP_STATE.databaseReady = false;
+
+        console.error(
+            'SupermarketPOS: خطا در دیتابیس:',
+            error
+        );
+
+        throw error;
+    }
+}
+
+// ============================================================================
 // Initialize Application
 // ============================================================================
 
-function initializeApp() {
+async function initializeApp() {
 
     if (APP_STATE.initialized) {
         return;
@@ -424,11 +458,23 @@ function initializeApp() {
 
     setupNavigation();
 
-    APP_STATE.initialized = true;
+    try {
 
-    console.log(
-        'SupermarketPOS: برنامه با موفقیت راه‌اندازی شد.'
-    );
+        await setupDatabase();
+
+        APP_STATE.initialized = true;
+
+        console.log(
+            'SupermarketPOS: برنامه با موفقیت راه‌اندازی شد.'
+        );
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: راه‌اندازی برنامه ناموفق بود.',
+            error
+        );
+    }
 }
 
 // ============================================================================
