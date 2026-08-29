@@ -1,7 +1,7 @@
 // js/app.js
 // SupermarketPOS
-// Product List + Backup
-// Stage 2
+// Product List + Backup + Restore
+// Stage 4
 
 'use strict';
 
@@ -9,7 +9,8 @@ import {
     initializeDatabase,
     addProduct,
     getAllProducts,
-    getProductsForBackup
+    getProductsForBackup,
+    restoreProductsMerge
 } from './database.js';
 
 
@@ -409,7 +410,7 @@ function createProductsScreen() {
         </div>
 
 
-        <!-- Backup -->
+        <!-- Backup / Restore -->
 
         <div class="backup-card">
 
@@ -424,18 +425,37 @@ function createProductsScreen() {
                 </h3>
 
                 <p>
-                    ذخیره کالاهای این دستگاه در یک فایل
+                    ذخیره یا بازیابی کالاهای این دستگاه
                 </p>
 
             </div>
 
-            <button
-                type="button"
-                class="backup-button"
-                id="backup-button"
-            >
-                پشتیبان‌گیری
-            </button>
+            <div class="backup-actions">
+
+                <button
+                    type="button"
+                    class="backup-button"
+                    id="backup-button"
+                >
+                    💾 پشتیبان‌گیری
+                </button>
+
+                <button
+                    type="button"
+                    class="restore-button"
+                    id="restore-button"
+                >
+                    📂 بازیابی
+                </button>
+
+                <input
+                    type="file"
+                    id="restore-file-input"
+                    accept=".json,application/json"
+                    hidden
+                >
+
+            </div>
 
         </div>
 
@@ -624,6 +644,10 @@ function createProductsScreen() {
         screen
     );
 
+    setupRestore(
+        screen
+    );
+
 
     const back =
         screen.querySelector(
@@ -637,6 +661,10 @@ function createProductsScreen() {
             () => {
 
                 clearProductMessage(
+                    screen
+                );
+
+                clearBackupMessage(
                     screen
                 );
 
@@ -681,6 +709,11 @@ function setupBackup(screen) {
 
                 return;
             }
+
+
+            clearBackupMessage(
+                screen
+            );
 
 
             backupButton.disabled =
@@ -797,10 +830,332 @@ function setupBackup(screen) {
                     false;
 
                 backupButton.textContent =
-                    'پشتیبان‌گیری';
+                    '💾 پشتیبان‌گیری';
             }
         }
     );
+}
+
+
+// ============================================================================
+// Restore
+// ============================================================================
+
+function setupRestore(screen) {
+
+    const restoreButton =
+        screen.querySelector(
+            '#restore-button'
+        );
+
+    const fileInput =
+        screen.querySelector(
+            '#restore-file-input'
+        );
+
+
+    if (
+        !restoreButton ||
+        !fileInput
+    ) {
+        return;
+    }
+
+
+    restoreButton.addEventListener(
+        'click',
+        () => {
+
+            if (
+                !APP_STATE.databaseReady
+            ) {
+
+                showBackupMessage(
+                    screen,
+                    '❌ پایگاه داده آماده نیست.',
+                    false
+                );
+
+                return;
+            }
+
+
+            fileInput.value =
+                '';
+
+
+            fileInput.click();
+        }
+    );
+
+
+    fileInput.addEventListener(
+        'change',
+        async event => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+
+            if (!file) {
+                return;
+            }
+
+
+            await processRestoreFile(
+                screen,
+                file
+            );
+        }
+    );
+}
+
+
+// ============================================================================
+// Process Restore File
+// ============================================================================
+
+async function processRestoreFile(
+    screen,
+    file
+) {
+
+    clearBackupMessage(
+        screen
+    );
+
+
+    try {
+
+        const text =
+            await file.text();
+
+
+        let backup;
+
+
+        try {
+
+            backup =
+                JSON.parse(
+                    text
+                );
+
+        } catch (error) {
+
+            showBackupMessage(
+                screen,
+                '❌ فایل انتخاب‌شده JSON معتبر نیست.',
+                false
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------------------------------------
+        // Validate Backup
+        // --------------------------------------------------------------------
+
+        if (
+            !backup ||
+            typeof backup !== 'object'
+        ) {
+
+            showBackupMessage(
+                screen,
+                '❌ ساختار فایل پشتیبان معتبر نیست.',
+                false
+            );
+
+            return;
+        }
+
+
+        if (
+            backup.type !==
+            'SupermarketPOS'
+        ) {
+
+            showBackupMessage(
+                screen,
+                '❌ این فایل متعلق به SupermarketPOS نیست.',
+                false
+            );
+
+            return;
+        }
+
+
+        if (
+            !Array.isArray(
+                backup.products
+            )
+        ) {
+
+            showBackupMessage(
+                screen,
+                '❌ بخش کالاها در فایل پشتیبان پیدا نشد.',
+                false
+            );
+
+            return;
+        }
+
+
+        const products =
+            backup.products;
+
+
+        if (
+            products.length === 0
+        ) {
+
+            showBackupMessage(
+                screen,
+                '⚠️ فایل پشتیبان هیچ کالایی ندارد.',
+                false
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------------------------------------
+        // Confirmation
+        // --------------------------------------------------------------------
+
+        const countText =
+            products.length
+                .toLocaleString('fa-IR');
+
+
+        const confirmed =
+            window.confirm(
+                `فایل پشتیبان شامل ${countText} کالا است.\n\n` +
+                `حالت بازیابی: ادغام (Merge)\n\n` +
+                `کالاهای فعلی که در فایل نیستند حذف نخواهند شد.\n` +
+                `کالاهایی که بارکد مشابه دارند به‌روزرسانی می‌شوند.\n\n` +
+                `آیا می‌خواهید ادامه دهید؟`
+            );
+
+
+        if (!confirmed) {
+
+            showBackupMessage(
+                screen,
+                '↩️ عملیات بازیابی لغو شد.',
+                true
+            );
+
+            return;
+        }
+
+
+        const restoreButton =
+            screen.querySelector(
+                '#restore-button'
+            );
+
+
+        if (restoreButton) {
+
+            restoreButton.disabled =
+                true;
+
+            restoreButton.textContent =
+                'در حال بازیابی...';
+        }
+
+
+        // --------------------------------------------------------------------
+        // Restore
+        // --------------------------------------------------------------------
+
+        const result =
+            await restoreProductsMerge(
+                products
+            );
+
+
+        // --------------------------------------------------------------------
+        // Result
+        // --------------------------------------------------------------------
+
+        const added =
+            Number(result.added) || 0;
+
+
+        const updated =
+            Number(result.updated) || 0;
+
+
+        const skipped =
+            Number(result.skipped) || 0;
+
+
+        let message =
+            `✅ بازیابی با موفقیت انجام شد.\n` +
+            `➕ اضافه‌شده: ${added.toLocaleString('fa-IR')}\n` +
+            `🔄 به‌روزرسانی‌شده: ${updated.toLocaleString('fa-IR')}`;
+
+
+        if (skipped > 0) {
+
+            message +=
+                `\n⚠️ ردشده: ${skipped.toLocaleString('fa-IR')}`;
+        }
+
+
+        showBackupMessage(
+            screen,
+            message,
+            true
+        );
+
+
+        // --------------------------------------------------------------------
+        // Refresh List
+        // --------------------------------------------------------------------
+
+        await loadProducts(
+            screen
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: خطا در Restore.',
+            error
+        );
+
+
+        showBackupMessage(
+            screen,
+            '❌ بازیابی انجام نشد. فایل یا اطلاعات آن قابل استفاده نیست.',
+            false
+        );
+
+
+    } finally {
+
+        const restoreButton =
+            screen.querySelector(
+                '#restore-button'
+            );
+
+
+        if (restoreButton) {
+
+            restoreButton.disabled =
+                false;
+
+            restoreButton.textContent =
+                '📂 بازیابی';
+        }
+    }
 }
 
 
@@ -851,6 +1206,30 @@ function showBackupMessage(
     messageBox.style.display =
         'block';
 
+    messageBox.style.whiteSpace =
+        'pre-line';
+
+    messageBox.style.marginTop =
+        '10px';
+
+    messageBox.style.padding =
+        '11px 12px';
+
+    messageBox.style.borderRadius =
+        '11px';
+
+    messageBox.style.fontSize =
+        '12px';
+
+    messageBox.style.lineHeight =
+        '1.9';
+
+    messageBox.style.textAlign =
+        'center';
+
+    messageBox.style.border =
+        '1px solid';
+
     messageBox.style.background =
         success
             ? '#ecfdf5'
@@ -861,13 +1240,41 @@ function showBackupMessage(
             ? '#047857'
             : '#b91c1c';
 
-    messageBox.style.border =
+    messageBox.style.borderColor =
         success
-            ? '1px solid #a7f3d0'
-            : '1px solid #fecaca';
+            ? '#a7f3d0'
+            : '#fecaca';
 
     messageBox.textContent =
         message;
+}
+
+
+// ============================================================================
+// Clear Backup Message
+// ============================================================================
+
+function clearBackupMessage(
+    screen
+) {
+
+    if (!screen) {
+        return;
+    }
+
+
+    const message =
+        screen.querySelector(
+            '#backup-message'
+        );
+
+
+    if (!message) {
+        return;
+    }
+
+
+    message.remove();
 }
 
 
