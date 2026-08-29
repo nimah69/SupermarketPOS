@@ -1,7 +1,7 @@
 /* =========================================================
    SupermarketPOS
    Modern Mobile POS UI
-   Stage 5 - Visual Design
+   Stage 6 - Header Fix
 ========================================================= */
 
 * {
@@ -127,8 +127,6 @@ button {
         0 14px 35px rgba(15, 118, 110, 0.22);
 }
 
-/* Decorative circles */
-
 .app-header::before {
     content: "";
 
@@ -165,6 +163,7 @@ button {
 
 .header-content {
     position: relative;
+
     z-index: 2;
 
     display: flex;
@@ -237,15 +236,24 @@ button {
     opacity: 0.78;
 }
 
+/* =========================================================
+   Header Status
+========================================================= */
+
 .header-status {
     display: flex;
 
     align-items: center;
+    justify-content: center;
 
-    gap: 6px;
+    gap: 8px;
 
     padding:
         7px 10px;
+
+    min-height: 30px;
+
+    flex-shrink: 0;
 
     border-radius: 999px;
 
@@ -258,20 +266,27 @@ button {
 
     font-size: 10px;
 
+    line-height: 1.5;
+
     white-space: nowrap;
 }
 
 .status-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
+
+    min-width: 8px;
+    min-height: 8px;
+
+    flex-shrink: 0;
 
     border-radius: 50%;
 
     background: #86efac;
 
     box-shadow:
-        0 0 0 4px
-        rgba(134, 239, 172, 0.12);
+        0 0 0 3px
+        rgba(134, 239, 172, 0.15);
 }
 
 /* =========================================================
@@ -672,6 +687,14 @@ main {
         padding: 17px;
     }
 
+    .header-content {
+        gap: 9px;
+    }
+
+    .brand {
+        gap: 9px;
+    }
+
     .brand-icon {
         width: 47px;
         height: 47px;
@@ -683,11 +706,27 @@ main {
         font-size: 16px;
     }
 
+    .brand-text span {
+        font-size: 10px;
+    }
+
     .header-status {
         padding:
             6px 8px;
 
+        gap: 6px;
+
+        min-height: 28px;
+
         font-size: 9px;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+
+        min-width: 7px;
+        min-height: 7px;
     }
 
     .menu-grid {
