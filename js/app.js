@@ -1,6 +1,6 @@
 // js/app.js
 // SupermarketPOS
-// Product Save - Stage 3
+// Product Form Fix - Stage 4
 
 'use strict';
 
@@ -79,11 +79,12 @@ function showDatabaseStatus(message, success = true) {
             ? '#a7f3d0'
             : '#fecaca';
 
-    status.textContent = message;
+    status.textContent =
+        message;
 }
 
 // ============================================================================
-// Header Status
+// Header
 // ============================================================================
 
 function setupHeaderStatus() {
@@ -108,28 +109,21 @@ function setupHeaderStatus() {
         );
 
     if (ready) {
-
         ready.textContent =
             'آماده به کار';
     }
 
     if (online) {
-
         online.textContent =
             '● آنلاین';
     }
 }
 
 // ============================================================================
-// Home
+// Hide Screens
 // ============================================================================
 
-function showHomeScreen() {
-
-    const home =
-        document.querySelector(
-            '.home-screen'
-        );
+function hideSecondaryScreens() {
 
     const sales =
         document.getElementById(
@@ -148,6 +142,20 @@ function showHomeScreen() {
     if (products) {
         products.style.display = 'none';
     }
+}
+
+// ============================================================================
+// Home
+// ============================================================================
+
+function showHomeScreen() {
+
+    hideSecondaryScreens();
+
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
 
     if (home) {
         home.style.display = '';
@@ -195,14 +203,17 @@ function openSalesScreen() {
         sales =
             createSalesScreen();
 
-        main.appendChild(sales);
+        main.appendChild(
+            sales
+        );
     }
 
-    sales.style.display = 'block';
+    sales.style.display =
+        'block';
 }
 
 // ============================================================================
-// Create Sales Screen
+// Sales Screen
 // ============================================================================
 
 function createSalesScreen() {
@@ -328,14 +339,17 @@ function openProductsScreen() {
         products =
             createProductsScreen();
 
-        main.appendChild(products);
+        main.appendChild(
+            products
+        );
     }
 
-    products.style.display = 'block';
+    products.style.display =
+        'block';
 }
 
 // ============================================================================
-// Create Products Screen
+// Products Screen
 // ============================================================================
 
 function createProductsScreen() {
@@ -418,6 +432,7 @@ function createProductsScreen() {
                         type="text"
                         id="product-barcode"
                         inputmode="numeric"
+                        autocomplete="off"
                         placeholder="بارکد کالا"
                     >
 
@@ -432,6 +447,7 @@ function createProductsScreen() {
                     <input
                         type="text"
                         id="product-name"
+                        autocomplete="off"
                         placeholder="مثلاً نوشابه"
                     >
 
@@ -446,6 +462,7 @@ function createProductsScreen() {
                     <input
                         type="text"
                         id="product-category"
+                        autocomplete="off"
                         placeholder="مثلاً نوشیدنی"
                     >
 
@@ -462,6 +479,8 @@ function createProductsScreen() {
                         id="product-price"
                         inputmode="numeric"
                         min="0"
+                        step="1"
+                        autocomplete="off"
                         placeholder="قیمت به تومان"
                     >
 
@@ -478,8 +497,10 @@ function createProductsScreen() {
                         id="product-stock"
                         inputmode="numeric"
                         min="0"
-                        value="0"
-                        placeholder="تعداد موجود"
+                        step="1"
+                        autocomplete="off"
+                        value=""
+                        placeholder="موجودی"
                     >
 
                 </div>
@@ -550,7 +571,17 @@ function createProductsScreen() {
 
         back.addEventListener(
             'click',
-            showHomeScreen
+            () => {
+
+                /*
+                 * قبل از خروج، پیام فرم را
+                 * کاملاً پاک می‌کنیم.
+                 */
+
+                clearProductMessage(screen);
+
+                showHomeScreen();
+            }
         );
     }
 
@@ -558,7 +589,33 @@ function createProductsScreen() {
 }
 
 // ============================================================================
-// Product Form Message
+// Clear Product Message
+// ============================================================================
+
+function clearProductMessage(screen) {
+
+    if (!screen) {
+        return;
+    }
+
+    const message =
+        screen.querySelector(
+            '#product-form-message'
+        );
+
+    if (!message) {
+        return;
+    }
+
+    message.textContent = '';
+
+    message.removeAttribute(
+        'style'
+    );
+}
+
+// ============================================================================
+// Product Message
 // ============================================================================
 
 function showProductMessage(
@@ -656,8 +713,24 @@ function setupProductForm(screen) {
         'click',
         () => {
 
+            clearProductMessage(screen);
+
             form.style.display =
                 'block';
+
+            const stockInput =
+                screen.querySelector(
+                    '#product-stock'
+                );
+
+            /*
+             * موجودی هنگام باز شدن فرم
+             * همیشه کاملاً خالی است.
+             */
+
+            if (stockInput) {
+                stockInput.value = '';
+            }
 
             const barcode =
                 screen.querySelector(
@@ -675,6 +748,8 @@ function setupProductForm(screen) {
     // ------------------------------------------------------------------------
 
     function closeForm() {
+
+        clearProductMessage(screen);
 
         form.style.display =
             'none';
@@ -705,6 +780,10 @@ function setupProductForm(screen) {
         saveButton.addEventListener(
             'click',
             async () => {
+
+                clearProductMessage(
+                    screen
+                );
 
                 if (
                     !APP_STATE.databaseReady
@@ -753,15 +832,24 @@ function setupProductForm(screen) {
                 const category =
                     categoryInput.value.trim();
 
+                const priceText =
+                    priceInput.value.trim();
+
+                const stockText =
+                    stockInput.value.trim();
+
                 const price =
-                    Number(
-                        priceInput.value
-                    );
+                    Number(priceText);
+
+                /*
+                 * اگر موجودی خالی باشد،
+                 * آن را صفر در نظر می‌گیریم.
+                 */
 
                 const stock =
-                    Number(
-                        stockInput.value
-                    );
+                    stockText === ''
+                        ? 0
+                        : Number(stockText);
 
                 // ------------------------------------------------------------
                 // Validation
@@ -794,6 +882,7 @@ function setupProductForm(screen) {
                 }
 
                 if (
+                    priceText === '' ||
                     !Number.isFinite(price) ||
                     price < 0
                 ) {
@@ -855,12 +944,6 @@ function setupProductForm(screen) {
                 saveButton.textContent =
                     'در حال ذخیره...';
 
-                showProductMessage(
-                    screen,
-                    'در حال ذخیره کالا...',
-                    true
-                );
-
                 try {
 
                     const productId =
@@ -869,7 +952,7 @@ function setupProductForm(screen) {
                         );
 
                     console.log(
-                        'Product saved:',
+                        'SupermarketPOS: Product saved:',
                         productId
                     );
 
@@ -879,9 +962,10 @@ function setupProductForm(screen) {
                         true
                     );
 
-                    // --------------------------------------------------------
-                    // Clear Form
-                    // --------------------------------------------------------
+                    /*
+                     * بعد از ذخیره موفق،
+                     * فیلدها کاملاً خالی می‌شوند.
+                     */
 
                     barcodeInput.value =
                         '';
@@ -896,7 +980,7 @@ function setupProductForm(screen) {
                         '';
 
                     stockInput.value =
-                        '0';
+                        '';
 
                     barcodeInput.focus();
 
@@ -1021,7 +1105,7 @@ async function setupDatabase() {
 }
 
 // ============================================================================
-// Initialize Application
+// Initialize
 // ============================================================================
 
 async function initializeApp() {
