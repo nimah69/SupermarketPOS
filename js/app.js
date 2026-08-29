@@ -1,15 +1,17 @@
 // SupermarketPOS
 // Application Entry Point
-// Stage 4
+// Stage 4 Test
 
 'use strict';
 
 import { showWelcomeMessage } from './ui.js';
 
-console.log('SupermarketPOS application started successfully.');
+console.log('SupermarketPOS: app.js loaded');
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded successfully.');
+    console.log('SupermarketPOS: DOM loaded');
 
     showWelcomeMessage();
+
+    console.log('SupermarketPOS: UI module executed');
 });
