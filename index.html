@@ -1,214 +1,258 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<!DOCTYPE html><html lang="fa" dir="rtl"><head>
+    <meta charset="UTF-8"><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-<head>
-    <meta charset="UTF-8">
+<title>SupermarketPOS</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<link rel="stylesheet" href="./css/style.css">
 
-    <title>SupermarketPOS</title>
+</head><body><div id="app">
 
-    <link rel="stylesheet" href="./css/style.css">
-</head>
+    <!-- =====================================================
+         Header
+    ====================================================== -->
 
-<body>
+    <header class="app-header">
 
-    <div id="app">
+        <div class="header-content">
 
-        <!-- Header -->
-        <header class="app-header">
+            <!-- Brand -->
 
-            <div class="header-content">
+            <div class="brand">
 
-                <div class="brand">
-
-                    <div class="brand-icon">
-                        🛒
-                    </div>
-
-                    <div class="brand-text">
-
-                        <h1>
-                            SupermarketPOS
-                        </h1>
-
-                        <span>
-                            سیستم مدیریت فروشگاه
-                        </span>
-
-                    </div>
-
+                <div class="brand-icon">
+                    🛒
                 </div>
 
-                <div class="header-status">
+                <div class="brand-text">
 
-                    <span class="status-dot"></span>
+                    <h1>
+                        SupermarketPOS
+                    </h1>
 
-                    آماده به کار
+                    <span>
+                        سیستم مدیریت فروشگاه
+                    </span>
 
                 </div>
 
             </div>
 
-        </header>
 
-        <!-- Main -->
-        <main>
+            <!-- Status -->
 
-            <section class="home-screen">
+            <div class="header-status">
 
-                <!-- Welcome -->
-                <div class="welcome-card">
+                <!-- Online -->
 
-                    <div class="welcome-icon">
-                        👋
+                <div class="status-online">
+
+                    <span class="status-dot"></span>
+
+                    <span>
+                        آنلاین
+                    </span>
+
+                </div>
+
+
+                <!-- Ready -->
+
+                <div class="status-ready">
+
+                    <span>
+                        آماده به کار
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         Main
+    ====================================================== -->
+
+    <main>
+
+        <section class="home-screen">
+
+            <!-- Welcome -->
+
+            <div class="welcome-card">
+
+                <div class="welcome-icon">
+                    👋
+                </div>
+
+                <div>
+
+                    <h2>
+                        خوش آمدید
+                    </h2>
+
+                    <p>
+                        مدیریت فروشگاه را از اینجا شروع کنید.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 Menu
+            ================================================== -->
+
+            <div class="menu-grid">
+
+
+                <!-- فروش -->
+
+                <button
+                    type="button"
+                    class="menu-card"
+                    data-action="sales"
+                >
+
+                    <div class="menu-icon sales-icon">
+                        💳
                     </div>
 
-                    <div>
+                    <div class="menu-card-content">
 
-                        <h2>
-                            خوش آمدید
-                        </h2>
+                        <h3>
+                            فروش و صندوق
+                        </h3>
 
                         <p>
-                            مدیریت فروشگاه را از اینجا شروع کنید.
+                            ثبت فروش و مدیریت سبد خرید
                         </p>
 
                     </div>
 
-                </div>
+                    <div class="menu-arrow">
+                        ←
+                    </div>
 
-                <!-- Menu -->
-                <div class="menu-grid">
+                </button>
 
-                    <button
-                        type="button"
-                        class="menu-card"
-                        data-action="sales"
-                    >
 
-                        <div class="menu-icon sales-icon">
-                            💳
-                        </div>
+                <!-- کالاها -->
 
-                        <div class="menu-card-content">
+                <button
+                    type="button"
+                    class="menu-card"
+                    data-action="products"
+                >
 
-                            <h3>
-                                فروش و صندوق
-                            </h3>
+                    <div class="menu-icon products-icon">
+                        📦
+                    </div>
 
-                            <p>
-                                ثبت فروش و مدیریت سبد خرید
-                            </p>
+                    <div class="menu-card-content">
 
-                        </div>
+                        <h3>
+                            کالاها
+                        </h3>
 
-                        <div class="menu-arrow">
-                            ←
-                        </div>
+                        <p>
+                            مدیریت محصولات و موجودی
+                        </p>
 
-                    </button>
+                    </div>
 
-                    <button
-                        type="button"
-                        class="menu-card"
-                        data-action="products"
-                    >
+                    <div class="menu-arrow">
+                        ←
+                    </div>
 
-                        <div class="menu-icon products-icon">
-                            📦
-                        </div>
+                </button>
 
-                        <div class="menu-card-content">
 
-                            <h3>
-                                کالاها
-                            </h3>
+                <!-- گزارش‌ها -->
 
-                            <p>
-                                مدیریت محصولات و موجودی
-                            </p>
+                <button
+                    type="button"
+                    class="menu-card"
+                    data-action="reports"
+                >
 
-                        </div>
+                    <div class="menu-icon reports-icon">
+                        📊
+                    </div>
 
-                        <div class="menu-arrow">
-                            ←
-                        </div>
+                    <div class="menu-card-content">
 
-                    </button>
+                        <h3>
+                            گزارش‌ها
+                        </h3>
 
-                    <button
-                        type="button"
-                        class="menu-card"
-                        data-action="reports"
-                    >
+                        <p>
+                            مشاهده فروش و عملکرد فروشگاه
+                        </p>
 
-                        <div class="menu-icon reports-icon">
-                            📊
-                        </div>
+                    </div>
 
-                        <div class="menu-card-content">
+                    <div class="menu-arrow">
+                        ←
+                    </div>
 
-                            <h3>
-                                گزارش‌ها
-                            </h3>
+                </button>
 
-                            <p>
-                                مشاهده فروش و عملکرد فروشگاه
-                            </p>
 
-                        </div>
+                <!-- تنظیمات -->
 
-                        <div class="menu-arrow">
-                            ←
-                        </div>
+                <button
+                    type="button"
+                    class="menu-card"
+                    data-action="settings"
+                >
 
-                    </button>
+                    <div class="menu-icon settings-icon">
+                        ⚙️
+                    </div>
 
-                    <button
-                        type="button"
-                        class="menu-card"
-                        data-action="settings"
-                    >
+                    <div class="menu-card-content">
 
-                        <div class="menu-icon settings-icon">
-                            ⚙️
-                        </div>
+                        <h3>
+                            تنظیمات
+                        </h3>
 
-                        <div class="menu-card-content">
+                        <p>
+                            تنظیمات و مدیریت سیستم
+                        </p>
 
-                            <h3>
-                                تنظیمات
-                            </h3>
+                    </div>
 
-                            <p>
-                                تنظیمات و مدیریت سیستم
-                            </p>
+                    <div class="menu-arrow">
+                        ←
+                    </div>
 
-                        </div>
+                </button>
 
-                        <div class="menu-arrow">
-                            ←
-                        </div>
 
-                    </button>
+            </div>
 
-                </div>
+        </section>
 
-            </section>
+    </main>
 
-        </main>
+</div>
 
-    </div>
 
-    <script
-        type="module"
-        src="./js/app.js"
-    ></script>
+<!-- =========================================================
+     Application
+========================================================== -->
 
-</body>
+<script
+    type="module"
+    src="./js/app.js"
+></script>
 
-</html>
+</body></html>
