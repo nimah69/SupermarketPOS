@@ -2,7 +2,7 @@
 // SupermarketPOS
 // Sales Screen - Stage 5
 // Real Cart + Barcode + Stock Control
-// Version: 0.5
+// Version: 0.5.1
 
 'use strict';
 
@@ -17,6 +17,8 @@ import {
 
 let salesCart = [];
 
+let salesScreenInitialized = false;
+
 
 // ============================================================================
 // Helpers
@@ -24,7 +26,8 @@ let salesCart = [];
 
 function formatPrice(value) {
 
-    const number = Number(value) || 0;
+    const number =
+        Number(value) || 0;
 
     return number.toLocaleString('fa-IR');
 }
@@ -39,7 +42,8 @@ function normalizeBarcode(value) {
 function findCartItem(barcode) {
 
     return salesCart.find(
-        item => item.barcode === barcode
+        item =>
+            item.barcode === barcode
     );
 }
 
@@ -79,7 +83,10 @@ function calculateCartCount() {
 // Sales Message
 // ============================================================================
 
-function showSalesMessage(message, type = 'info') {
+function showSalesMessage(
+    message,
+    type = 'info'
+) {
 
     const element =
         document.getElementById(
@@ -90,11 +97,18 @@ function showSalesMessage(message, type = 'info') {
         return;
     }
 
-    element.textContent = message;
+
+    element.textContent =
+        message;
+
 
     element.className =
-        'sales-barcode-message ' +
-        `sales-message-${type}`;
+        'sales-barcode-message';
+
+
+    element.classList.add(
+        `sales-message-${type}`
+    );
 }
 
 
@@ -109,9 +123,11 @@ function focusBarcodeInput() {
             'sales-barcode-input'
         );
 
+
     if (!input) {
         return;
     }
+
 
     setTimeout(
         () => {
@@ -130,7 +146,9 @@ function focusBarcodeInput() {
 // Add Product By Barcode
 // ============================================================================
 
-async function addProductByBarcode(barcodeValue) {
+async function addProductByBarcode(
+    barcodeValue
+) {
 
     const barcode =
         normalizeBarcode(
@@ -165,10 +183,6 @@ async function addProductByBarcode(barcodeValue) {
             );
 
 
-        // ---------------------------------------------------------------
-        // Product Not Found
-        // ---------------------------------------------------------------
-
         if (!product) {
 
             showSalesMessage(
@@ -181,10 +195,6 @@ async function addProductByBarcode(barcodeValue) {
             return;
         }
 
-
-        // ---------------------------------------------------------------
-        // Stock
-        // ---------------------------------------------------------------
 
         const stock =
             Number(product.stock) || 0;
@@ -203,18 +213,17 @@ async function addProductByBarcode(barcodeValue) {
         }
 
 
-        // ---------------------------------------------------------------
-        // Price
-        // ---------------------------------------------------------------
-
         const salePrice =
-            Number(product.salePrice) || 0;
+            Number(product.salePrice);
 
 
-        if (salePrice < 0) {
+        if (
+            !Number.isFinite(salePrice) ||
+            salePrice < 0
+        ) {
 
             showSalesMessage(
-                'قیمت فروش کالا معتبر نیست.',
+                'قیمت فروش این کالا معتبر نیست.',
                 'error'
             );
 
@@ -223,10 +232,6 @@ async function addProductByBarcode(barcodeValue) {
             return;
         }
 
-
-        // ---------------------------------------------------------------
-        // Existing Item
-        // ---------------------------------------------------------------
 
         const existingItem =
             findCartItem(
@@ -237,7 +242,8 @@ async function addProductByBarcode(barcodeValue) {
         if (existingItem) {
 
             if (
-                existingItem.quantity >= stock
+                existingItem.quantity >=
+                stock
             ) {
 
                 showSalesMessage(
@@ -252,7 +258,6 @@ async function addProductByBarcode(barcodeValue) {
 
 
             existingItem.quantity += 1;
-
 
         } else {
 
@@ -280,7 +285,6 @@ async function addProductByBarcode(barcodeValue) {
 
                 quantity:
                     1
-
             });
         }
 
@@ -307,7 +311,6 @@ async function addProductByBarcode(barcodeValue) {
             input.focus();
         }
 
-
     } catch (error) {
 
         console.error(
@@ -330,7 +333,9 @@ async function addProductByBarcode(barcodeValue) {
 // Increase Quantity
 // ============================================================================
 
-function increaseQuantity(barcode) {
+function increaseQuantity(
+    barcode
+) {
 
     const item =
         findCartItem(
@@ -349,7 +354,7 @@ function increaseQuantity(barcode) {
     ) {
 
         showSalesMessage(
-            `موجودی «${item.name}» فقط ${formatPrice(item.stock)} عدد است.`,
+            `موجودی «${item.name}» بیشتر از ${formatPrice(item.stock)} عدد نیست.`,
             'error'
         );
 
@@ -374,7 +379,9 @@ function increaseQuantity(barcode) {
 // Decrease Quantity
 // ============================================================================
 
-function decreaseQuantity(barcode) {
+function decreaseQuantity(
+    barcode
+) {
 
     const item =
         findCartItem(
@@ -416,7 +423,9 @@ function decreaseQuantity(barcode) {
 // Remove Item
 // ============================================================================
 
-function removeFromCart(barcode) {
+function removeFromCart(
+    barcode
+) {
 
     const index =
         salesCart.findIndex(
@@ -447,6 +456,9 @@ function removeFromCart(barcode) {
         `«${item.name}» از سبد حذف شد.`,
         'info'
     );
+
+
+    focusBarcodeInput();
 }
 
 
@@ -464,6 +476,8 @@ function clearCart() {
             'سبد خرید خالی است.',
             'info'
         );
+
+        focusBarcodeInput();
 
         return;
     }
@@ -515,12 +529,6 @@ function renderCart() {
         );
 
 
-    const clearButton =
-        document.getElementById(
-            'sales-clear-button'
-        );
-
-
     if (
         !cartItems ||
         !cartCount ||
@@ -531,7 +539,8 @@ function renderCart() {
     }
 
 
-    cartItems.innerHTML = '';
+    cartItems.innerHTML =
+        '';
 
 
     const totalCount =
@@ -557,13 +566,6 @@ function renderCart() {
     }
 
 
-    if (clearButton) {
-
-        clearButton.disabled =
-            salesCart.length === 0;
-    }
-
-
     // ------------------------------------------------------------------------
     // Empty Cart
     // ------------------------------------------------------------------------
@@ -573,43 +575,58 @@ function renderCart() {
     ) {
 
         const empty =
-            document.createElement('div');
+            document.createElement(
+                'div'
+            );
+
 
         empty.className =
             'sales-cart-empty';
 
 
         const icon =
-            document.createElement('div');
+            document.createElement(
+                'div'
+            );
+
 
         icon.className =
-            'sales-empty-icon';
+            'placeholder-icon';
+
 
         icon.textContent =
             '🛍️';
 
 
         const title =
-            document.createElement('h3');
+            document.createElement(
+                'h3'
+            );
+
 
         title.textContent =
             'سبد خرید خالی است';
 
 
         const text =
-            document.createElement('p');
+            document.createElement(
+                'p'
+            );
+
 
         text.textContent =
-            'بارکد کالا را وارد کنید تا محصول به سبد اضافه شود.';
+            'بارکد کالا را وارد کنید تا کالا به سبد اضافه شود.';
 
 
         empty.appendChild(
             icon
         );
 
+
         empty.appendChild(
             title
         );
+
 
         empty.appendChild(
             text
@@ -633,39 +650,54 @@ function renderCart() {
         item => {
 
             const card =
-                document.createElement('article');
+                document.createElement(
+                    'article'
+                );
+
 
             card.className =
                 'sales-cart-item';
 
 
             // ---------------------------------------------------------------
-            // Item Top
+            // Header
             // ---------------------------------------------------------------
 
             const top =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
+
 
             top.className =
                 'sales-cart-item-top';
 
 
             const info =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
+
 
             info.className =
                 'sales-cart-item-info';
 
 
             const name =
-                document.createElement('h4');
+                document.createElement(
+                    'h4'
+                );
+
 
             name.textContent =
                 item.name;
 
 
             const barcode =
-                document.createElement('span');
+                document.createElement(
+                    'span'
+                );
+
 
             barcode.textContent =
                 `بارکد: ${item.barcode}`;
@@ -675,22 +707,29 @@ function renderCart() {
                 name
             );
 
+
             info.appendChild(
                 barcode
             );
 
 
             const removeButton =
-                document.createElement('button');
+                document.createElement(
+                    'button'
+                );
+
 
             removeButton.type =
                 'button';
 
+
             removeButton.className =
                 'sales-remove-item';
 
+
             removeButton.textContent =
                 '×';
+
 
             removeButton.setAttribute(
                 'aria-label',
@@ -714,31 +753,41 @@ function renderCart() {
                 info
             );
 
+
             top.appendChild(
                 removeButton
             );
 
 
             // ---------------------------------------------------------------
-            // Price Row
+            // Price
             // ---------------------------------------------------------------
 
             const priceRow =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
+
 
             priceRow.className =
                 'sales-cart-price-row';
 
 
             const unitPrice =
-                document.createElement('span');
+                document.createElement(
+                    'span'
+                );
+
 
             unitPrice.textContent =
                 `قیمت واحد: ${formatPrice(item.salePrice)} تومان`;
 
 
             const rowTotal =
-                document.createElement('strong');
+                document.createElement(
+                    'strong'
+                );
+
 
             rowTotal.textContent =
                 `${formatPrice(
@@ -751,37 +800,47 @@ function renderCart() {
                 unitPrice
             );
 
+
             priceRow.appendChild(
                 rowTotal
             );
 
 
             // ---------------------------------------------------------------
-            // Quantity Controls
+            // Quantity
             // ---------------------------------------------------------------
 
             const controls =
-                document.createElement('div');
+                document.createElement(
+                    'div'
+                );
+
 
             controls.className =
                 'sales-quantity-controls';
 
 
             const decreaseButton =
-                document.createElement('button');
+                document.createElement(
+                    'button'
+                );
+
 
             decreaseButton.type =
                 'button';
 
+
             decreaseButton.className =
                 'sales-quantity-button';
+
 
             decreaseButton.textContent =
                 '−';
 
+
             decreaseButton.setAttribute(
                 'aria-label',
-                'کاهش تعداد'
+                `کاهش تعداد ${item.name}`
             );
 
 
@@ -798,10 +857,14 @@ function renderCart() {
 
 
             const quantity =
-                document.createElement('span');
+                document.createElement(
+                    'span'
+                );
+
 
             quantity.className =
                 'sales-quantity';
+
 
             quantity.textContent =
                 formatPrice(
@@ -810,20 +873,26 @@ function renderCart() {
 
 
             const increaseButton =
-                document.createElement('button');
+                document.createElement(
+                    'button'
+                );
+
 
             increaseButton.type =
                 'button';
 
+
             increaseButton.className =
                 'sales-quantity-button';
+
 
             increaseButton.textContent =
                 '+';
 
+
             increaseButton.setAttribute(
                 'aria-label',
-                'افزایش تعداد'
+                `افزایش تعداد ${item.name}`
             );
 
 
@@ -856,9 +925,11 @@ function renderCart() {
                 decreaseButton
             );
 
+
             controls.appendChild(
                 quantity
             );
+
 
             controls.appendChild(
                 increaseButton
@@ -870,22 +941,17 @@ function renderCart() {
             // ---------------------------------------------------------------
 
             const stockInfo =
-                document.createElement('span');
+                document.createElement(
+                    'span'
+                );
+
 
             stockInfo.className =
                 'sales-stock-info';
 
 
-            const remaining =
-                Math.max(
-                    0,
-                    item.stock -
-                    item.quantity
-                );
-
-
             stockInfo.textContent =
-                `موجودی پس از فروش: ${formatPrice(remaining)}`;
+                `موجودی فعلی: ${formatPrice(item.stock)}`;
 
 
             // ---------------------------------------------------------------
@@ -896,13 +962,16 @@ function renderCart() {
                 top
             );
 
+
             card.appendChild(
                 priceRow
             );
 
+
             card.appendChild(
                 controls
             );
+
 
             card.appendChild(
                 stockInfo
@@ -936,11 +1005,14 @@ function createSalesScreen() {
 
 
     const screen =
-        document.createElement('section');
+        document.createElement(
+            'section'
+        );
 
 
     screen.id =
         'sales-screen';
+
 
     screen.className =
         'sales-screen';
@@ -957,29 +1029,39 @@ function createSalesScreen() {
     // ========================================================================
 
     const header =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     header.className =
         'sales-header';
 
 
     const title =
-        document.createElement('h2');
+        document.createElement(
+            'h2'
+        );
+
 
     title.textContent =
         '🛒 فروش و صندوق';
 
 
     const description =
-        document.createElement('p');
+        document.createElement(
+            'p'
+        );
+
 
     description.textContent =
-        'بارکد کالا را وارد کنید یا با بارکدخوان اسکن کنید.';
+        'بارکد کالا را وارد کنید یا با اسکنر بارکد اسکن کنید.';
 
 
     header.appendChild(
         title
     );
+
 
     header.appendChild(
         description
@@ -991,93 +1073,74 @@ function createSalesScreen() {
     // ========================================================================
 
     const barcodeCard =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     barcodeCard.className =
         'sales-barcode-card';
 
 
-    const barcodeHeader =
-        document.createElement('div');
-
-    barcodeHeader.className =
-        'sales-section-header';
-
-
-    const barcodeIcon =
-        document.createElement('div');
-
-    barcodeIcon.className =
-        'sales-section-icon';
-
-    barcodeIcon.textContent =
-        '▣';
-
-
-    const barcodeHeaderText =
-        document.createElement('div');
-
-
     const barcodeTitle =
-        document.createElement('h3');
+        document.createElement(
+            'h3'
+        );
+
 
     barcodeTitle.textContent =
-        'افزودن کالا';
+        '▣ افزودن کالا';
 
 
     const barcodeDescription =
-        document.createElement('p');
+        document.createElement(
+            'p'
+        );
+
 
     barcodeDescription.textContent =
-        'بارکد را وارد کنید و روی «افزودن کالا» بزنید.';
-
-
-    barcodeHeaderText.appendChild(
-        barcodeTitle
-    );
-
-    barcodeHeaderText.appendChild(
-        barcodeDescription
-    );
-
-
-    barcodeHeader.appendChild(
-        barcodeIcon
-    );
-
-    barcodeHeader.appendChild(
-        barcodeHeaderText
-    );
+        'بارکد را وارد کنید و «افزودن کالا» را بزنید.';
 
 
     const barcodeRow =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     barcodeRow.className =
         'sales-barcode-row';
 
 
     const barcodeInput =
-        document.createElement('input');
+        document.createElement(
+            'input'
+        );
 
 
     barcodeInput.type =
         'text';
 
+
     barcodeInput.inputMode =
         'numeric';
+
 
     barcodeInput.autocomplete =
         'off';
 
+
     barcodeInput.id =
         'sales-barcode-input';
+
 
     barcodeInput.className =
         'sales-barcode-input';
 
+
     barcodeInput.placeholder =
         'بارکد کالا را وارد کنید';
+
 
     barcodeInput.setAttribute(
         'aria-label',
@@ -1086,14 +1149,18 @@ function createSalesScreen() {
 
 
     const addButton =
-        document.createElement('button');
+        document.createElement(
+            'button'
+        );
 
 
     addButton.type =
         'button';
 
+
     addButton.className =
         'sales-add-button';
+
 
     addButton.textContent =
         'افزودن کالا';
@@ -1103,39 +1170,46 @@ function createSalesScreen() {
         barcodeInput
     );
 
+
     barcodeRow.appendChild(
         addButton
     );
 
 
     const barcodeMessage =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
 
 
     barcodeMessage.id =
         'sales-barcode-message';
 
+
     barcodeMessage.className =
         'sales-barcode-message';
+
 
     barcodeMessage.setAttribute(
         'role',
         'status'
     );
 
-    barcodeMessage.setAttribute(
-        'aria-live',
-        'polite'
+
+    barcodeCard.appendChild(
+        barcodeTitle
     );
 
 
     barcodeCard.appendChild(
-        barcodeHeader
+        barcodeDescription
     );
+
 
     barcodeCard.appendChild(
         barcodeRow
     );
+
 
     barcodeCard.appendChild(
         barcodeMessage
@@ -1147,69 +1221,57 @@ function createSalesScreen() {
     // ========================================================================
 
     const cartCard =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     cartCard.className =
         'sales-cart-card';
 
 
     const cartHeader =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     cartHeader.className =
         'sales-cart-header';
 
 
-    const cartHeaderLeft =
-        document.createElement('div');
-
-    cartHeaderLeft.className =
-        'sales-cart-header-left';
-
-
-    const cartIcon =
-        document.createElement('div');
-
-    cartIcon.className =
-        'sales-section-icon sales-cart-icon';
-
-    cartIcon.textContent =
-        '🛍️';
-
-
     const cartTitle =
-        document.createElement('h3');
+        document.createElement(
+            'h3'
+        );
+
 
     cartTitle.textContent =
-        'سبد خرید';
-
-
-    cartHeaderLeft.appendChild(
-        cartIcon
-    );
-
-    cartHeaderLeft.appendChild(
-        cartTitle
-    );
+        '🛍️ سبد خرید';
 
 
     const cartCount =
-        document.createElement('span');
+        document.createElement(
+            'span'
+        );
 
 
     cartCount.id =
         'sales-cart-count';
 
+
     cartCount.className =
         'sales-cart-count';
+
 
     cartCount.textContent =
         '۰ کالا';
 
 
     cartHeader.appendChild(
-        cartHeaderLeft
+        cartTitle
     );
+
 
     cartHeader.appendChild(
         cartCount
@@ -1217,11 +1279,14 @@ function createSalesScreen() {
 
 
     const cartItems =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
 
 
     cartItems.id =
         'sales-cart-items';
+
 
     cartItems.className =
         'sales-cart-items';
@@ -1230,6 +1295,7 @@ function createSalesScreen() {
     cartCard.appendChild(
         cartHeader
     );
+
 
     cartCard.appendChild(
         cartItems
@@ -1241,55 +1307,43 @@ function createSalesScreen() {
     // ========================================================================
 
     const totalCard =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     totalCard.className =
         'sales-total-card';
 
 
-    const totalInfo =
-        document.createElement('div');
-
-    totalInfo.className =
-        'sales-total-info';
-
-
     const totalLabel =
-        document.createElement('span');
+        document.createElement(
+            'span'
+        );
+
 
     totalLabel.textContent =
         'مبلغ قابل پرداخت';
 
 
-    const totalHint =
-        document.createElement('small');
-
-    totalHint.textContent =
-        'جمع کل سبد خرید';
-
-
-    totalInfo.appendChild(
-        totalLabel
-    );
-
-    totalInfo.appendChild(
-        totalHint
-    );
-
-
     const totalValue =
-        document.createElement('strong');
+        document.createElement(
+            'strong'
+        );
+
 
     totalValue.id =
         'sales-total-value';
+
 
     totalValue.textContent =
         '۰ تومان';
 
 
     totalCard.appendChild(
-        totalInfo
+        totalLabel
     );
+
 
     totalCard.appendChild(
         totalValue
@@ -1297,57 +1351,30 @@ function createSalesScreen() {
 
 
     // ========================================================================
-    // Actions
+    // Checkout Button
     // ========================================================================
 
-    const actions =
-        document.createElement('div');
-
-    actions.className =
-        'sales-actions';
-
-
-    const clearButton =
-        document.createElement('button');
-
-
-    clearButton.type =
-        'button';
-
-    clearButton.id =
-        'sales-clear-button';
-
-    clearButton.className =
-        'sales-clear-button';
-
-    clearButton.textContent =
-        'پاک کردن سبد';
-
-    clearButton.disabled =
-        true;
-
-
-    clearButton.addEventListener(
-        'click',
-        clearCart
-    );
-
-
     const checkoutButton =
-        document.createElement('button');
+        document.createElement(
+            'button'
+        );
 
 
     checkoutButton.type =
         'button';
 
+
     checkoutButton.id =
         'sales-checkout-button';
+
 
     checkoutButton.className =
         'sales-checkout-button';
 
+
     checkoutButton.textContent =
         'ثبت فروش';
+
 
     checkoutButton.disabled =
         true;
@@ -1357,21 +1384,52 @@ function createSalesScreen() {
         'click',
         () => {
 
+            if (
+                salesCart.length === 0
+            ) {
+
+                showSalesMessage(
+                    'سبد خرید خالی است.',
+                    'error'
+                );
+
+                return;
+            }
+
+
             showSalesMessage(
                 'ثبت نهایی فروش در مرحله بعد فعال خواهد شد.',
                 'info'
             );
-
         }
     );
 
 
-    actions.appendChild(
-        clearButton
-    );
+    // ========================================================================
+    // Clear Button
+    // ========================================================================
 
-    actions.appendChild(
-        checkoutButton
+    const clearButton =
+        document.createElement(
+            'button'
+        );
+
+
+    clearButton.type =
+        'button';
+
+
+    clearButton.className =
+        'sales-clear-button';
+
+
+    clearButton.textContent =
+        '🗑 پاک کردن سبد';
+
+
+    clearButton.addEventListener(
+        'click',
+        clearCart
     );
 
 
@@ -1380,14 +1438,18 @@ function createSalesScreen() {
     // ========================================================================
 
     const backButton =
-        document.createElement('button');
+        document.createElement(
+            'button'
+        );
 
 
     backButton.type =
         'button';
 
+
     backButton.className =
         'sales-back-button';
+
 
     backButton.textContent =
         '← بازگشت به صفحه اصلی';
@@ -1418,7 +1480,6 @@ function createSalesScreen() {
                 homeScreen.style.display =
                     '';
             }
-
         }
     );
 
@@ -1431,21 +1492,31 @@ function createSalesScreen() {
         header
     );
 
+
     screen.appendChild(
         barcodeCard
     );
+
 
     screen.appendChild(
         cartCard
     );
 
+
     screen.appendChild(
         totalCard
     );
 
+
     screen.appendChild(
-        actions
+        checkoutButton
     );
+
+
+    screen.appendChild(
+        clearButton
+    );
+
 
     screen.appendChild(
         backButton
@@ -1463,7 +1534,6 @@ function createSalesScreen() {
             addProductByBarcode(
                 barcodeInput.value
             );
-
         }
     );
 
@@ -1478,17 +1548,17 @@ function createSalesScreen() {
 
                 event.preventDefault();
 
+
                 addProductByBarcode(
                     barcodeInput.value
                 );
             }
-
         }
     );
 
 
     // ========================================================================
-    // Initial Render
+    // Render
     // ========================================================================
 
     renderCart();
@@ -1544,6 +1614,7 @@ function openSalesScreen() {
         salesScreen =
             createSalesScreen();
 
+
         main.appendChild(
             salesScreen
         );
@@ -1568,7 +1639,7 @@ function openSalesScreen() {
 
 
 // ============================================================================
-// Connect Sales Button
+// Setup Sales Button
 // ============================================================================
 
 function setupSalesButton() {
@@ -1585,49 +1656,137 @@ function setupSalesButton() {
             'SupermarketPOS: دکمه فروش پیدا نشد.'
         );
 
-        return;
+        return false;
     }
 
 
-    // Prevent duplicate listeners
+    if (
+        salesButton.dataset.salesConnected ===
+        'true'
+    ) {
+
+        return true;
+    }
+
+
+    salesButton.addEventListener(
+        'click',
+        event => {
+
+            event.preventDefault();
+
+            openSalesScreen();
+        }
+    );
+
+
+    salesButton.dataset.salesConnected =
+        'true';
+
+
+    return true;
+}
+
+
+// ============================================================================
+// Initialize Sales Module
+// ============================================================================
+
+function initializeSalesModule() {
 
     if (
-        salesButton.dataset.salesReady ===
-        'true'
+        salesScreenInitialized
     ) {
 
         return;
     }
 
 
-    salesButton.dataset.salesReady =
-        'true';
+    const connected =
+        setupSalesButton();
 
 
-    salesButton.addEventListener(
-        'click',
-        openSalesScreen
-    );
-}
+    if (connected) {
+
+        salesScreenInitialized =
+            true;
 
 
-// ============================================================================
-// Initialize
-// ============================================================================
+        console.log(
+            'SupermarketPOS: ماژول فروش مرحله ۵ آماده است.'
+        );
 
-function initializeSalesModule() {
+    } else {
 
-    setupSalesButton();
-
-
-    console.log(
-        'SupermarketPOS: ماژول فروش مرحله ۵ آماده است.'
-    );
+        console.warn(
+            'SupermarketPOS: ماژول فروش منتظر ایجاد دکمه فروش است.'
+        );
+    }
 }
 
 
 // ============================================================================
 // Bootstrap
+// ============================================================================
+
+function bootstrapSalesModule() {
+
+    initializeSalesModule();
+
+
+    // ------------------------------------------------------------------------
+    // Fallback برای زمانی که index.html یا app.js
+    // دکمه‌های منو را کمی دیرتر ایجاد می‌کند.
+    // ------------------------------------------------------------------------
+
+    let attempts =
+        0;
+
+
+    const maxAttempts =
+        20;
+
+
+    const interval =
+        setInterval(
+            () => {
+
+                attempts++;
+
+
+                if (
+                    salesScreenInitialized
+                ) {
+
+                    clearInterval(
+                        interval
+                    );
+
+                    return;
+                }
+
+
+                initializeSalesModule();
+
+
+                if (
+                    attempts >=
+                    maxAttempts
+                ) {
+
+                    clearInterval(
+                        interval
+                    );
+                }
+
+            },
+            250
+        );
+}
+
+
+// ============================================================================
+// Start
 // ============================================================================
 
 if (
@@ -1637,7 +1796,7 @@ if (
 
     document.addEventListener(
         'DOMContentLoaded',
-        initializeSalesModule,
+        bootstrapSalesModule,
         {
             once: true
         }
@@ -1645,6 +1804,5 @@ if (
 
 } else {
 
-    initializeSalesModule();
-
+    bootstrapSalesModule();
 }
