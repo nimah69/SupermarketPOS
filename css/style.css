@@ -1,1245 +1,2240 @@
-/* ============================================================================
-   SupermarketPOS
-   Main Stylesheet
-   Product Cards - Modern UI
-============================================================================ */
+// js/app.js
+// SupermarketPOS
+// Product List + Backup + Restore
+// Stage 4
 
-* {
-    box-sizing: border-box;
-}
+'use strict';
 
-:root {
-    --primary: #0f766e;
-    --primary-dark: #115e59;
-    --primary-light: #ccfbf1;
+import {
+    initializeDatabase,
+    addProduct,
+    getAllProducts,
+    getProductsForBackup,
+    restoreProductsMerge
+} from './database.js';
 
-    --background: #f1f5f9;
-    --surface: #ffffff;
-    --surface-soft: #f8fafc;
 
-    --text: #0f172a;
-    --muted: #64748b;
+// ============================================================================
+// Application State
+// ============================================================================
 
-    --border: #e2e8f0;
-    --border-light: #eef2f7;
+const APP_STATE = {
+    initialized: false,
+    databaseReady: false
+};
 
-    --blue-soft: #dbeafe;
-    --yellow-soft: #fef3c7;
-    --purple-soft: #f3e8ff;
 
-    --success: #047857;
-    --success-soft: #ecfdf5;
+// ============================================================================
+// DOM
+// ============================================================================
 
-    --danger: #b91c1c;
-    --danger-soft: #fef2f2;
-}
+const DOM = {
+    app: null
+};
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100%;
-}
 
-body {
-    min-height: 100vh;
+// ============================================================================
+// Database Status
+// ============================================================================
 
-    font-family:
-        Tahoma,
-        Arial,
-        sans-serif;
+function showDatabaseStatus(
+    message,
+    success = true
+) {
 
-    background:
-        linear-gradient(
-            180deg,
-            #f8fafc 0%,
-            var(--background) 100%
+    let status =
+        document.getElementById(
+            'database-test-status'
         );
 
-    color: var(--text);
+    if (!status) {
+
+        status =
+            document.createElement('div');
+
+        status.id =
+            'database-test-status';
+
+        status.style.cssText = `
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            text-align: center;
+            border: 1px solid;
+        `;
+
+        const home =
+            document.querySelector(
+                '.home-screen'
+            );
+
+        if (home) {
+            home.appendChild(status);
+        }
+    }
+
+    status.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+    status.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+    status.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+    status.textContent =
+        message;
 }
 
-button,
-input {
-    font: inherit;
-}
 
-button {
-    cursor: pointer;
-}
+// ============================================================================
+// Header
+// ============================================================================
 
-/* ============================================================================
-   Main Container
-============================================================================ */
+function setupHeaderStatus() {
 
-#app {
-    width: 100%;
-    max-width: 600px;
-
-    min-height: 100vh;
-
-    margin: 0 auto;
-
-    padding:
-        20px
-        16px
-        40px;
-}
-
-/* ============================================================================
-   Header
-============================================================================ */
-
-.app-header {
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-dark)
+    const headerStatus =
+        document.querySelector(
+            '.header-status'
         );
 
-    color: #ffffff;
-
-    border-radius: 22px;
-
-    padding: 18px;
-
-    margin-bottom: 20px;
-
-    box-shadow:
-        0 12px 30px
-        rgba(15, 118, 110, 0.18);
-}
-
-.header-content {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
-}
-
-.brand {
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    min-width: 0;
-}
-
-.brand-icon {
-    width: 48px;
-    height: 48px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    background:
-        rgba(255, 255, 255, 0.16);
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.12);
-
-    border-radius: 14px;
-
-    font-size: 25px;
-}
-
-.brand-text {
-    min-width: 0;
-}
-
-.brand-text h1 {
-    margin: 0;
-
-    font-size: 18px;
-
-    white-space: nowrap;
-}
-
-.brand-text span {
-    display: block;
-
-    margin-top: 4px;
-
-    font-size: 12px;
-
-    opacity: 0.82;
-}
-
-.header-status {
-    display: flex;
-
-    align-items: center;
-
-    gap: 6px;
-
-    font-size: 11px;
-
-    white-space: nowrap;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-
-    flex-shrink: 0;
-
-    border-radius: 50%;
-
-    background: #86efac;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(134, 239, 172, 0.15);
-}
-
-/* ============================================================================
-   Main
-============================================================================ */
-
-main {
-    width: 100%;
-}
-
-.home-screen {
-    width: 100%;
-}
-
-/* ============================================================================
-   Welcome
-============================================================================ */
-
-.welcome-card {
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
-
-    background: var(--surface);
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 18px;
-
-    padding: 18px;
-
-    margin-bottom: 18px;
-
-    box-shadow:
-        0 5px 18px
-        rgba(15, 23, 42, 0.04);
-}
-
-.welcome-icon {
-    width: 52px;
-    height: 52px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 16px;
-
-    background:
-        var(--primary-light);
-
-    font-size: 25px;
-}
-
-.welcome-card h2 {
-    margin:
-        0 0 5px;
-
-    font-size: 17px;
-}
-
-.welcome-card p {
-    margin: 0;
-
-    color: var(--muted);
-
-    font-size: 12px;
-
-    line-height: 1.7;
-}
-
-/* ============================================================================
-   Home Menu
-============================================================================ */
-
-.menu-grid {
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 12px;
-}
-
-.menu-card {
-    position: relative;
-
-    width: 100%;
-
-    min-height: 155px;
-
-    padding: 18px;
-
-    text-align: right;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 18px;
-
-    background:
-        rgba(255, 255, 255, 0.94);
-
-    color: var(--text);
-
-    box-shadow:
-        0 5px 15px
-        rgba(15, 23, 42, 0.04);
-
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease,
-        border-color 0.15s ease;
-}
-
-.menu-card:hover {
-    border-color:
-        #cbd5e1;
-
-    box-shadow:
-        0 10px 25px
-        rgba(15, 23, 42, 0.08);
-}
-
-.menu-card:active {
-    transform:
-        scale(0.98);
-}
-
-.menu-icon {
-    width: 48px;
-    height: 48px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 14px;
-
-    margin-bottom: 14px;
-
-    font-size: 24px;
-}
-
-.sales-icon {
-    background:
-        var(--primary-light);
-}
-
-.products-icon {
-    background:
-        var(--blue-soft);
-}
-
-.reports-icon {
-    background:
-        var(--yellow-soft);
-}
-
-.settings-icon {
-    background:
-        var(--purple-soft);
-}
-
-.menu-card-content h3 {
-    margin:
-        0 0 6px;
-
-    font-size: 14px;
-}
-
-.menu-card-content p {
-    margin: 0;
-
-    color: var(--muted);
-
-    font-size: 11px;
-
-    line-height: 1.7;
-}
-
-.menu-arrow {
-    position: absolute;
-
-    left: 14px;
-    bottom: 14px;
-
-    color: var(--muted);
-
-    font-size: 18px;
-}
-
-/* ============================================================================
-   Database Status
-============================================================================ */
-
-#database-test-status {
-    box-shadow:
-        0 4px 12px
-        rgba(15, 23, 42, 0.03);
-}
-
-/* ============================================================================
-   Products Screen
-============================================================================ */
-
-.products-screen,
-.sales-screen {
-    width: 100%;
-}
-
-.products-header,
-.sales-header {
-    position: relative;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #f8fafc
+    if (!headerStatus) {
+        return;
+    }
+
+    const ready =
+        headerStatus.querySelector(
+            '.status-ready'
         );
 
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 20px;
-
-    padding: 20px;
-
-    margin-bottom: 14px;
-
-    box-shadow:
-        0 6px 20px
-        rgba(15, 23, 42, 0.05);
-}
-
-.products-header::before,
-.sales-header::before {
-    content: "";
-
-    position: absolute;
-
-    right: 0;
-    top: 18px;
-    bottom: 18px;
-
-    width: 4px;
-
-    border-radius:
-        4px 0 0 4px;
-
-    background:
-        var(--primary);
-}
-
-.products-header h2,
-.sales-header h2 {
-    margin:
-        0 0 6px;
-
-    font-size: 19px;
-}
-
-.products-header p,
-.sales-header p {
-    margin: 0;
-
-    color: var(--muted);
-
-    font-size: 12px;
-}
-
-/* ============================================================================
-   Product Actions
-============================================================================ */
-
-.products-actions {
-    display: flex;
-
-    margin-bottom: 14px;
-}
-
-.add-product-button {
-    width: 100%;
-
-    min-height: 48px;
-
-    border: 0;
-
-    border-radius: 15px;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            var(--primary-dark)
+    const online =
+        headerStatus.querySelector(
+            '.status-online'
         );
 
-    color: #ffffff;
-
-    font-size: 13px;
-
-    font-weight: bold;
-
-    box-shadow:
-        0 8px 18px
-        rgba(15, 118, 110, 0.18);
-
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease;
-}
-
-.add-product-button:hover {
-    box-shadow:
-        0 10px 24px
-        rgba(15, 118, 110, 0.24);
-}
-
-.add-product-button:active {
-    transform:
-        scale(0.98);
-}
-
-/* ============================================================================
-   Product Form
-============================================================================ */
-
-.product-form-container {
-    margin-bottom: 16px;
-}
-
-.product-form {
-    background:
-        var(--surface);
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 20px;
-
-    padding: 18px;
-
-    box-shadow:
-        0 8px 25px
-        rgba(15, 23, 42, 0.07);
-}
-
-.product-form-header {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 12px;
-
-    margin-bottom: 16px;
-}
-
-.product-form-header h3 {
-    margin:
-        0 0 5px;
-
-    font-size: 16px;
-}
-
-.product-form-header p {
-    margin: 0;
-
-    color: var(--muted);
-
-    font-size: 11px;
-}
-
-.close-product-form {
-    width: 34px;
-    height: 34px;
-
-    flex-shrink: 0;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 10px;
-
-    background:
-        var(--surface-soft);
-
-    color: var(--muted);
-
-    font-size: 21px;
-
-    line-height: 1;
-}
-
-.close-product-form:active {
-    transform:
-        scale(0.95);
-}
-
-.form-field {
-    margin-bottom: 12px;
-}
-
-.form-field label {
-    display: block;
-
-    margin-bottom: 6px;
-
-    font-size: 11px;
-
-    font-weight: bold;
-
-    color:
-        #334155;
-}
-
-.form-field input {
-    width: 100%;
-
-    height: 45px;
-
-    padding:
-        0 13px;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 12px;
-
-    outline: none;
-
-    background:
-        #ffffff;
-
-    color: var(--text);
-
-    font-size: 13px;
-
-    transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
-}
-
-.form-field input:focus {
-    border-color:
-        var(--primary);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(15, 118, 110, 0.10);
-}
-
-.form-field input::placeholder {
-    color:
-        #94a3b8;
-}
-
-/* ============================================================================
-   Product Form Actions
-============================================================================ */
-
-.product-form-actions {
-    display: grid;
-
-    grid-template-columns:
-        1fr 1.4fr;
-
-    gap: 10px;
-
-    margin-top: 16px;
-}
-
-.cancel-product-button,
-.save-product-button {
-    min-height: 45px;
-
-    border-radius: 12px;
-
-    font-size: 12px;
-
-    font-weight: bold;
-}
-
-.cancel-product-button {
-    border:
-        1px solid
-        var(--border);
-
-    background:
-        var(--surface-soft);
-
-    color:
-        #475569;
-}
-
-.save-product-button {
-    border: 0;
-
-    background:
-        var(--primary);
-
-    color: #ffffff;
-
-    box-shadow:
-        0 6px 15px
-        rgba(15, 118, 110, 0.15);
-}
-
-.save-product-button:disabled {
-    opacity: 0.65;
-
-    cursor: wait;
-}
-
-.product-form-message {
-    width: 100%;
-}
-
-/* ============================================================================
-   Products List
-============================================================================ */
-
-.products-list {
-    width: 100%;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 12px;
-
-    margin-bottom: 16px;
-}
-
-.products-list-title {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 10px;
-
-    padding:
-        4px 2px 2px;
-}
-
-.products-list-title strong {
-    font-size: 14px;
-}
-
-.products-list-title span {
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    min-width: 48px;
-
-    padding:
-        5px 9px;
-
-    border-radius: 999px;
-
-    background:
-        var(--primary-light);
-
-    color:
-        var(--primary-dark);
-
-    font-size: 10px;
-
-    font-weight: bold;
-}
-
-/* ============================================================================
-   Individual Product Card
-============================================================================ */
-
-.product-card {
-    width: 100%;
-
-    background:
-        var(--surface);
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 18px;
-
-    padding: 15px;
-
-    box-shadow:
-        0 5px 16px
-        rgba(15, 23, 42, 0.045);
-
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease,
-        border-color 0.15s ease;
-
-    overflow: hidden;
-}
-
-.product-card:hover {
-    border-color:
-        #cbd5e1;
-
-    box-shadow:
-        0 9px 22px
-        rgba(15, 23, 42, 0.08);
-
-    transform:
-        translateY(-1px);
-}
-
-.product-card:active {
-    transform:
-        scale(0.99);
-}
-
-/* ============================================================================
-   Product Card Top
-============================================================================ */
-
-.product-card-top {
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    padding-bottom: 13px;
-
-    border-bottom:
-        1px solid
-        var(--border-light);
-}
-
-.product-card-icon {
-    width: 46px;
-    height: 46px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 13px;
-
-    background:
-        var(--blue-soft);
-
-    font-size: 22px;
-}
-
-.product-card-info {
-    min-width: 0;
-
-    flex: 1;
-}
-
-.product-card-info h3 {
-    margin:
-        0 0 5px;
-
-    font-size: 14px;
-
-    line-height: 1.5;
-
-    overflow:
-        hidden;
-
-    text-overflow:
-        ellipsis;
-
-    white-space:
-        nowrap;
-}
-
-.product-card-info span {
-    display: inline-block;
-
-    max-width: 100%;
-
-    padding:
-        3px 8px;
-
-    border-radius: 999px;
-
-    background:
-        var(--surface-soft);
-
-    color:
-        var(--muted);
-
-    font-size: 9px;
-
-    overflow:
-        hidden;
-
-    text-overflow:
-        ellipsis;
-
-    white-space:
-        nowrap;
-}
-
-/* ============================================================================
-   Product Details
-============================================================================ */
-
-.product-card-details {
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr 1fr;
-
-    gap: 8px;
-
-    padding-top: 13px;
-}
-
-.product-detail {
-    min-width: 0;
-
-    padding:
-        9px 8px;
-
-    border-radius: 11px;
-
-    background:
-        var(--surface-soft);
-
-    text-align: center;
-}
-
-.product-detail span {
-    display: block;
-
-    margin-bottom: 5px;
-
-    color:
-        var(--muted);
-
-    font-size: 9px;
-}
-
-.product-detail strong {
-    display: block;
-
-    color:
-        var(--text);
-
-    font-size: 10px;
-
-    line-height: 1.5;
-
-    overflow-wrap:
-        anywhere;
-}
-
-.product-detail:nth-child(2) {
-    background:
-        #f0fdfa;
-}
-
-.product-detail:nth-child(2) strong {
-    color:
-        var(--primary-dark);
-}
-
-.product-detail:nth-child(3) {
-    background:
-        #f8fafc;
-}
-
-/* ============================================================================
-   Empty / Loading / Error
-============================================================================ */
-
-.products-empty,
-.products-loading {
-    width: 100%;
-
-    background:
-        var(--surface);
-
-    border:
-        1px dashed
-        #cbd5e1;
-
-    border-radius: 18px;
-
-    padding:
-        28px 18px;
-
-    text-align: center;
-}
-
-.products-empty .placeholder-icon,
-.products-loading .placeholder-icon {
-    margin:
-        0 auto 12px;
-}
-
-.products-empty h3 {
-    margin:
-        0 0 7px;
-
-    font-size: 14px;
-}
-
-.products-empty p,
-.products-loading p {
-    margin: 0;
-
-    color:
-        var(--muted);
-
-    font-size: 11px;
-
-    line-height: 1.7;
-}
-
-.products-error {
-    border-color:
-        #fecaca;
-
-    background:
-        #fffafa;
-}
-
-/* ============================================================================
-   Placeholder
-============================================================================ */
-
-.sales-placeholder {
-    width: 100%;
-
-    background:
-        var(--surface);
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 18px;
-
-    padding:
-        24px 18px;
-
-    margin-bottom: 12px;
-
-    text-align: center;
-
-    box-shadow:
-        0 5px 16px
-        rgba(15, 23, 42, 0.04);
-}
-
-.placeholder-icon {
-    width: 52px;
-    height: 52px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    margin:
-        0 auto 12px;
-
-    border-radius: 16px;
-
-    background:
-        var(--primary-light);
-
-    font-size: 24px;
-}
-
-.sales-placeholder h3 {
-    margin:
-        0 0 7px;
-
-    font-size: 14px;
-}
-
-.sales-placeholder p {
-    margin: 0;
-
-    color:
-        var(--muted);
-
-    font-size: 11px;
-
-    line-height: 1.7;
-}
-
-/* ============================================================================
-   Back Buttons
-============================================================================ */
-
-.products-back-button,
-.sales-back-button {
-    width: 100%;
-
-    min-height: 45px;
-
-    border:
-        1px solid
-        var(--border);
-
-    border-radius: 13px;
-
-    background:
-        var(--surface);
-
-    color:
-        #475569;
-
-    font-size: 12px;
-
-    font-weight: bold;
-
-    transition:
-        background 0.15s ease,
-        transform 0.15s ease;
-}
-
-.products-back-button:hover,
-.sales-back-button:hover {
-    background:
-        var(--surface-soft);
-}
-
-.products-back-button:active,
-.sales-back-button:active {
-    transform:
-        scale(0.98);
-}
-
-/* ============================================================================
-   Responsive
-============================================================================ */
-
-@media (max-width: 430px) {
-
-    #app {
-        padding:
-            14px
-            12px
-            30px;
+    if (ready) {
+        ready.textContent =
+            'آماده به کار';
     }
 
-    .app-header {
-        border-radius: 19px;
-
-        padding: 15px;
-    }
-
-    .brand-icon {
-        width: 44px;
-        height: 44px;
-
-        font-size: 22px;
-    }
-
-    .brand-text h1 {
-        font-size: 16px;
-    }
-
-    .menu-card {
-        min-height: 145px;
-
-        padding: 15px;
-    }
-
-    .product-card {
-        padding: 13px;
+    if (online) {
+        online.textContent =
+            '● آنلاین';
     }
 }
 
-@media (max-width: 380px) {
 
-    .menu-grid {
-        grid-template-columns:
-            1fr;
+// ============================================================================
+// Hide Secondary Screens
+// ============================================================================
+
+function hideSecondaryScreens() {
+
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
+
+    const products =
+        document.getElementById(
+            'products-screen'
+        );
+
+    if (sales) {
+        sales.style.display = 'none';
     }
 
-    .menu-card {
-        min-height: 125px;
+    if (products) {
+        products.style.display = 'none';
+    }
+}
+
+
+// ============================================================================
+// Home
+// ============================================================================
+
+function showHomeScreen() {
+
+    hideSecondaryScreens();
+
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
+
+    if (home) {
+        home.style.display = '';
+    }
+}
+
+
+// ============================================================================
+// Sales
+// ============================================================================
+
+function openSalesScreen() {
+
+    const main =
+        document.querySelector('main');
+
+    if (!main) {
+        return;
     }
 
-    .product-card-details {
-        grid-template-columns:
-            1fr;
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
+
+    if (home) {
+        home.style.display = 'none';
     }
 
-    .product-detail {
-        display: flex;
+    const products =
+        document.getElementById(
+            'products-screen'
+        );
 
-        align-items: center;
-
-        justify-content: space-between;
-
-        gap: 10px;
-
-        text-align: right;
+    if (products) {
+        products.style.display = 'none';
     }
 
-    .product-detail span {
-        margin: 0;
+    let sales =
+        document.getElementById(
+            'sales-screen'
+        );
+
+    if (!sales) {
+
+        sales =
+            createSalesScreen();
+
+        main.appendChild(sales);
     }
 
-    .product-detail strong {
-        text-align: left;
+    sales.style.display =
+        'block';
+}
+
+
+// ============================================================================
+// Sales Screen
+// ============================================================================
+
+function createSalesScreen() {
+
+    const screen =
+        document.createElement('section');
+
+    screen.id =
+        'sales-screen';
+
+    screen.className =
+        'sales-screen';
+
+    screen.innerHTML = `
+
+        <div class="sales-header">
+
+            <h2>
+                🛒 فروش و صندوق
+            </h2>
+
+            <p>
+                بخش فروش فروشگاه
+            </p>
+
+        </div>
+
+        <div class="sales-placeholder">
+
+            <div class="placeholder-icon">
+                ▣
+            </div>
+
+            <h3>
+                اسکن یا ورود بارکد
+            </h3>
+
+            <p>
+                سیستم بارکد در مرحله بعد فعال خواهد شد.
+            </p>
+
+        </div>
+
+        <div class="sales-placeholder">
+
+            <div class="placeholder-icon">
+                🛍️
+            </div>
+
+            <h3>
+                سبد خرید
+            </h3>
+
+            <p>
+                هنوز کالایی به سبد اضافه نشده است.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            class="sales-back-button"
+            id="sales-back-button"
+        >
+            ← بازگشت به صفحه اصلی
+        </button>
+    `;
+
+    const back =
+        screen.querySelector(
+            '#sales-back-button'
+        );
+
+    if (back) {
+
+        back.addEventListener(
+            'click',
+            showHomeScreen
+        );
     }
 
-    .product-form-actions {
-        grid-template-columns:
-            1fr;
+    return screen;
+}
+
+
+// ============================================================================
+// Products
+// ============================================================================
+
+async function openProductsScreen() {
+
+    const main =
+        document.querySelector('main');
+
+    if (!main) {
+        return;
     }
+
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
+
+    if (home) {
+        home.style.display = 'none';
+    }
+
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
+
+    if (sales) {
+        sales.style.display = 'none';
+    }
+
+    let products =
+        document.getElementById(
+            'products-screen'
+        );
+
+    if (!products) {
+
+        products =
+            createProductsScreen();
+
+        main.appendChild(products);
+    }
+
+    products.style.display =
+        'block';
+
+    await loadProducts(
+        products
+    );
+}
+
+
+// ============================================================================
+// Products Screen
+// ============================================================================
+
+function createProductsScreen() {
+
+    const screen =
+        document.createElement('section');
+
+    screen.id =
+        'products-screen';
+
+    screen.className =
+        'products-screen';
+
+    screen.innerHTML = `
+
+        <div class="products-header">
+
+            <h2>
+                📦 مدیریت کالاها
+            </h2>
+
+            <p>
+                مدیریت محصولات و موجودی فروشگاه
+            </p>
+
+        </div>
+
+
+        <!-- Product Actions -->
+
+        <div class="products-actions">
+
+            <button
+                type="button"
+                class="add-product-button"
+                id="add-product-button"
+            >
+                ＋ افزودن کالا
+            </button>
+
+        </div>
+
+
+        <!-- Backup / Restore -->
+
+        <div class="backup-card">
+
+            <div class="backup-card-icon">
+                💾
+            </div>
+
+            <div class="backup-card-content">
+
+                <h3>
+                    پشتیبان اطلاعات
+                </h3>
+
+                <p>
+                    ذخیره یا بازیابی کالاهای این دستگاه
+                </p>
+
+            </div>
+
+            <div class="backup-actions">
+
+                <button
+                    type="button"
+                    class="backup-button"
+                    id="backup-button"
+                >
+                    💾 پشتیبان‌گیری
+                </button>
+
+                <button
+                    type="button"
+                    class="restore-button"
+                    id="restore-button"
+                >
+                    📂 بازیابی
+                </button>
+
+                <input
+                    type="file"
+                    id="restore-file-input"
+                    accept=".json,application/json"
+                    hidden
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- Product Form -->
+
+        <div
+            id="product-form-container"
+            class="product-form-container"
+            style="display: none;"
+        >
+
+            <div class="product-form">
+
+                <div class="product-form-header">
+
+                    <div>
+
+                        <h3>
+                            افزودن کالای جدید
+                        </h3>
+
+                        <p>
+                            اطلاعات کالا را وارد کنید.
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="close-product-form"
+                        id="close-product-form"
+                        aria-label="بستن فرم"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="product-barcode">
+                        بارکد
+                    </label>
+
+                    <input
+                        type="text"
+                        id="product-barcode"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="بارکد کالا"
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="product-name">
+                        نام کالا
+                    </label>
+
+                    <input
+                        type="text"
+                        id="product-name"
+                        autocomplete="off"
+                        placeholder="مثلاً نوشابه"
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="product-category">
+                        دسته‌بندی
+                    </label>
+
+                    <input
+                        type="text"
+                        id="product-category"
+                        autocomplete="off"
+                        placeholder="مثلاً نوشیدنی"
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="product-price">
+                        قیمت فروش
+                    </label>
+
+                    <input
+                        type="number"
+                        id="product-price"
+                        inputmode="numeric"
+                        min="0"
+                        step="1"
+                        autocomplete="off"
+                        placeholder="قیمت به تومان"
+                    >
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="product-stock">
+                        موجودی
+                    </label>
+
+                    <input
+                        type="number"
+                        id="product-stock"
+                        inputmode="numeric"
+                        min="0"
+                        step="1"
+                        autocomplete="off"
+                        value=""
+                        placeholder="موجودی"
+                    >
+
+                </div>
+
+
+                <div class="product-form-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-product-button"
+                        id="cancel-product-button"
+                    >
+                        انصراف
+                    </button>
+
+                    <button
+                        type="button"
+                        class="save-product-button"
+                        id="save-product-button"
+                    >
+                        ذخیره کالا
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="product-form-message"
+                    class="product-form-message"
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Products List -->
+
+        <div
+            id="products-list"
+            class="products-list"
+        ></div>
+
+
+        <!-- Back -->
+
+        <button
+            type="button"
+            class="products-back-button"
+            id="products-back-button"
+        >
+            ← بازگشت به صفحه اصلی
+        </button>
+
+    `;
+
+    setupProductForm(
+        screen
+    );
+
+    setupBackup(
+        screen
+    );
+
+    setupRestore(
+        screen
+    );
+
+
+    const back =
+        screen.querySelector(
+            '#products-back-button'
+        );
+
+    if (back) {
+
+        back.addEventListener(
+            'click',
+            () => {
+
+                clearProductMessage(
+                    screen
+                );
+
+                clearBackupMessage(
+                    screen
+                );
+
+                showHomeScreen();
+            }
+        );
+    }
+
+    return screen;
+}
+
+
+// ============================================================================
+// Backup
+// ============================================================================
+
+function setupBackup(screen) {
+
+    const backupButton =
+        screen.querySelector(
+            '#backup-button'
+        );
+
+    if (!backupButton) {
+        return;
+    }
+
+
+    backupButton.addEventListener(
+        'click',
+        async () => {
+
+            if (
+                !APP_STATE.databaseReady
+            ) {
+
+                showBackupMessage(
+                    screen,
+                    '❌ پایگاه داده آماده نیست.',
+                    false
+                );
+
+                return;
+            }
+
+
+            clearBackupMessage(
+                screen
+            );
+
+
+            backupButton.disabled =
+                true;
+
+            backupButton.textContent =
+                'در حال آماده‌سازی...';
+
+
+            try {
+
+                const backup =
+                    await getProductsForBackup();
+
+
+                const json =
+                    JSON.stringify(
+                        backup,
+                        null,
+                        2
+                    );
+
+
+                const blob =
+                    new Blob(
+                        [
+                            json
+                        ],
+                        {
+                            type:
+                                'application/json;charset=utf-8'
+                        }
+                    );
+
+
+                const url =
+                    URL.createObjectURL(
+                        blob
+                    );
+
+
+                const link =
+                    document.createElement(
+                        'a'
+                    );
+
+
+                const date =
+                    new Date();
+
+
+                const dateText =
+                    date
+                        .toISOString()
+                        .replace(
+                            /[:.]/g,
+                            '-'
+                        );
+
+
+                link.href =
+                    url;
+
+                link.download =
+                    `SupermarketPOS-Backup-${dateText}.json`;
+
+                document.body.appendChild(
+                    link
+                );
+
+                link.click();
+
+                link.remove();
+
+
+                URL.revokeObjectURL(
+                    url
+                );
+
+
+                const count =
+                    Array.isArray(
+                        backup.products
+                    )
+                        ? backup.products.length
+                        : 0;
+
+
+                showBackupMessage(
+                    screen,
+                    `✅ پشتیبان ${count.toLocaleString('fa-IR')} کالا با موفقیت ساخته شد.`,
+                    true
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    'SupermarketPOS: خطا در پشتیبان‌گیری.',
+                    error
+                );
+
+
+                showBackupMessage(
+                    screen,
+                    '❌ ساخت فایل پشتیبان انجام نشد.',
+                    false
+                );
+
+
+            } finally {
+
+                backupButton.disabled =
+                    false;
+
+                backupButton.textContent =
+                    '💾 پشتیبان‌گیری';
+            }
+        }
+    );
+}
+
+
+// ============================================================================
+// Restore
+// ============================================================================
+
+function setupRestore(screen) {
+
+    const restoreButton =
+        screen.querySelector(
+            '#restore-button'
+        );
+
+    const fileInput =
+        screen.querySelector(
+            '#restore-file-input'
+        );
+
+
+    if (
+        !restoreButton ||
+        !fileInput
+    ) {
+        return;
+    }
+
+
+    restoreButton.addEventListener(
+        'click',
+        () => {
+
+            if (
+                !APP_STATE.databaseReady
+            ) {
+
+                showBackupMessage(
+                    screen,
+                    '❌ پایگاه داده آماده نیست.',
+                    false
+                );
+
+                return;
+            }
+
+
+            fileInput.value =
+                '';
+
+
+            fileInput.click();
+        }
+    );
+
+
+    fileInput.addEventListener(
+        'change',
+        async event => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+
+            if (!file) {
+                return;
+            }
+
+
+            await processRestoreFile(
+                screen,
+                file
+            );
+        }
+    );
+}
+
+
+// ============================================================================
+// Process Restore File
+// ============================================================================
+
+async function processRestoreFile(
+    screen,
+    file
+) {
+
+    clearBackupMessage(
+        screen
+    );
+
+
+    try {
+
+        const text =
+            await file.text();
+
+
+        let backup;
+
+
+        try {
+
+            backup =
+                JSON.parse(
+                    text
+                );
+
+        } catch (error) {
+
+            showBackupMessage(
+                screen,
+                '❌ فایل انتخاب‌شده JSON معتبر نیست.',
+                false
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------------------------------------
+        // Validate Backup
+        // --------------------------------------------------------------------
+
+        if (
+            !backup ||
+            typeof backup !== 'object'
+        ) {
+
+            showBackupMessage(
+                screen,
+                '❌ ساختار فایل پشتیبان معتبر نیست.',
+                false
+            );
+
+            return;
+        }
+
+
+        if (
+            backup.type !==
+            'SupermarketPOS'
+        ) {
+
+            showBackupMessage(
+                screen,
+                '❌ این فایل متعلق به SupermarketPOS نیست.',
+                false
+            );
+
+            return;
+        }
+
+
+        if (
+            !Array.isArray(
+                backup.products
+            )
+        ) {
+
+            showBackupMessage(
+                screen,
+                '❌ بخش کالاها در فایل پشتیبان پیدا نشد.',
+                false
+            );
+
+            return;
+        }
+
+
+        const products =
+            backup.products;
+
+
+        if (
+            products.length === 0
+        ) {
+
+            showBackupMessage(
+                screen,
+                '⚠️ فایل پشتیبان هیچ کالایی ندارد.',
+                false
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------------------------------------
+        // Confirmation
+        // --------------------------------------------------------------------
+
+        const countText =
+            products.length
+                .toLocaleString('fa-IR');
+
+
+        const confirmed =
+            window.confirm(
+                `فایل پشتیبان شامل ${countText} کالا است.\n\n` +
+                `حالت بازیابی: ادغام (Merge)\n\n` +
+                `کالاهای فعلی که در فایل نیستند حذف نخواهند شد.\n` +
+                `کالاهایی که بارکد مشابه دارند به‌روزرسانی می‌شوند.\n\n` +
+                `آیا می‌خواهید ادامه دهید؟`
+            );
+
+
+        if (!confirmed) {
+
+            showBackupMessage(
+                screen,
+                '↩️ عملیات بازیابی لغو شد.',
+                true
+            );
+
+            return;
+        }
+
+
+        const restoreButton =
+            screen.querySelector(
+                '#restore-button'
+            );
+
+
+        if (restoreButton) {
+
+            restoreButton.disabled =
+                true;
+
+            restoreButton.textContent =
+                'در حال بازیابی...';
+        }
+
+
+        // --------------------------------------------------------------------
+        // Restore
+        // --------------------------------------------------------------------
+
+        const result =
+            await restoreProductsMerge(
+                products
+            );
+
+
+        // --------------------------------------------------------------------
+        // Result
+        // --------------------------------------------------------------------
+
+        const added =
+            Number(result.added) || 0;
+
+
+        const updated =
+            Number(result.updated) || 0;
+
+
+        const skipped =
+            Number(result.skipped) || 0;
+
+
+        let message =
+            `✅ بازیابی با موفقیت انجام شد.\n` +
+            `➕ اضافه‌شده: ${added.toLocaleString('fa-IR')}\n` +
+            `🔄 به‌روزرسانی‌شده: ${updated.toLocaleString('fa-IR')}`;
+
+
+        if (skipped > 0) {
+
+            message +=
+                `\n⚠️ ردشده: ${skipped.toLocaleString('fa-IR')}`;
+        }
+
+
+        showBackupMessage(
+            screen,
+            message,
+            true
+        );
+
+
+        // --------------------------------------------------------------------
+        // Refresh List
+        // --------------------------------------------------------------------
+
+        await loadProducts(
+            screen
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: خطا در Restore.',
+            error
+        );
+
+
+        showBackupMessage(
+            screen,
+            '❌ بازیابی انجام نشد. فایل یا اطلاعات آن قابل استفاده نیست.',
+            false
+        );
+
+
+    } finally {
+
+        const restoreButton =
+            screen.querySelector(
+                '#restore-button'
+            );
+
+
+        if (restoreButton) {
+
+            restoreButton.disabled =
+                false;
+
+            restoreButton.textContent =
+                '📂 بازیابی';
+        }
+    }
+}
+
+
+// ============================================================================
+// Backup Message
+// ============================================================================
+
+function showBackupMessage(
+    screen,
+    message,
+    success = true
+) {
+
+    let messageBox =
+        screen.querySelector(
+            '#backup-message'
+        );
+
+
+    if (!messageBox) {
+
+        messageBox =
+            document.createElement(
+                'div'
+            );
+
+        messageBox.id =
+            'backup-message';
+
+        messageBox.className =
+            'backup-message';
+
+        const backupCard =
+            screen.querySelector(
+                '.backup-card'
+            );
+
+        if (backupCard) {
+
+            backupCard.insertAdjacentElement(
+                'afterend',
+                messageBox
+            );
+        }
+    }
+
+
+    messageBox.style.display =
+        'block';
+
+    messageBox.style.whiteSpace =
+        'pre-line';
+
+    messageBox.style.marginTop =
+        '10px';
+
+    messageBox.style.padding =
+        '11px 12px';
+
+    messageBox.style.borderRadius =
+        '11px';
+
+    messageBox.style.fontSize =
+        '12px';
+
+    messageBox.style.lineHeight =
+        '1.9';
+
+    messageBox.style.textAlign =
+        'center';
+
+    messageBox.style.border =
+        '1px solid';
+
+    messageBox.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+    messageBox.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+    messageBox.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+    messageBox.textContent =
+        message;
+}
+
+
+// ============================================================================
+// Clear Backup Message
+// ============================================================================
+
+function clearBackupMessage(
+    screen
+) {
+
+    if (!screen) {
+        return;
+    }
+
+
+    const message =
+        screen.querySelector(
+            '#backup-message'
+        );
+
+
+    if (!message) {
+        return;
+    }
+
+
+    message.remove();
+}
+
+
+// ============================================================================
+// Load Products
+// ============================================================================
+
+async function loadProducts(screen) {
+
+    const list =
+        screen.querySelector(
+            '#products-list'
+        );
+
+    if (!list) {
+        return;
+    }
+
+
+    list.innerHTML = `
+
+        <div class="products-loading">
+
+            <div class="placeholder-icon">
+                ⏳
+            </div>
+
+            <p>
+                در حال خواندن کالاها...
+            </p>
+
+        </div>
+    `;
+
+
+    try {
+
+        const products =
+            await getAllProducts();
+
+
+        renderProducts(
+            screen,
+            products
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: خطا در خواندن کالاها.',
+            error
+        );
+
+
+        list.innerHTML = `
+
+            <div class="products-empty products-error">
+
+                <div class="placeholder-icon">
+                    ⚠️
+                </div>
+
+                <h3>
+                    خطا در خواندن کالاها
+                </h3>
+
+                <p>
+                    اطلاعات کالاها قابل دریافت نیست.
+                </p>
+
+            </div>
+        `;
+    }
+}
+
+
+// ============================================================================
+// Render Products
+// ============================================================================
+
+function renderProducts(
+    screen,
+    products
+) {
+
+    const list =
+        screen.querySelector(
+            '#products-list'
+        );
+
+    if (!list) {
+        return;
+    }
+
+
+    list.innerHTML = '';
+
+
+    if (
+        !Array.isArray(products) ||
+        products.length === 0
+    ) {
+
+        list.innerHTML = `
+
+            <div class="products-empty">
+
+                <div class="placeholder-icon">
+                    📦
+                </div>
+
+                <h3>
+                    هنوز کالایی ثبت نشده است
+                </h3>
+
+                <p>
+                    برای شروع، اولین کالای فروشگاه را اضافه کنید.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    const title =
+        document.createElement(
+            'div'
+        );
+
+
+    title.className =
+        'products-list-title';
+
+
+    title.innerHTML = `
+        <strong>
+            کالاهای ثبت‌شده
+        </strong>
+
+        <span>
+            ${products.length.toLocaleString('fa-IR')} کالا
+        </span>
+    `;
+
+
+    list.appendChild(
+        title
+    );
+
+
+    products.forEach(
+        product => {
+
+            list.appendChild(
+                createProductCard(
+                    product
+                )
+            );
+        }
+    );
+}
+
+
+// ============================================================================
+// Product Card
+// ============================================================================
+
+function createProductCard(
+    product
+) {
+
+    const card =
+        document.createElement(
+            'article'
+        );
+
+
+    card.className =
+        'product-card';
+
+
+    const barcode =
+        product.barcode || '-';
+
+
+    const name =
+        product.name || 'بدون نام';
+
+
+    const category =
+        product.category ||
+        'بدون دسته‌بندی';
+
+
+    const price =
+        Number(
+            product.salePrice
+        );
+
+
+    const stock =
+        Number(
+            product.stock
+        );
+
+
+    const safePrice =
+        Number.isFinite(price)
+            ? price.toLocaleString('fa-IR')
+            : '۰';
+
+
+    const safeStock =
+        Number.isFinite(stock)
+            ? stock.toLocaleString('fa-IR')
+            : '۰';
+
+
+    card.innerHTML = `
+
+        <div class="product-card-top">
+
+            <div class="product-card-icon">
+                📦
+            </div>
+
+            <div class="product-card-info">
+
+                <h3>
+                    ${escapeHTML(name)}
+                </h3>
+
+                <span>
+                    ${escapeHTML(category)}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="product-card-details">
+
+            <div class="product-detail">
+
+                <span>
+                    بارکد
+                </span>
+
+                <strong>
+                    ${escapeHTML(barcode)}
+                </strong>
+
+            </div>
+
+
+            <div class="product-detail">
+
+                <span>
+                    قیمت فروش
+                </span>
+
+                <strong>
+                    ${safePrice}
+                    تومان
+                </strong>
+
+            </div>
+
+
+            <div class="product-detail">
+
+                <span>
+                    موجودی
+                </span>
+
+                <strong>
+                    ${safeStock}
+                </strong>
+
+            </div>
+
+        </div>
+    `;
+
+
+    return card;
+}
+
+
+// ============================================================================
+// Escape HTML
+// ============================================================================
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
+}
+
+
+// ============================================================================
+// Clear Product Message
+// ============================================================================
+
+function clearProductMessage(
+    screen
+) {
+
+    if (!screen) {
+        return;
+    }
+
+
+    const message =
+        screen.querySelector(
+            '#product-form-message'
+        );
+
+
+    if (!message) {
+        return;
+    }
+
+
+    message.textContent =
+        '';
+
+
+    message.removeAttribute(
+        'style'
+    );
+}
+
+
+// ============================================================================
+// Product Message
+// ============================================================================
+
+function showProductMessage(
+    screen,
+    message,
+    success = true
+) {
+
+    const messageBox =
+        screen.querySelector(
+            '#product-form-message'
+        );
+
+
+    if (!messageBox) {
+        return;
+    }
+
+
+    messageBox.style.marginTop =
+        '12px';
+
+    messageBox.style.padding =
+        '11px 12px';
+
+    messageBox.style.borderRadius =
+        '11px';
+
+    messageBox.style.fontSize =
+        '12px';
+
+    messageBox.style.textAlign =
+        'center';
+
+    messageBox.style.border =
+        '1px solid';
+
+    messageBox.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+    messageBox.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+    messageBox.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+    messageBox.textContent =
+        message;
+}
+
+
+// ============================================================================
+// Product Form
+// ============================================================================
+
+function setupProductForm(
+    screen
+) {
+
+    const addButton =
+        screen.querySelector(
+            '#add-product-button'
+        );
+
+
+    const form =
+        screen.querySelector(
+            '#product-form-container'
+        );
+
+
+    const closeButton =
+        screen.querySelector(
+            '#close-product-form'
+        );
+
+
+    const cancelButton =
+        screen.querySelector(
+            '#cancel-product-button'
+        );
+
+
+    const saveButton =
+        screen.querySelector(
+            '#save-product-button'
+        );
+
+
+    if (
+        !addButton ||
+        !form
+    ) {
+        return;
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Open
+    // ------------------------------------------------------------------------
+
+    addButton.addEventListener(
+        'click',
+        () => {
+
+            clearProductMessage(
+                screen
+            );
+
+
+            form.style.display =
+                'block';
+
+
+            const stockInput =
+                screen.querySelector(
+                    '#product-stock'
+                );
+
+
+            if (stockInput) {
+                stockInput.value =
+                    '';
+            }
+
+
+            const barcode =
+                screen.querySelector(
+                    '#product-barcode'
+                );
+
+
+            if (barcode) {
+                barcode.focus();
+            }
+        }
+    );
+
+
+    // ------------------------------------------------------------------------
+    // Close
+    // ------------------------------------------------------------------------
+
+    function closeForm() {
+
+        clearProductMessage(
+            screen
+        );
+
+
+        form.style.display =
+            'none';
+    }
+
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            'click',
+            closeForm
+        );
+    }
+
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            'click',
+            closeForm
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Save
+    // ------------------------------------------------------------------------
+
+    if (saveButton) {
+
+        saveButton.addEventListener(
+            'click',
+            async () => {
+
+                clearProductMessage(
+                    screen
+                );
+
+
+                if (
+                    !APP_STATE.databaseReady
+                ) {
+
+                    showProductMessage(
+                        screen,
+                        '❌ پایگاه داده آماده نیست.',
+                        false
+                    );
+
+                    return;
+                }
+
+
+                const barcodeInput =
+                    screen.querySelector(
+                        '#product-barcode'
+                    );
+
+
+                const nameInput =
+                    screen.querySelector(
+                        '#product-name'
+                    );
+
+
+                const categoryInput =
+                    screen.querySelector(
+                        '#product-category'
+                    );
+
+
+                const priceInput =
+                    screen.querySelector(
+                        '#product-price'
+                    );
+
+
+                const stockInput =
+                    screen.querySelector(
+                        '#product-stock'
+                    );
+
+
+                const barcode =
+                    barcodeInput.value.trim();
+
+
+                const name =
+                    nameInput.value.trim();
+
+
+                const category =
+                    categoryInput.value.trim();
+
+
+                const priceText =
+                    priceInput.value.trim();
+
+
+                const stockText =
+                    stockInput.value.trim();
+
+
+                const price =
+                    Number(priceText);
+
+
+                const stock =
+                    stockText === ''
+                        ? 0
+                        : Number(stockText);
+
+
+                // ------------------------------------------------------------
+                // Validation
+                // ------------------------------------------------------------
+
+                if (!barcode) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ بارکد را وارد کنید.',
+                        false
+                    );
+
+                    barcodeInput.focus();
+
+                    return;
+                }
+
+
+                if (!name) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ نام کالا را وارد کنید.',
+                        false
+                    );
+
+                    nameInput.focus();
+
+                    return;
+                }
+
+
+                if (
+                    priceText === '' ||
+                    !Number.isFinite(price) ||
+                    price < 0
+                ) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ قیمت فروش را صحیح وارد کنید.',
+                        false
+                    );
+
+                    priceInput.focus();
+
+                    return;
+                }
+
+
+                if (
+                    !Number.isFinite(stock) ||
+                    stock < 0
+                ) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ موجودی را صحیح وارد کنید.',
+                        false
+                    );
+
+                    stockInput.focus();
+
+                    return;
+                }
+
+
+                const now =
+                    new Date().toISOString();
+
+
+                const product = {
+
+                    barcode: barcode,
+
+                    name: name,
+
+                    category: category,
+
+                    salePrice: price,
+
+                    stock: stock,
+
+                    createdAt: now,
+
+                    updatedAt: now
+                };
+
+
+                saveButton.disabled =
+                    true;
+
+
+                saveButton.textContent =
+                    'در حال ذخیره...';
+
+
+                try {
+
+                    const productId =
+                        await addProduct(
+                            product
+                        );
+
+
+                    console.log(
+                        'SupermarketPOS: Product saved:',
+                        productId
+                    );
+
+
+                    showProductMessage(
+                        screen,
+                        '✅ کالا با موفقیت ذخیره شد.',
+                        true
+                    );
+
+
+                    barcodeInput.value =
+                        '';
+
+                    nameInput.value =
+                        '';
+
+                    categoryInput.value =
+                        '';
+
+                    priceInput.value =
+                        '';
+
+                    stockInput.value =
+                        '';
+
+
+                    barcodeInput.focus();
+
+
+                    await loadProducts(
+                        screen
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        'SupermarketPOS: خطا در ذخیره کالا.',
+                        error
+                    );
+
+
+                    if (
+                        error &&
+                        error.name ===
+                            'ConstraintError'
+                    ) {
+
+                        showProductMessage(
+                            screen,
+                            '⚠️ این بارکد قبلاً ثبت شده است.',
+                            false
+                        );
+
+                    } else {
+
+                        showProductMessage(
+                            screen,
+                            '❌ ذخیره کالا انجام نشد.',
+                            false
+                        );
+                    }
+
+
+                } finally {
+
+                    saveButton.disabled =
+                        false;
+
+                    saveButton.textContent =
+                        'ذخیره کالا';
+                }
+            }
+        );
+    }
+}
+
+
+// ============================================================================
+// Navigation
+// ============================================================================
+
+function setupNavigation() {
+
+    const cards =
+        document.querySelectorAll(
+            '.menu-card'
+        );
+
+
+    cards.forEach(
+        card => {
+
+            card.addEventListener(
+                'click',
+                () => {
+
+                    const action =
+                        card.getAttribute(
+                            'data-action'
+                        );
+
+
+                    if (
+                        action === 'sales'
+                    ) {
+
+                        openSalesScreen();
+
+                        return;
+                    }
+
+
+                    if (
+                        action === 'products'
+                    ) {
+
+                        openProductsScreen();
+
+                        return;
+                    }
+                }
+            );
+        }
+    );
+}
+
+
+// ============================================================================
+// Database
+// ============================================================================
+
+async function setupDatabase() {
+
+    try {
+
+        await initializeDatabase();
+
+
+        APP_STATE.databaseReady =
+            true;
+
+
+        showDatabaseStatus(
+            '✅ پایگاه داده با موفقیت آماده شد',
+            true
+        );
+
+
+    } catch (error) {
+
+        APP_STATE.databaseReady =
+            false;
+
+
+        showDatabaseStatus(
+            '❌ خطا در راه‌اندازی پایگاه داده',
+            false
+        );
+
+
+        console.error(
+            'SupermarketPOS: خطای دیتابیس',
+            error
+        );
+    }
+}
+
+
+// ============================================================================
+// Initialize
+// ============================================================================
+
+async function initializeApp() {
+
+    if (
+        APP_STATE.initialized
+    ) {
+        return;
+    }
+
+
+    DOM.app =
+        document.querySelector(
+            '#app'
+        );
+
+
+    if (!DOM.app) {
+        return;
+    }
+
+
+    setupHeaderStatus();
+
+    setupNavigation();
+
+
+    APP_STATE.initialized =
+        true;
+
+
+    await setupDatabase();
+}
+
+
+// ============================================================================
+// Bootstrap
+// ============================================================================
+
+if (
+    document.readyState ===
+    'loading'
+) {
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        initializeApp,
+        {
+            once: true
+        }
+    );
+
+} else {
+
+    initializeApp();
+
 }
