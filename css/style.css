@@ -1,7 +1,8 @@
-/* =========================================================
+/* ============================================================================
    SupermarketPOS
-   Modern Mobile UI
-   ========================================================= */
+   Main Stylesheet
+   Product Cards - Modern UI
+============================================================================ */
 
 * {
     box-sizing: border-box;
@@ -10,34 +11,27 @@
 :root {
     --primary: #0f766e;
     --primary-dark: #115e59;
-    --primary-soft: #ccfbf1;
+    --primary-light: #ccfbf1;
 
-    --background: #f4f7f9;
+    --background: #f1f5f9;
     --surface: #ffffff;
     --surface-soft: #f8fafc;
 
-    --text: #10202b;
+    --text: #0f172a;
     --muted: #64748b;
 
-    --border: #e5e7eb;
+    --border: #e2e8f0;
+    --border-light: #eef2f7;
 
-    --blue-soft: #e0f2fe;
-    --blue: #0284c7;
-
-    --amber-soft: #fef3c7;
-    --amber: #d97706;
-
+    --blue-soft: #dbeafe;
+    --yellow-soft: #fef3c7;
     --purple-soft: #f3e8ff;
-    --purple: #9333ea;
 
-    --danger-soft: #fee2e2;
-    --danger: #dc2626;
+    --success: #047857;
+    --success-soft: #ecfdf5;
 
-    --shadow-sm:
-        0 4px 14px rgba(15, 23, 42, 0.05);
-
-    --shadow-md:
-        0 12px 30px rgba(15, 23, 42, 0.08);
+    --danger: #b91c1c;
+    --danger-soft: #fef2f2;
 }
 
 html,
@@ -58,8 +52,8 @@ body {
     background:
         linear-gradient(
             180deg,
-            #eefbf9 0,
-            var(--background) 220px
+            #f8fafc 0%,
+            var(--background) 100%
         );
 
     color: var(--text);
@@ -72,98 +66,52 @@ input {
 
 button {
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible,
-input:focus-visible {
-    outline: 3px solid rgba(15, 118, 110, 0.18);
-    outline-offset: 2px;
-}
-
-/* =========================================================
-   App Container
-   ========================================================= */
+/* ============================================================================
+   Main Container
+============================================================================ */
 
 #app {
     width: 100%;
     max-width: 600px;
+
     min-height: 100vh;
 
     margin: 0 auto;
 
     padding:
+        20px
         16px
-        16px
-        42px;
+        40px;
 }
 
-/* =========================================================
+/* ============================================================================
    Header
-   ========================================================= */
+============================================================================ */
 
 .app-header {
-    position: relative;
-
-    overflow: hidden;
-
     background:
         linear-gradient(
             135deg,
-            #0f766e,
-            #0d9488
+            var(--primary),
+            var(--primary-dark)
         );
 
     color: #ffffff;
 
-    border-radius: 24px;
+    border-radius: 22px;
 
     padding: 18px;
 
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 
     box-shadow:
-        0 14px 32px rgba(15, 118, 110, 0.20);
-}
-
-.app-header::before {
-    content: "";
-
-    position: absolute;
-
-    width: 140px;
-    height: 140px;
-
-    top: -80px;
-    left: -55px;
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.08);
-}
-
-.app-header::after {
-    content: "";
-
-    position: absolute;
-
-    width: 90px;
-    height: 90px;
-
-    right: -35px;
-    bottom: -50px;
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.07);
+        0 12px 30px
+        rgba(15, 118, 110, 0.18);
 }
 
 .header-content {
-    position: relative;
-    z-index: 2;
-
     display: flex;
 
     align-items: center;
@@ -174,6 +122,7 @@ input:focus-visible {
 
 .brand {
     display: flex;
+
     align-items: center;
 
     gap: 12px;
@@ -188,23 +137,20 @@ input:focus-visible {
     flex-shrink: 0;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     background:
-        rgba(255, 255, 255, 0.15);
+        rgba(255, 255, 255, 0.16);
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.18);
+        rgba(255, 255, 255, 0.12);
 
-    border-radius: 16px;
+    border-radius: 14px;
 
-    font-size: 24px;
-
-    box-shadow:
-        inset 0 1px 0
-        rgba(255, 255, 255, 0.15);
+    font-size: 25px;
 }
 
 .brand-text {
@@ -214,11 +160,9 @@ input:focus-visible {
 .brand-text h1 {
     margin: 0;
 
-    font-size: 17px;
+    font-size: 18px;
 
-    font-weight: 800;
-
-    letter-spacing: -0.2px;
+    white-space: nowrap;
 }
 
 .brand-text span {
@@ -226,90 +170,41 @@ input:focus-visible {
 
     margin-top: 4px;
 
-    font-size: 11px;
+    font-size: 12px;
 
-    opacity: 0.78;
+    opacity: 0.82;
 }
-
-/* =========================================================
-   Header Status
-   ========================================================= */
 
 .header-status {
     display: flex;
 
     align-items: center;
 
-    gap: 7px;
+    gap: 6px;
+
+    font-size: 11px;
+
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
 
     flex-shrink: 0;
 
-    font-size: 10px;
-
-    white-space: nowrap;
-}
-
-.status-ready,
-.status-online {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    min-height: 30px;
-
-    padding:
-        6px
-        9px;
-
-    border-radius: 10px;
-
-    font-size: 10px;
-
-    font-weight: 700;
-
-    white-space: nowrap;
-}
-
-.status-ready {
-    background:
-        rgba(255, 255, 255, 0.16);
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.16);
-}
-
-.status-online {
-    gap: 5px;
-
-    color: #065f46;
-
-    background: #d1fae5;
-
-    border:
-        1px solid
-        rgba(167, 243, 208, 0.8);
-}
-
-.status-online::before {
-    content: "";
-
-    width: 6px;
-    height: 6px;
-
     border-radius: 50%;
 
-    background: #10b981;
+    background: #86efac;
 
     box-shadow:
-        0 0 0 3px
-        rgba(16, 185, 129, 0.12);
+        0 0 0 4px
+        rgba(134, 239, 172, 0.15);
 }
 
-/* =========================================================
+/* ============================================================================
    Main
-   ========================================================= */
+============================================================================ */
 
 main {
     width: 100%;
@@ -319,56 +214,32 @@ main {
     width: 100%;
 }
 
-/* =========================================================
-   Welcome Card
-   ========================================================= */
+/* ============================================================================
+   Welcome
+============================================================================ */
 
 .welcome-card {
-    position: relative;
-
     display: flex;
+
     align-items: center;
 
     gap: 14px;
 
-    overflow: hidden;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #f8fffe
-        );
+    background: var(--surface);
 
     border:
         1px solid
-        #dcefeb;
+        var(--border);
 
-    border-radius: 20px;
+    border-radius: 18px;
 
-    padding: 17px;
+    padding: 18px;
 
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 
     box-shadow:
-        var(--shadow-sm);
-}
-
-.welcome-card::after {
-    content: "";
-
-    position: absolute;
-
-    width: 100px;
-    height: 100px;
-
-    left: -60px;
-    bottom: -70px;
-
-    border-radius: 50%;
-
-    background:
-        rgba(20, 184, 166, 0.06);
+        0 5px 18px
+        rgba(15, 23, 42, 0.04);
 }
 
 .welcome-icon {
@@ -378,31 +249,23 @@ main {
     flex-shrink: 0;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     border-radius: 16px;
 
     background:
-        linear-gradient(
-            135deg,
-            #ccfbf1,
-            #e6fffb
-        );
+        var(--primary-light);
 
-    border:
-        1px solid
-        #b8eee5;
-
-    font-size: 24px;
+    font-size: 25px;
 }
 
 .welcome-card h2 {
-    margin: 0 0 5px;
+    margin:
+        0 0 5px;
 
-    font-size: 16px;
-
-    font-weight: 800;
+    font-size: 17px;
 }
 
 .welcome-card p {
@@ -410,20 +273,20 @@ main {
 
     color: var(--muted);
 
-    font-size: 11px;
+    font-size: 12px;
 
-    line-height: 1.8;
+    line-height: 1.7;
 }
 
-/* =========================================================
-   Menu Grid
-   ========================================================= */
+/* ============================================================================
+   Home Menu
+============================================================================ */
 
 .menu-grid {
     display: grid;
 
     grid-template-columns:
-        repeat(2, minmax(0, 1fr));
+        1fr 1fr;
 
     gap: 12px;
 }
@@ -432,9 +295,10 @@ main {
     position: relative;
 
     width: 100%;
+
     min-height: 155px;
 
-    padding: 17px;
+    padding: 18px;
 
     text-align: right;
 
@@ -442,224 +306,82 @@ main {
         1px solid
         var(--border);
 
-    border-radius: 20px;
+    border-radius: 18px;
 
     background:
-        rgba(255, 255, 255, 0.96);
+        rgba(255, 255, 255, 0.94);
 
     color: var(--text);
 
     box-shadow:
-        var(--shadow-sm);
-
-    overflow: hidden;
+        0 5px 15px
+        rgba(15, 23, 42, 0.04);
 
     transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
-        border-color 0.16s ease;
-}
-
-.menu-card::after {
-    content: "";
-
-    position: absolute;
-
-    width: 90px;
-    height: 90px;
-
-    left: -48px;
-    bottom: -52px;
-
-    border-radius: 50%;
-
-    background:
-        rgba(15, 118, 110, 0.035);
-
-    pointer-events: none;
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .menu-card:hover {
-    transform: translateY(-2px);
+    border-color:
+        #cbd5e1;
 
     box-shadow:
-        var(--shadow-md);
-
-    border-color:
-        #d5e4e2;
+        0 10px 25px
+        rgba(15, 23, 42, 0.08);
 }
 
 .menu-card:active {
-    transform: scale(0.975);
+    transform:
+        scale(0.98);
 }
-
-/* =========================================================
-   Menu Icons
-   ========================================================= */
 
 .menu-icon {
     width: 48px;
     height: 48px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    border-radius: 15px;
+    border-radius: 14px;
 
     margin-bottom: 14px;
 
-    font-size: 23px;
-
-    border: 1px solid
-        rgba(0, 0, 0, 0.03);
+    font-size: 24px;
 }
 
 .sales-icon {
     background:
-        linear-gradient(
-            135deg,
-            #ccfbf1,
-            #e6fffb
-        );
+        var(--primary-light);
 }
 
 .products-icon {
     background:
-        linear-gradient(
-            135deg,
-            #dbeafe,
-            #eff6ff
-        );
+        var(--blue-soft);
 }
 
 .reports-icon {
     background:
-        linear-gradient(
-            135deg,
-            #fef3c7,
-            #fffbeb
-        );
+        var(--yellow-soft);
 }
 
 .settings-icon {
     background:
-        linear-gradient(
-            135deg,
-            #f3e8ff,
-            #faf5ff
-        );
+        var(--purple-soft);
 }
 
-/* =========================================================
-   Menu Content
-   ========================================================= */
-
 .menu-card-content h3 {
-    margin: 0 0 6px;
+    margin:
+        0 0 6px;
 
     font-size: 14px;
-
-    font-weight: 800;
 }
 
 .menu-card-content p {
     margin: 0;
-
-    color: var(--muted);
-
-    font-size: 10px;
-
-    line-height: 1.8;
-}
-
-.menu-arrow {
-    position: absolute;
-
-    left: 13px;
-    bottom: 13px;
-
-    width: 28px;
-    height: 28px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 9px;
-
-    color: var(--muted);
-
-    background:
-        var(--surface-soft);
-
-    font-size: 15px;
-}
-
-/* =========================================================
-   Database Status
-   ========================================================= */
-
-#database-test-status {
-    margin-top: 14px !important;
-
-    padding: 11px 14px !important;
-
-    border-radius: 13px !important;
-
-    font-size: 11px !important;
-
-    box-shadow:
-        0 4px 12px
-        rgba(15, 118, 110, 0.05);
-}
-
-/* =========================================================
-   Sales Screen
-   ========================================================= */
-
-.sales-screen,
-.products-screen {
-    width: 100%;
-}
-
-.sales-header,
-.products-header {
-    position: relative;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #f7fffd
-        );
-
-    border:
-        1px solid
-        #dcefeb;
-
-    border-radius: 20px;
-
-    padding: 18px;
-
-    margin-bottom: 14px;
-
-    box-shadow:
-        var(--shadow-sm);
-}
-
-.sales-header h2,
-.products-header h2 {
-    margin: 0;
-
-    font-size: 18px;
-
-    font-weight: 800;
-}
-
-.sales-header p,
-.products-header p {
-    margin: 6px 0 0;
 
     color: var(--muted);
 
@@ -668,39 +390,133 @@ main {
     line-height: 1.7;
 }
 
-/* =========================================================
-   Products Actions
-   ========================================================= */
+.menu-arrow {
+    position: absolute;
+
+    left: 14px;
+    bottom: 14px;
+
+    color: var(--muted);
+
+    font-size: 18px;
+}
+
+/* ============================================================================
+   Database Status
+============================================================================ */
+
+#database-test-status {
+    box-shadow:
+        0 4px 12px
+        rgba(15, 23, 42, 0.03);
+}
+
+/* ============================================================================
+   Products Screen
+============================================================================ */
+
+.products-screen,
+.sales-screen {
+    width: 100%;
+}
+
+.products-header,
+.sales-header {
+    position: relative;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f8fafc
+        );
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 20px;
+
+    padding: 20px;
+
+    margin-bottom: 14px;
+
+    box-shadow:
+        0 6px 20px
+        rgba(15, 23, 42, 0.05);
+}
+
+.products-header::before,
+.sales-header::before {
+    content: "";
+
+    position: absolute;
+
+    right: 0;
+    top: 18px;
+    bottom: 18px;
+
+    width: 4px;
+
+    border-radius:
+        4px 0 0 4px;
+
+    background:
+        var(--primary);
+}
+
+.products-header h2,
+.sales-header h2 {
+    margin:
+        0 0 6px;
+
+    font-size: 19px;
+}
+
+.products-header p,
+.sales-header p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+/* ============================================================================
+   Product Actions
+============================================================================ */
 
 .products-actions {
-    margin-bottom: 12px;
+    display: flex;
+
+    margin-bottom: 14px;
 }
 
 .add-product-button {
     width: 100%;
 
-    min-height: 52px;
+    min-height: 48px;
 
-    border: none;
+    border: 0;
 
-    border-radius: 16px;
+    border-radius: 15px;
 
     background:
         linear-gradient(
             135deg,
             var(--primary),
-            #0d9488
+            var(--primary-dark)
         );
 
     color: #ffffff;
 
     font-size: 13px;
 
-    font-weight: 800;
+    font-weight: bold;
 
     box-shadow:
-        0 10px 22px
-        rgba(15, 118, 110, 0.17);
+        0 8px 18px
+        rgba(15, 118, 110, 0.18);
 
     transition:
         transform 0.15s ease,
@@ -709,58 +525,39 @@ main {
 
 .add-product-button:hover {
     box-shadow:
-        0 13px 26px
-        rgba(15, 118, 110, 0.22);
+        0 10px 24px
+        rgba(15, 118, 110, 0.24);
 }
 
 .add-product-button:active {
-    transform: scale(0.985);
+    transform:
+        scale(0.98);
 }
 
-/* =========================================================
+/* ============================================================================
    Product Form
-   ========================================================= */
+============================================================================ */
 
 .product-form-container {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .product-form {
     background:
-        #ffffff;
+        var(--surface);
 
     border:
         1px solid
-        #dcefeb;
+        var(--border);
 
-    border-radius: 22px;
+    border-radius: 20px;
 
-    padding: 17px;
+    padding: 18px;
 
     box-shadow:
-        0 14px 34px
-        rgba(15, 23, 42, 0.08);
-
-    animation:
-        formAppear 0.2s ease;
+        0 8px 25px
+        rgba(15, 23, 42, 0.07);
 }
-
-@keyframes formAppear {
-
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* =========================================================
-   Product Form Header
-   ========================================================= */
 
 .product-form-header {
     display: flex;
@@ -771,29 +568,22 @@ main {
 
     gap: 12px;
 
-    margin-bottom: 17px;
-
-    padding-bottom: 14px;
-
-    border-bottom:
-        1px solid
-        #edf2f2;
+    margin-bottom: 16px;
 }
 
 .product-form-header h3 {
-    margin: 0;
+    margin:
+        0 0 5px;
 
-    font-size: 15px;
-
-    font-weight: 800;
+    font-size: 16px;
 }
 
 .product-form-header p {
-    margin: 5px 0 0;
+    margin: 0;
 
     color: var(--muted);
 
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .close-product-form {
@@ -802,84 +592,79 @@ main {
 
     flex-shrink: 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: none;
+    border:
+        1px solid
+        var(--border);
 
     border-radius: 10px;
 
     background:
-        #f8fafc;
+        var(--surface-soft);
 
-    color: #64748b;
+    color: var(--muted);
 
-    font-size: 22px;
+    font-size: 21px;
 
     line-height: 1;
-
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
 }
 
-.close-product-form:hover {
-    background:
-        var(--danger-soft);
-
-    color:
-        var(--danger);
+.close-product-form:active {
+    transform:
+        scale(0.95);
 }
-
-/* =========================================================
-   Form Fields
-   ========================================================= */
 
 .form-field {
-    margin-bottom: 13px;
+    margin-bottom: 12px;
 }
 
 .form-field label {
     display: block;
 
-    margin-bottom: 7px;
+    margin-bottom: 6px;
 
     font-size: 11px;
 
-    font-weight: 800;
+    font-weight: bold;
 
-    color: #334155;
+    color:
+        #334155;
 }
 
 .form-field input {
     width: 100%;
 
-    height: 48px;
+    height: 45px;
 
     padding:
-        0
-        13px;
+        0 13px;
 
     border:
         1px solid
-        #dfe7e8;
+        var(--border);
 
-    border-radius: 13px;
+    border-radius: 12px;
+
+    outline: none;
 
     background:
-        #fbfdfd;
+        #ffffff;
 
     color: var(--text);
 
-    font-size: 12px;
-
-    direction: rtl;
+    font-size: 13px;
 
     transition:
         border-color 0.15s ease,
-        box-shadow 0.15s ease,
-        background 0.15s ease;
+        box-shadow 0.15s ease;
+}
+
+.form-field input:focus {
+    border-color:
+        var(--primary);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(15, 118, 110, 0.10);
 }
 
 .form-field input::placeholder {
@@ -887,33 +672,9 @@ main {
         #94a3b8;
 }
 
-.form-field input:focus {
-    outline: none;
-
-    background:
-        #ffffff;
-
-    border-color:
-        #2bb6aa;
-
-    box-shadow:
-        0 0 0 4px
-        rgba(20, 184, 166, 0.09);
-}
-
-/* Numeric fields */
-
-#product-barcode,
-#product-price,
-#product-stock {
-    direction: ltr;
-
-    text-align: right;
-}
-
-/* =========================================================
+/* ============================================================================
    Product Form Actions
-   ========================================================= */
+============================================================================ */
 
 .product-form-actions {
     display: grid;
@@ -921,263 +682,564 @@ main {
     grid-template-columns:
         1fr 1.4fr;
 
-    gap: 9px;
+    gap: 10px;
 
-    margin-top: 17px;
-
-    padding-top: 15px;
-
-    border-top:
-        1px solid
-        #edf2f2;
+    margin-top: 16px;
 }
 
 .cancel-product-button,
 .save-product-button {
-    min-height: 47px;
+    min-height: 45px;
 
-    border-radius: 13px;
+    border-radius: 12px;
 
-    font-size: 11px;
+    font-size: 12px;
 
-    font-weight: 800;
-
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease;
+    font-weight: bold;
 }
 
 .cancel-product-button {
     border:
         1px solid
-        #e2e8f0;
+        var(--border);
 
     background:
-        #f8fafc;
+        var(--surface-soft);
 
     color:
         #475569;
 }
 
 .save-product-button {
-    border: none;
+    border: 0;
 
     background:
-        linear-gradient(
-            135deg,
-            var(--primary),
-            #0d9488
-        );
+        var(--primary);
 
-    color:
-        #ffffff;
+    color: #ffffff;
 
     box-shadow:
-        0 8px 18px
-        rgba(15, 118, 110, 0.16);
+        0 6px 15px
+        rgba(15, 118, 110, 0.15);
 }
 
-.cancel-product-button:active,
-.save-product-button:active {
-    transform: scale(0.98);
+.save-product-button:disabled {
+    opacity: 0.65;
+
+    cursor: wait;
 }
 
-/* =========================================================
-   Placeholders
-   ========================================================= */
+.product-form-message {
+    width: 100%;
+}
 
-.sales-placeholder,
-.products-placeholder {
+/* ============================================================================
+   Products List
+============================================================================ */
+
+.products-list {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+.products-list-title {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding:
+        4px 2px 2px;
+}
+
+.products-list-title strong {
+    font-size: 14px;
+}
+
+.products-list-title span {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 48px;
+
+    padding:
+        5px 9px;
+
+    border-radius: 999px;
+
     background:
-        rgba(255, 255, 255, 0.96);
+        var(--primary-light);
+
+    color:
+        var(--primary-dark);
+
+    font-size: 10px;
+
+    font-weight: bold;
+}
+
+/* ============================================================================
+   Individual Product Card
+============================================================================ */
+
+.product-card {
+    width: 100%;
+
+    background:
+        var(--surface);
 
     border:
         1px solid
         var(--border);
 
-    border-radius: 19px;
+    border-radius: 18px;
 
-    padding: 22px 18px;
+    padding: 15px;
+
+    box-shadow:
+        0 5px 16px
+        rgba(15, 23, 42, 0.045);
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease;
+
+    overflow: hidden;
+}
+
+.product-card:hover {
+    border-color:
+        #cbd5e1;
+
+    box-shadow:
+        0 9px 22px
+        rgba(15, 23, 42, 0.08);
+
+    transform:
+        translateY(-1px);
+}
+
+.product-card:active {
+    transform:
+        scale(0.99);
+}
+
+/* ============================================================================
+   Product Card Top
+============================================================================ */
+
+.product-card-top {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding-bottom: 13px;
+
+    border-bottom:
+        1px solid
+        var(--border-light);
+}
+
+.product-card-icon {
+    width: 46px;
+    height: 46px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background:
+        var(--blue-soft);
+
+    font-size: 22px;
+}
+
+.product-card-info {
+    min-width: 0;
+
+    flex: 1;
+}
+
+.product-card-info h3 {
+    margin:
+        0 0 5px;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+}
+
+.product-card-info span {
+    display: inline-block;
+
+    max-width: 100%;
+
+    padding:
+        3px 8px;
+
+    border-radius: 999px;
+
+    background:
+        var(--surface-soft);
+
+    color:
+        var(--muted);
+
+    font-size: 9px;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+}
+
+/* ============================================================================
+   Product Details
+============================================================================ */
+
+.product-card-details {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr 1fr;
+
+    gap: 8px;
+
+    padding-top: 13px;
+}
+
+.product-detail {
+    min-width: 0;
+
+    padding:
+        9px 8px;
+
+    border-radius: 11px;
+
+    background:
+        var(--surface-soft);
+
+    text-align: center;
+}
+
+.product-detail span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color:
+        var(--muted);
+
+    font-size: 9px;
+}
+
+.product-detail strong {
+    display: block;
+
+    color:
+        var(--text);
+
+    font-size: 10px;
+
+    line-height: 1.5;
+
+    overflow-wrap:
+        anywhere;
+}
+
+.product-detail:nth-child(2) {
+    background:
+        #f0fdfa;
+}
+
+.product-detail:nth-child(2) strong {
+    color:
+        var(--primary-dark);
+}
+
+.product-detail:nth-child(3) {
+    background:
+        #f8fafc;
+}
+
+/* ============================================================================
+   Empty / Loading / Error
+============================================================================ */
+
+.products-empty,
+.products-loading {
+    width: 100%;
+
+    background:
+        var(--surface);
+
+    border:
+        1px dashed
+        #cbd5e1;
+
+    border-radius: 18px;
+
+    padding:
+        28px 18px;
+
+    text-align: center;
+}
+
+.products-empty .placeholder-icon,
+.products-loading .placeholder-icon {
+    margin:
+        0 auto 12px;
+}
+
+.products-empty h3 {
+    margin:
+        0 0 7px;
+
+    font-size: 14px;
+}
+
+.products-empty p,
+.products-loading p {
+    margin: 0;
+
+    color:
+        var(--muted);
+
+    font-size: 11px;
+
+    line-height: 1.7;
+}
+
+.products-error {
+    border-color:
+        #fecaca;
+
+    background:
+        #fffafa;
+}
+
+/* ============================================================================
+   Placeholder
+============================================================================ */
+
+.sales-placeholder {
+    width: 100%;
+
+    background:
+        var(--surface);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 18px;
+
+    padding:
+        24px 18px;
 
     margin-bottom: 12px;
 
     text-align: center;
 
     box-shadow:
-        var(--shadow-sm);
+        0 5px 16px
+        rgba(15, 23, 42, 0.04);
 }
 
 .placeholder-icon {
     width: 52px;
     height: 52px;
 
-    margin:
-        0 auto
-        11px;
-
     display: flex;
+
     align-items: center;
     justify-content: center;
+
+    margin:
+        0 auto 12px;
 
     border-radius: 16px;
 
     background:
-        var(--primary-soft);
+        var(--primary-light);
 
     font-size: 24px;
 }
 
-.sales-placeholder h3,
-.products-placeholder h3 {
+.sales-placeholder h3 {
     margin:
-        0
-        0
-        6px;
+        0 0 7px;
 
     font-size: 14px;
-
-    font-weight: 800;
 }
 
-.sales-placeholder p,
-.products-placeholder p {
+.sales-placeholder p {
     margin: 0;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
-    font-size: 10px;
+    font-size: 11px;
 
-    line-height: 1.8;
+    line-height: 1.7;
 }
 
-/* =========================================================
+/* ============================================================================
    Back Buttons
-   ========================================================= */
+============================================================================ */
 
-.sales-back-button,
-.products-back-button {
+.products-back-button,
+.sales-back-button {
     width: 100%;
 
-    min-height: 46px;
-
-    margin-top: 4px;
+    min-height: 45px;
 
     border:
         1px solid
-        #dce5e7;
+        var(--border);
 
     border-radius: 13px;
 
     background:
-        #ffffff;
+        var(--surface);
 
     color:
         #475569;
 
-    font-size: 11px;
+    font-size: 12px;
 
-    font-weight: 800;
+    font-weight: bold;
 
     transition:
         background 0.15s ease,
         transform 0.15s ease;
 }
 
-.sales-back-button:hover,
-.products-back-button:hover {
+.products-back-button:hover,
+.sales-back-button:hover {
     background:
-        #f8fafc;
+        var(--surface-soft);
 }
 
-.sales-back-button:active,
-.products-back-button:active {
-    transform: scale(0.985);
+.products-back-button:active,
+.sales-back-button:active {
+    transform:
+        scale(0.98);
 }
 
-/* =========================================================
-   Small Phones
-   ========================================================= */
+/* ============================================================================
+   Responsive
+============================================================================ */
 
-@media (max-width: 380px) {
+@media (max-width: 430px) {
 
     #app {
         padding:
+            14px
             12px
-            12px
-            34px;
+            30px;
     }
 
     .app-header {
-        border-radius: 21px;
+        border-radius: 19px;
 
         padding: 15px;
     }
 
-    .header-content {
-        align-items: flex-start;
+    .brand-icon {
+        width: 44px;
+        height: 44px;
+
+        font-size: 22px;
     }
 
     .brand-text h1 {
-        font-size: 15px;
-    }
-
-    .header-status {
-        flex-direction: column;
-
-        align-items: stretch;
-
-        gap: 5px;
-    }
-
-    .status-ready,
-    .status-online {
-        min-height: 27px;
-
-        padding:
-            5px
-            7px;
-
-        font-size: 9px;
-    }
-
-    .menu-grid {
-        grid-template-columns: 1fr;
+        font-size: 16px;
     }
 
     .menu-card {
-        min-height: 132px;
+        min-height: 145px;
+
+        padding: 15px;
+    }
+
+    .product-card {
+        padding: 13px;
+    }
+}
+
+@media (max-width: 380px) {
+
+    .menu-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .menu-card {
+        min-height: 125px;
+    }
+
+    .product-card-details {
+        grid-template-columns:
+            1fr;
+    }
+
+    .product-detail {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+        text-align: right;
+    }
+
+    .product-detail span {
+        margin: 0;
+    }
+
+    .product-detail strong {
+        text-align: left;
     }
 
     .product-form-actions {
         grid-template-columns:
-            1fr 1fr;
-    }
-}
-
-/* =========================================================
-   Very Small Phones
-   ========================================================= */
-
-@media (max-width: 330px) {
-
-    .brand-icon {
-        width: 43px;
-        height: 43px;
-    }
-
-    .brand-text h1 {
-        font-size: 14px;
-    }
-
-    .brand-text span {
-        font-size: 9px;
-    }
-
-    .header-status {
-        display: none;
-    }
-
-    .product-form {
-        padding: 14px;
+            1fr;
     }
 }
