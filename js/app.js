@@ -1,6 +1,6 @@
 // js/app.js
 // SupermarketPOS
-// Stable Version
+// Stable Recovery Version
 
 'use strict';
 
@@ -26,57 +26,10 @@ const DOM = {
 };
 
 // ============================================================================
-// DOM Cache
-// ============================================================================
-
-function cacheDOM() {
-    DOM.app = document.querySelector('#app');
-}
-
-// ============================================================================
-// Application Status
-// ============================================================================
-
-function setApplicationStatus() {
-
-    const statusContainer =
-        document.querySelector('.header-status');
-
-    if (!statusContainer) {
-        return;
-    }
-
-    const readyStatus =
-        statusContainer.querySelector('.status-ready');
-
-    const onlineStatus =
-        statusContainer.querySelector('.status-online');
-
-    if (readyStatus) {
-
-        readyStatus.setAttribute(
-            'aria-label',
-            'وضعیت: آماده به کار'
-        );
-    }
-
-    if (onlineStatus) {
-
-        onlineStatus.setAttribute(
-            'aria-label',
-            'اتصال: آنلاین'
-        );
-    }
-}
-
-// ============================================================================
 // Database Status
 // ============================================================================
 
-function showDatabaseStatus(
-    message,
-    success = true
-) {
+function showDatabaseStatus(message, success = true) {
 
     let status =
         document.getElementById(
@@ -95,16 +48,18 @@ function showDatabaseStatus(
             margin-top: 14px;
             padding: 12px 14px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 11px;
             text-align: center;
             border: 1px solid;
         `;
 
-        const homeScreen =
-            document.querySelector('.home-screen');
+        const home =
+            document.querySelector(
+                '.home-screen'
+            );
 
-        if (homeScreen) {
-            homeScreen.appendChild(status);
+        if (home) {
+            home.appendChild(status);
         }
     }
 
@@ -123,40 +78,83 @@ function showDatabaseStatus(
             ? '#a7f3d0'
             : '#fecaca';
 
-    status.textContent =
-        message;
+    status.textContent = message;
 }
 
 // ============================================================================
-// Home Screen
+// Header Status
+// ============================================================================
+
+function setupHeaderStatus() {
+
+    const headerStatus =
+        document.querySelector(
+            '.header-status'
+        );
+
+    if (!headerStatus) {
+        return;
+    }
+
+    const ready =
+        headerStatus.querySelector(
+            '.status-ready'
+        );
+
+    const online =
+        headerStatus.querySelector(
+            '.status-online'
+        );
+
+    if (ready) {
+
+        ready.textContent =
+            'آماده به کار';
+    }
+
+    if (online) {
+
+        online.textContent =
+            '● آنلاین';
+    }
+}
+
+// ============================================================================
+// Home
 // ============================================================================
 
 function showHomeScreen() {
 
-    const homeScreen =
-        document.querySelector('.home-screen');
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
 
-    const salesScreen =
-        document.getElementById('sales-screen');
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
 
-    const productsScreen =
-        document.getElementById('products-screen');
+    const products =
+        document.getElementById(
+            'products-screen'
+        );
 
-    if (salesScreen) {
-        salesScreen.style.display = 'none';
+    if (sales) {
+        sales.style.display = 'none';
     }
 
-    if (productsScreen) {
-        productsScreen.style.display = 'none';
+    if (products) {
+        products.style.display = 'none';
     }
 
-    if (homeScreen) {
-        homeScreen.style.display = '';
+    if (home) {
+        home.style.display = '';
     }
 }
 
 // ============================================================================
-// Sales Screen
+// Sales
 // ============================================================================
 
 function openSalesScreen() {
@@ -168,35 +166,38 @@ function openSalesScreen() {
         return;
     }
 
-    const homeScreen =
-        document.querySelector('.home-screen');
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
 
-    if (homeScreen) {
-        homeScreen.style.display = 'none';
+    if (home) {
+        home.style.display = 'none';
     }
 
-    const productsScreen =
-        document.getElementById('products-screen');
+    const products =
+        document.getElementById(
+            'products-screen'
+        );
 
-    if (productsScreen) {
-        productsScreen.style.display = 'none';
+    if (products) {
+        products.style.display = 'none';
     }
 
-    let salesScreen =
-        document.getElementById('sales-screen');
+    let sales =
+        document.getElementById(
+            'sales-screen'
+        );
 
-    if (!salesScreen) {
+    if (!sales) {
 
-        salesScreen =
+        sales =
             createSalesScreen();
 
-        main.appendChild(
-            salesScreen
-        );
+        main.appendChild(sales);
     }
 
-    salesScreen.style.display =
-        'block';
+    sales.style.display = 'block';
 }
 
 // ============================================================================
@@ -215,6 +216,7 @@ function createSalesScreen() {
         'sales-screen';
 
     screen.innerHTML = `
+
         <div class="sales-header">
 
             <h2>
@@ -268,14 +270,14 @@ function createSalesScreen() {
         </button>
     `;
 
-    const backButton =
+    const back =
         screen.querySelector(
             '#sales-back-button'
         );
 
-    if (backButton) {
+    if (back) {
 
-        backButton.addEventListener(
+        back.addEventListener(
             'click',
             showHomeScreen
         );
@@ -285,7 +287,7 @@ function createSalesScreen() {
 }
 
 // ============================================================================
-// Products Screen
+// Products
 // ============================================================================
 
 function openProductsScreen() {
@@ -297,37 +299,38 @@ function openProductsScreen() {
         return;
     }
 
-    const homeScreen =
-        document.querySelector('.home-screen');
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
 
-    if (homeScreen) {
-        homeScreen.style.display = 'none';
+    if (home) {
+        home.style.display = 'none';
     }
 
-    const salesScreen =
-        document.getElementById('sales-screen');
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
 
-    if (salesScreen) {
-        salesScreen.style.display = 'none';
+    if (sales) {
+        sales.style.display = 'none';
     }
 
-    let productsScreen =
+    let products =
         document.getElementById(
             'products-screen'
         );
 
-    if (!productsScreen) {
+    if (!products) {
 
-        productsScreen =
+        products =
             createProductsScreen();
 
-        main.appendChild(
-            productsScreen
-        );
+        main.appendChild(products);
     }
 
-    productsScreen.style.display =
-        'block';
+    products.style.display = 'block';
 }
 
 // ============================================================================
@@ -346,6 +349,7 @@ function createProductsScreen() {
         'products-screen';
 
     screen.innerHTML = `
+
         <div class="products-header">
 
             <h2>
@@ -530,14 +534,14 @@ function createProductsScreen() {
 
     setupProductForm(screen);
 
-    const backButton =
+    const back =
         screen.querySelector(
             '#products-back-button'
         );
 
-    if (backButton) {
+    if (back) {
 
-        backButton.addEventListener(
+        back.addEventListener(
             'click',
             showHomeScreen
         );
@@ -557,7 +561,7 @@ function setupProductForm(screen) {
             '#add-product-button'
         );
 
-    const formContainer =
+    const form =
         screen.querySelector(
             '#product-form-container'
         );
@@ -572,37 +576,33 @@ function setupProductForm(screen) {
             '#cancel-product-button'
         );
 
-    if (!addButton || !formContainer) {
+    if (!addButton || !form) {
         return;
     }
 
-    // Open
+    function closeForm() {
+
+        form.style.display =
+            'none';
+    }
 
     addButton.addEventListener(
         'click',
         () => {
 
-            formContainer.style.display =
+            form.style.display =
                 'block';
 
-            const barcodeInput =
+            const barcode =
                 screen.querySelector(
                     '#product-barcode'
                 );
 
-            if (barcodeInput) {
-                barcodeInput.focus();
+            if (barcode) {
+                barcode.focus();
             }
         }
     );
-
-    // Close
-
-    function closeForm() {
-
-        formContainer.style.display =
-            'none';
-    }
 
     if (closeButton) {
 
@@ -619,6 +619,16 @@ function setupProductForm(screen) {
             closeForm
         );
     }
+
+    /*
+     * دکمه ذخیره فعلاً عمداً
+     * هیچ کاری انجام نمی‌دهد.
+     *
+     * در مرحله بعد، ابتدا تابع
+     * addProduct را به database.js
+     * اضافه می‌کنیم و سپس این دکمه
+     * را به دیتابیس متصل خواهیم کرد.
+     */
 }
 
 // ============================================================================
@@ -627,44 +637,42 @@ function setupProductForm(screen) {
 
 function setupNavigation() {
 
-    const menuCards =
+    const cards =
         document.querySelectorAll(
             '.menu-card'
         );
 
-    menuCards.forEach(
-        card => {
+    cards.forEach(card => {
 
-            card.addEventListener(
-                'click',
-                () => {
+        card.addEventListener(
+            'click',
+            () => {
 
-                    const action =
-                        card.getAttribute(
-                            'data-action'
-                        );
+                const action =
+                    card.getAttribute(
+                        'data-action'
+                    );
 
-                    if (
-                        action === 'sales'
-                    ) {
+                if (
+                    action === 'sales'
+                ) {
 
-                        openSalesScreen();
+                    openSalesScreen();
 
-                        return;
-                    }
-
-                    if (
-                        action === 'products'
-                    ) {
-
-                        openProductsScreen();
-
-                        return;
-                    }
+                    return;
                 }
-            );
-        }
-    );
+
+                if (
+                    action === 'products'
+                ) {
+
+                    openProductsScreen();
+
+                    return;
+                }
+            }
+        );
+    });
 }
 
 // ============================================================================
@@ -703,7 +711,7 @@ async function setupDatabase() {
 }
 
 // ============================================================================
-// Initialize
+// Initialize App
 // ============================================================================
 
 async function initializeApp() {
@@ -712,13 +720,16 @@ async function initializeApp() {
         return;
     }
 
-    cacheDOM();
+    DOM.app =
+        document.querySelector(
+            '#app'
+        );
 
     if (!DOM.app) {
         return;
     }
 
-    setApplicationStatus();
+    setupHeaderStatus();
 
     setupNavigation();
 
