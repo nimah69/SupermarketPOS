@@ -1,95 +1,128 @@
 // js/app.js
 // SupermarketPOS
-// Product List + Backup + Restore
-// Stage 4
+// Application Controller
+// Stage 5
+// Sales Module Integration + Products + Backup + Restore
 
 'use strict';
 
 import {
-initializeDatabase,
-addProduct,
-getAllProducts,
-getProductsForBackup,
-restoreProductsMerge
+    initializeDatabase,
+    addProduct,
+    getAllProducts,
+    getProductsForBackup,
+    restoreProductsMerge
 } from './database.js';
+
+// ============================================================================
+// IMPORTANT
+// ============================================================================
+// Sales screen is handled by sales.js.
+// Do NOT create another sales screen inside this file.
+// ============================================================================
+
+import './sales.js';
+
 
 // ============================================================================
 // Application State
 // ============================================================================
 
 const APP_STATE = {
-initialized: false,
-databaseReady: false
+
+    initialized: false,
+
+    databaseReady: false
+
 };
+
 
 // ============================================================================
 // DOM
 // ============================================================================
 
 const DOM = {
-app: null
+
+    app: null
+
 };
+
 
 // ============================================================================
 // Database Status
 // ============================================================================
 
 function showDatabaseStatus(
-message,
-success = true
+    message,
+    success = true
 ) {
 
-let status =  
-    document.getElementById(  
-        'database-test-status'  
-    );  
+    let status =
+        document.getElementById(
+            'database-test-status'
+        );
 
-if (!status) {  
 
-    status =  
-        document.createElement('div');  
+    if (!status) {
 
-    status.id =  
-        'database-test-status';  
+        status =
+            document.createElement(
+                'div'
+            );
 
-    status.style.cssText = `  
-        margin-top: 14px;  
-        padding: 12px 14px;  
-        border-radius: 12px;  
-        font-size: 11px;  
-        text-align: center;  
-        border: 1px solid;  
-    `;  
+        status.id =
+            'database-test-status';
 
-    const home =  
-        document.querySelector(  
-            '.home-screen'  
-        );  
+        status.style.cssText = `
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            text-align: center;
+            border: 1px solid;
+        `;
 
-    if (home) {  
-        home.appendChild(status);  
-    }  
-}  
 
-status.style.background =  
-    success  
-        ? '#ecfdf5'  
-        : '#fef2f2';  
+        const home =
+            document.querySelector(
+                '.home-screen'
+            );
 
-status.style.color =  
-    success  
-        ? '#047857'  
-        : '#b91c1c';  
 
-status.style.borderColor =  
-    success  
-        ? '#a7f3d0'  
-        : '#fecaca';  
+        if (home) {
 
-status.textContent =  
-    message;
+            home.appendChild(
+                status
+            );
+
+        }
+
+    }
+
+
+    status.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+
+    status.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+
+    status.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+
+    status.textContent =
+        message;
 
 }
+
 
 // ============================================================================
 // Header
@@ -97,36 +130,78 @@ status.textContent =
 
 function setupHeaderStatus() {
 
-const headerStatus =  
-    document.querySelector(  
-        '.header-status'  
-    );  
+    const headerStatus =
+        document.querySelector(
+            '.header-status'
+        );
 
-if (!headerStatus) {  
-    return;  
-}  
 
-const ready =  
-    headerStatus.querySelector(  
-        '.status-ready'  
-    );  
+    if (!headerStatus) {
 
-const online =  
-    headerStatus.querySelector(  
-        '.status-online'  
-    );  
+        return;
 
-if (ready) {  
-    ready.textContent =  
-        'آماده به کار';  
-}  
+    }
 
-if (online) {  
-    online.textContent =  
-        '● آنلاین';  
+
+    const ready =
+        headerStatus.querySelector(
+            '.status-ready'
+        );
+
+
+    const online =
+        headerStatus.querySelector(
+            '.status-online'
+        );
+
+
+    if (ready) {
+
+        ready.innerHTML = `
+            <span class="status-icon">
+                ✓
+            </span>
+
+            <div class="status-info">
+
+                <span class="status-label">
+                    وضعیت
+                </span>
+
+                <strong>
+                    آماده به کار
+                </strong>
+
+            </div>
+        `;
+
+    }
+
+
+    if (online) {
+
+        online.innerHTML = `
+            <span class="status-icon">
+                ◉
+            </span>
+
+            <div class="status-info">
+
+                <span class="status-label">
+                    اتصال
+                </span>
+
+                <strong>
+                    آنلاین
+                </strong>
+
+            </div>
+        `;
+
+    }
+
 }
 
-}
 
 // ============================================================================
 // Hide Secondary Screens
@@ -134,25 +209,40 @@ if (online) {
 
 function hideSecondaryScreens() {
 
-const sales =  
-    document.getElementById(  
-        'sales-screen'  
-    );  
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
 
-const products =  
-    document.getElementById(  
-        'products-screen'  
-    );  
 
-if (sales) {  
-    sales.style.display = 'none';  
-}  
+    const products =
+        document.getElementById(
+            'products-screen'
+        );
 
-if (products) {  
-    products.style.display = 'none';  
+
+    if (sales) {
+
+        sales.style.display =
+            'none';
+
+        sales.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+    }
+
+
+    if (products) {
+
+        products.style.display =
+            'none';
+
+    }
+
 }
 
-}
 
 // ============================================================================
 // Home
@@ -160,154 +250,24 @@ if (products) {
 
 function showHomeScreen() {
 
-hideSecondaryScreens();  
+    hideSecondaryScreens();
 
-const home =  
-    document.querySelector(  
-        '.home-screen'  
-    );  
 
-if (home) {  
-    home.style.display = '';  
-}
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
 
-}
 
-// ============================================================================
-// Sales
-// ============================================================================
+    if (home) {
 
-function openSalesScreen() {
+        home.style.display =
+            '';
 
-const main =  
-    document.querySelector('main');  
-
-if (!main) {  
-    return;  
-}  
-
-const home =  
-    document.querySelector(  
-        '.home-screen'  
-    );  
-
-if (home) {  
-    home.style.display = 'none';  
-}  
-
-const products =  
-    document.getElementById(  
-        'products-screen'  
-    );  
-
-if (products) {  
-    products.style.display = 'none';  
-}  
-
-let sales =  
-    document.getElementById(  
-        'sales-screen'  
-    );  
-
-if (!sales) {  
-
-    sales =  
-        createSalesScreen();  
-
-    main.appendChild(sales);  
-}  
-
-sales.style.display =  
-    'block';
+    }
 
 }
 
-// ============================================================================
-// Sales Screen
-// ============================================================================
-
-function createSalesScreen() {
-
-const screen =  
-    document.createElement('section');  
-
-screen.id =  
-    'sales-screen';  
-
-screen.className =  
-    'sales-screen';  
-
-screen.innerHTML = `  
-
-    <div class="sales-header">  
-
-        <h2>  
-            🛒 فروش و صندوق  
-        </h2>  
-
-        <p>  
-            بخش فروش فروشگاه  
-        </p>  
-
-    </div>  
-
-    <div class="sales-placeholder">  
-
-        <div class="placeholder-icon">  
-            ▣  
-        </div>  
-
-        <h3>  
-            اسکن یا ورود بارکد  
-        </h3>  
-
-        <p>  
-            سیستم بارکد در مرحله بعد فعال خواهد شد.  
-        </p>  
-
-    </div>  
-
-    <div class="sales-placeholder">  
-
-        <div class="placeholder-icon">  
-            🛍️  
-        </div>  
-
-        <h3>  
-            سبد خرید  
-        </h3>  
-
-        <p>  
-            هنوز کالایی به سبد اضافه نشده است.  
-        </p>  
-
-    </div>  
-
-    <button  
-        type="button"  
-        class="sales-back-button"  
-        id="sales-back-button"  
-    >  
-        ← بازگشت به صفحه اصلی  
-    </button>  
-`;  
-
-const back =  
-    screen.querySelector(  
-        '#sales-back-button'  
-    );  
-
-if (back) {  
-
-    back.addEventListener(  
-        'click',  
-        showHomeScreen  
-    );  
-}  
-
-return screen;
-
-}
 
 // ============================================================================
 // Products
@@ -315,52 +275,85 @@ return screen;
 
 async function openProductsScreen() {
 
-const main =  
-    document.querySelector('main');  
+    const main =
+        document.querySelector(
+            'main'
+        );
 
-if (!main) {  
-    return;  
-}  
 
-const home =  
-    document.querySelector(  
-        '.home-screen'  
-    );  
+    if (!main) {
 
-if (home) {  
-    home.style.display = 'none';  
-}  
+        console.error(
+            'SupermarketPOS: عنصر main پیدا نشد.'
+        );
 
-const sales =  
-    document.getElementById(  
-        'sales-screen'  
-    );  
+        return;
 
-if (sales) {  
-    sales.style.display = 'none';  
-}  
+    }
 
-let products =  
-    document.getElementById(  
-        'products-screen'  
-    );  
 
-if (!products) {  
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
 
-    products =  
-        createProductsScreen();  
 
-    main.appendChild(products);  
-}  
+    if (home) {
 
-products.style.display =  
-    'block';  
+        home.style.display =
+            'none';
 
-await loadProducts(  
-    products  
-);
+    }
+
+
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
+
+
+    if (sales) {
+
+        sales.style.display =
+            'none';
+
+        sales.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+    }
+
+
+    let products =
+        document.getElementById(
+            'products-screen'
+        );
+
+
+    if (!products) {
+
+        products =
+            createProductsScreen();
+
+
+        main.appendChild(
+            products
+        );
+
+    }
+
+
+    products.style.display =
+        'block';
+
+
+    await loadProducts(
+        products
+    );
 
 }
+
 
 // ============================================================================
 // Products Screen
@@ -368,311 +361,326 @@ await loadProducts(
 
 function createProductsScreen() {
 
-const screen =  
-    document.createElement('section');  
+    const screen =
+        document.createElement(
+            'section'
+        );
 
-screen.id =  
-    'products-screen';  
 
-screen.className =  
-    'products-screen';  
+    screen.id =
+        'products-screen';
 
-screen.innerHTML = `  
 
-    <div class="products-header">  
+    screen.className =
+        'products-screen';
 
-        <h2>  
-            📦 مدیریت کالاها  
-        </h2>  
 
-        <p>  
-            مدیریت محصولات و موجودی فروشگاه  
-        </p>  
+    screen.innerHTML = `
 
-    </div>  
+        <div class="products-header">
 
+            <h2>
+                📦 مدیریت کالاها
+            </h2>
 
-    <!-- Product Actions -->  
+            <p>
+                مدیریت محصولات و موجودی فروشگاه
+            </p>
 
-    <div class="products-actions">  
+        </div>
 
-        <button  
-            type="button"  
-            class="add-product-button"  
-            id="add-product-button"  
-        >  
-            ＋ افزودن کالا  
-        </button>  
 
-    </div>  
+        <!-- Product Actions -->
 
+        <div class="products-actions">
 
-    <!-- Backup / Restore -->  
+            <button
+                type="button"
+                class="add-product-button"
+                id="add-product-button"
+            >
+                ＋ افزودن کالا
+            </button>
 
-    <div class="backup-card">  
+        </div>
 
-        <div class="backup-card-icon">  
-            💾  
-        </div>  
 
-        <div class="backup-card-content">  
+        <!-- Backup / Restore -->
 
-            <h3>  
-                پشتیبان اطلاعات  
-            </h3>  
+        <div class="backup-card">
 
-            <p>  
-                ذخیره یا بازیابی کالاهای این دستگاه  
-            </p>  
+            <div class="backup-card-icon">
+                💾
+            </div>
 
-        </div>  
+            <div class="backup-card-content">
 
-        <div class="backup-actions">  
+                <h3>
+                    پشتیبان اطلاعات
+                </h3>
 
-            <button  
-                type="button"  
-                class="backup-button"  
-                id="backup-button"  
-            >  
-                💾 پشتیبان‌گیری  
-            </button>  
+                <p>
+                    ذخیره یا بازیابی کالاهای این دستگاه
+                </p>
 
-            <button  
-                type="button"  
-                class="restore-button"  
-                id="restore-button"  
-            >  
-                📂 بازیابی  
-            </button>  
+            </div>
 
-            <input  
-                type="file"  
-                id="restore-file-input"  
-                accept=".json,application/json"  
-                hidden  
-            >  
+            <div class="backup-actions">
 
-        </div>  
+                <button
+                    type="button"
+                    class="backup-button"
+                    id="backup-button"
+                >
+                    💾 پشتیبان‌گیری
+                </button>
 
-    </div>  
+                <button
+                    type="button"
+                    class="restore-button"
+                    id="restore-button"
+                >
+                    📂 بازیابی
+                </button>
 
+                <input
+                    type="file"
+                    id="restore-file-input"
+                    accept=".json,application/json"
+                    hidden
+                >
 
-    <!-- Product Form -->  
+            </div>
 
-    <div  
-        id="product-form-container"  
-        class="product-form-container"  
-        style="display: none;"  
-    >  
+        </div>
 
-        <div class="product-form">  
 
-            <div class="product-form-header">  
+        <!-- Product Form -->
 
-                <div>  
+        <div
+            id="product-form-container"
+            class="product-form-container"
+            style="display: none;"
+        >
 
-                    <h3>  
-                        افزودن کالای جدید  
-                    </h3>  
+            <div class="product-form">
 
-                    <p>  
-                        اطلاعات کالا را وارد کنید.  
-                    </p>  
+                <div class="product-form-header">
 
-                </div>  
+                    <div>
 
-                <button  
-                    type="button"  
-                    class="close-product-form"  
-                    id="close-product-form"  
-                    aria-label="بستن فرم"  
-                >  
-                    ×  
-                </button>  
+                        <h3>
+                            افزودن کالای جدید
+                        </h3>
 
-            </div>  
+                        <p>
+                            اطلاعات کالا را وارد کنید.
+                        </p>
 
+                    </div>
 
-            <div class="form-field">  
+                    <button
+                        type="button"
+                        class="close-product-form"
+                        id="close-product-form"
+                        aria-label="بستن فرم"
+                    >
+                        ×
+                    </button>
 
-                <label for="product-barcode">  
-                    بارکد  
-                </label>  
+                </div>
 
-                <input  
-                    type="text"  
-                    id="product-barcode"  
-                    inputmode="numeric"  
-                    autocomplete="off"  
-                    placeholder="بارکد کالا"  
-                >  
 
-            </div>  
+                <div class="form-field">
 
+                    <label for="product-barcode">
+                        بارکد
+                    </label>
 
-            <div class="form-field">  
+                    <input
+                        type="text"
+                        id="product-barcode"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="بارکد کالا"
+                    >
 
-                <label for="product-name">  
-                    نام کالا  
-                </label>  
+                </div>
 
-                <input  
-                    type="text"  
-                    id="product-name"  
-                    autocomplete="off"  
-                    placeholder="مثلاً نوشابه"  
-                >  
 
-            </div>  
+                <div class="form-field">
 
+                    <label for="product-name">
+                        نام کالا
+                    </label>
 
-            <div class="form-field">  
+                    <input
+                        type="text"
+                        id="product-name"
+                        autocomplete="off"
+                        placeholder="مثلاً نوشابه"
+                    >
 
-                <label for="product-category">  
-                    دسته‌بندی  
-                </label>  
+                </div>
 
-                <input  
-                    type="text"  
-                    id="product-category"  
-                    autocomplete="off"  
-                    placeholder="مثلاً نوشیدنی"  
-                >  
 
-            </div>  
+                <div class="form-field">
 
+                    <label for="product-category">
+                        دسته‌بندی
+                    </label>
 
-            <div class="form-field">  
+                    <input
+                        type="text"
+                        id="product-category"
+                        autocomplete="off"
+                        placeholder="مثلاً نوشیدنی"
+                    >
 
-                <label for="product-price">  
-                    قیمت فروش  
-                </label>  
+                </div>
 
-                <input  
-                    type="number"  
-                    id="product-price"  
-                    inputmode="numeric"  
-                    min="0"  
-                    step="1"  
-                    autocomplete="off"  
-                    placeholder="قیمت به تومان"  
-                >  
 
-            </div>  
+                <div class="form-field">
 
+                    <label for="product-price">
+                        قیمت فروش
+                    </label>
 
-            <div class="form-field">  
+                    <input
+                        type="number"
+                        id="product-price"
+                        inputmode="numeric"
+                        min="0"
+                        step="1"
+                        autocomplete="off"
+                        placeholder="قیمت به تومان"
+                    >
 
-                <label for="product-stock">  
-                    موجودی  
-                </label>  
+                </div>
 
-                <input  
-                    type="number"  
-                    id="product-stock"  
-                    inputmode="numeric"  
-                    min="0"  
-                    step="1"  
-                    autocomplete="off"  
-                    value=""  
-                    placeholder="موجودی"  
-                >  
 
-            </div>  
+                <div class="form-field">
 
+                    <label for="product-stock">
+                        موجودی
+                    </label>
 
-            <div class="product-form-actions">  
+                    <input
+                        type="number"
+                        id="product-stock"
+                        inputmode="numeric"
+                        min="0"
+                        step="1"
+                        autocomplete="off"
+                        value=""
+                        placeholder="موجودی"
+                    >
 
-                <button  
-                    type="button"  
-                    class="cancel-product-button"  
-                    id="cancel-product-button"  
-                >  
-                    انصراف  
-                </button>  
+                </div>
 
-                <button  
-                    type="button"  
-                    class="save-product-button"  
-                    id="save-product-button"  
-                >  
-                    ذخیره کالا  
-                </button>  
 
-            </div>  
+                <div class="product-form-actions">
 
+                    <button
+                        type="button"
+                        class="cancel-product-button"
+                        id="cancel-product-button"
+                    >
+                        انصراف
+                    </button>
 
-            <div  
-                id="product-form-message"  
-                class="product-form-message"  
-                aria-live="polite"  
-            ></div>  
+                    <button
+                        type="button"
+                        class="save-product-button"
+                        id="save-product-button"
+                    >
+                        ذخیره کالا
+                    </button>
 
-        </div>  
+                </div>
 
-    </div>  
 
+                <div
+                    id="product-form-message"
+                    class="product-form-message"
+                    aria-live="polite"
+                ></div>
 
-    <!-- Products List -->  
+            </div>
 
-    <div  
-        id="products-list"  
-        class="products-list"  
-    ></div>  
+        </div>
 
 
-    <!-- Back -->  
+        <!-- Products List -->
 
-    <button  
-        type="button"  
-        class="products-back-button"  
-        id="products-back-button"  
-    >  
-        ← بازگشت به صفحه اصلی  
-    </button>  
+        <div
+            id="products-list"
+            class="products-list"
+        ></div>
 
-`;  
 
-setupProductForm(  
-    screen  
-);  
+        <!-- Back -->
 
-setupBackup(  
-    screen  
-);  
+        <button
+            type="button"
+            class="products-back-button"
+            id="products-back-button"
+        >
+            ← بازگشت به صفحه اصلی
+        </button>
 
-setupRestore(  
-    screen  
-);  
+    `;
 
 
-const back =  
-    screen.querySelector(  
-        '#products-back-button'  
-    );  
+    setupProductForm(
+        screen
+    );
 
-if (back) {  
 
-    back.addEventListener(  
-        'click',  
-        () => {  
+    setupBackup(
+        screen
+    );
 
-            clearProductMessage(  
-                screen  
-            );  
 
-            clearBackupMessage(  
-                screen  
-            );  
+    setupRestore(
+        screen
+    );
 
-            showHomeScreen();  
-        }  
-    );  
-}  
 
-return screen;
+    const back =
+        screen.querySelector(
+            '#products-back-button'
+        );
+
+
+    if (back) {
+
+        back.addEventListener(
+            'click',
+            () => {
+
+                clearProductMessage(
+                    screen
+                );
+
+
+                clearBackupMessage(
+                    screen
+                );
+
+
+                showHomeScreen();
+
+            }
+        );
+
+    }
+
+
+    return screen;
 
 }
+
 
 // ============================================================================
 // Backup
@@ -680,159 +688,172 @@ return screen;
 
 function setupBackup(screen) {
 
-const backupButton =  
-    screen.querySelector(  
-        '#backup-button'  
-    );  
-
-if (!backupButton) {  
-    return;  
-}  
+    const backupButton =
+        screen.querySelector(
+            '#backup-button'
+        );
 
 
-backupButton.addEventListener(  
-    'click',  
-    async () => {  
+    if (!backupButton) {
 
-        if (  
-            !APP_STATE.databaseReady  
-        ) {  
+        return;
 
-            showBackupMessage(  
-                screen,  
-                '❌ پایگاه داده آماده نیست.',  
-                false  
-            );  
-
-            return;  
-        }  
+    }
 
 
-        clearBackupMessage(  
-            screen  
-        );  
+    backupButton.addEventListener(
+        'click',
+        async () => {
+
+            if (
+                !APP_STATE.databaseReady
+            ) {
+
+                showBackupMessage(
+                    screen,
+                    '❌ پایگاه داده آماده نیست.',
+                    false
+                );
+
+                return;
+
+            }
 
 
-        backupButton.disabled =  
-            true;  
-
-        backupButton.textContent =  
-            'در حال آماده‌سازی...';  
+            clearBackupMessage(
+                screen
+            );
 
 
-        try {  
-
-            const backup =  
-                await getProductsForBackup();  
+            backupButton.disabled =
+                true;
 
 
-            const json =  
-                JSON.stringify(  
-                    backup,  
-                    null,  
-                    2  
-                );  
+            backupButton.textContent =
+                'در حال آماده‌سازی...';
 
 
-            const blob =  
-                new Blob(  
-                    [  
-                        json  
-                    ],  
-                    {  
-                        type:  
-                            'application/json;charset=utf-8'  
-                    }  
-                );  
+            try {
+
+                const backup =
+                    await getProductsForBackup();
 
 
-            const url =  
-                URL.createObjectURL(  
-                    blob  
-                );  
+                const json =
+                    JSON.stringify(
+                        backup,
+                        null,
+                        2
+                    );
 
 
-            const link =  
-                document.createElement(  
-                    'a'  
-                );  
+                const blob =
+                    new Blob(
+                        [
+                            json
+                        ],
+                        {
+                            type:
+                                'application/json;charset=utf-8'
+                        }
+                    );
 
 
-            const date =  
-                new Date();  
+                const url =
+                    URL.createObjectURL(
+                        blob
+                    );
 
 
-            const dateText =  
-                date  
-                    .toISOString()  
-                    .replace(  
-                        /[:.]/g,  
-                        '-'  
-                    );  
+                const link =
+                    document.createElement(
+                        'a'
+                    );
 
 
-            link.href =  
-                url;  
-
-            link.download =  
-                `SupermarketPOS-Backup-${dateText}.json`;  
-
-            document.body.appendChild(  
-                link  
-            );  
-
-            link.click();  
-
-            link.remove();  
+                const date =
+                    new Date();
 
 
-            URL.revokeObjectURL(  
-                url  
-            );  
+                const dateText =
+                    date
+                        .toISOString()
+                        .replace(
+                            /[:.]/g,
+                            '-'
+                        );
 
 
-            const count =  
-                Array.isArray(  
-                    backup.products  
-                )  
-                    ? backup.products.length  
-                    : 0;  
+                link.href =
+                    url;
 
 
-            showBackupMessage(  
-                screen,  
-                `✅ پشتیبان ${count.toLocaleString('fa-IR')} کالا با موفقیت ساخته شد.`,  
-                true  
-            );  
+                link.download =
+                    `SupermarketPOS-Backup-${dateText}.json`;
 
 
-        } catch (error) {  
-
-            console.error(  
-                'SupermarketPOS: خطا در پشتیبان‌گیری.',  
-                error  
-            );  
+                document.body.appendChild(
+                    link
+                );
 
 
-            showBackupMessage(  
-                screen,  
-                '❌ ساخت فایل پشتیبان انجام نشد.',  
-                false  
-            );  
+                link.click();
 
 
-        } finally {  
+                link.remove();
 
-            backupButton.disabled =  
-                false;  
 
-            backupButton.textContent =  
-                '💾 پشتیبان‌گیری';  
-        }  
-    }  
-);
+                URL.revokeObjectURL(
+                    url
+                );
+
+
+                const count =
+                    Array.isArray(
+                        backup.products
+                    )
+                        ? backup.products.length
+                        : 0;
+
+
+                showBackupMessage(
+                    screen,
+                    `✅ پشتیبان ${count.toLocaleString('fa-IR')} کالا با موفقیت ساخته شد.`,
+                    true
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    'SupermarketPOS: خطا در پشتیبان‌گیری.',
+                    error
+                );
+
+
+                showBackupMessage(
+                    screen,
+                    '❌ ساخت فایل پشتیبان انجام نشد.',
+                    false
+                );
+
+
+            } finally {
+
+                backupButton.disabled =
+                    false;
+
+
+                backupButton.textContent =
+                    '💾 پشتیبان‌گیری';
+
+            }
+
+        }
+    );
 
 }
+
 
 // ============================================================================
 // Restore
@@ -840,440 +861,474 @@ backupButton.addEventListener(
 
 function setupRestore(screen) {
 
-const restoreButton =  
-    screen.querySelector(  
-        '#restore-button'  
-    );  
-
-const fileInput =  
-    screen.querySelector(  
-        '#restore-file-input'  
-    );  
+    const restoreButton =
+        screen.querySelector(
+            '#restore-button'
+        );
 
 
-if (  
-    !restoreButton ||  
-    !fileInput  
-) {  
-    return;  
-}  
+    const fileInput =
+        screen.querySelector(
+            '#restore-file-input'
+        );
 
 
-restoreButton.addEventListener(  
-    'click',  
-    () => {  
+    if (
+        !restoreButton ||
+        !fileInput
+    ) {
 
-        if (  
-            !APP_STATE.databaseReady  
-        ) {  
+        return;
 
-            showBackupMessage(  
-                screen,  
-                '❌ پایگاه داده آماده نیست.',  
-                false  
-            );  
-
-            return;  
-        }  
+    }
 
 
-        fileInput.value =  
-            '';  
+    restoreButton.addEventListener(
+        'click',
+        () => {
+
+            if (
+                !APP_STATE.databaseReady
+            ) {
+
+                showBackupMessage(
+                    screen,
+                    '❌ پایگاه داده آماده نیست.',
+                    false
+                );
+
+                return;
+
+            }
 
 
-        fileInput.click();  
-    }  
-);  
+            fileInput.value =
+                '';
 
 
-fileInput.addEventListener(  
-    'change',  
-    async event => {  
+            fileInput.click();
 
-        const file =  
-            event.target.files &&  
-            event.target.files[0];  
+        }
+    );
 
 
-        if (!file) {  
-            return;  
-        }  
+    fileInput.addEventListener(
+        'change',
+        async event => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
 
 
-        await processRestoreFile(  
-            screen,  
-            file  
-        );  
-    }  
-);
+            if (!file) {
+
+                return;
+
+            }
+
+
+            await processRestoreFile(
+                screen,
+                file
+            );
+
+        }
+    );
 
 }
+
 
 // ============================================================================
 // Process Restore File
 // ============================================================================
 
 async function processRestoreFile(
-screen,
-file
+    screen,
+    file
 ) {
 
-clearBackupMessage(  
-    screen  
-);  
+    clearBackupMessage(
+        screen
+    );
 
 
-try {  
+    try {
 
-    const text =  
-        await file.text();  
+        const text =
+            await file.text();
 
 
-    let backup;  
+        let backup;
 
 
-    try {  
+        try {
 
-        backup =  
-            JSON.parse(  
-                text  
-            );  
+            backup =
+                JSON.parse(
+                    text
+                );
 
-    } catch (error) {  
+        } catch (error) {
 
-        showBackupMessage(  
-            screen,  
-            '❌ فایل انتخاب‌شده JSON معتبر نیست.',  
-            false  
-        );  
+            showBackupMessage(
+                screen,
+                '❌ فایل انتخاب‌شده JSON معتبر نیست.',
+                false
+            );
 
-        return;  
-    }  
+            return;
 
+        }
 
-    // --------------------------------------------------------------------  
-    // Validate Backup  
-    // --------------------------------------------------------------------  
 
-    if (  
-        !backup ||  
-        typeof backup !== 'object'  
-    ) {  
+        if (
+            !backup ||
+            typeof backup !== 'object'
+        ) {
 
-        showBackupMessage(  
-            screen,  
-            '❌ ساختار فایل پشتیبان معتبر نیست.',  
-            false  
-        );  
+            showBackupMessage(
+                screen,
+                '❌ ساختار فایل پشتیبان معتبر نیست.',
+                false
+            );
 
-        return;  
-    }  
+            return;
 
+        }
 
-    if (  
-        backup.type !==  
-        'SupermarketPOS'  
-    ) {  
 
-        showBackupMessage(  
-            screen,  
-            '❌ این فایل متعلق به SupermarketPOS نیست.',  
-            false  
-        );  
+        if (
+            backup.type !==
+            'SupermarketPOS'
+        ) {
 
-        return;  
-    }  
+            showBackupMessage(
+                screen,
+                '❌ این فایل متعلق به SupermarketPOS نیست.',
+                false
+            );
 
+            return;
 
-    if (  
-        !Array.isArray(  
-            backup.products  
-        )  
-    ) {  
+        }
 
-        showBackupMessage(  
-            screen,  
-            '❌ بخش کالاها در فایل پشتیبان پیدا نشد.',  
-            false  
-        );  
 
-        return;  
-    }  
+        if (
+            !Array.isArray(
+                backup.products
+            )
+        ) {
 
+            showBackupMessage(
+                screen,
+                '❌ بخش کالاها در فایل پشتیبان پیدا نشد.',
+                false
+            );
 
-    const products =  
-        backup.products;  
+            return;
 
+        }
 
-    if (  
-        products.length === 0  
-    ) {  
 
-        showBackupMessage(  
-            screen,  
-            '⚠️ فایل پشتیبان هیچ کالایی ندارد.',  
-            false  
-        );  
+        const products =
+            backup.products;
 
-        return;  
-    }  
 
+        if (
+            products.length === 0
+        ) {
 
-    // --------------------------------------------------------------------  
-    // Confirmation  
-    // --------------------------------------------------------------------  
+            showBackupMessage(
+                screen,
+                '⚠️ فایل پشتیبان هیچ کالایی ندارد.',
+                false
+            );
 
-    const countText =  
-        products.length  
-            .toLocaleString('fa-IR');  
+            return;
 
+        }
 
-    const confirmed =  
-        window.confirm(  
-            `فایل پشتیبان شامل ${countText} کالا است.\n\n` +  
-            `حالت بازیابی: ادغام (Merge)\n\n` +  
-            `کالاهای فعلی که در فایل نیستند حذف نخواهند شد.\n` +  
-            `کالاهایی که بارکد مشابه دارند به‌روزرسانی می‌شوند.\n\n` +  
-            `آیا می‌خواهید ادامه دهید؟`  
-        );  
 
+        const countText =
+            products.length
+                .toLocaleString('fa-IR');
 
-    if (!confirmed) {  
 
-        showBackupMessage(  
-            screen,  
-            '↩️ عملیات بازیابی لغو شد.',  
-            true  
-        );  
+        const confirmed =
+            window.confirm(
+                `فایل پشتیبان شامل ${countText} کالا است.\n\n` +
+                `حالت بازیابی: ادغام (Merge)\n\n` +
+                `کالاهای فعلی که در فایل نیستند حذف نخواهند شد.\n` +
+                `کالاهایی که بارکد مشابه دارند به‌روزرسانی می‌شوند.\n\n` +
+                `آیا می‌خواهید ادامه دهید؟`
+            );
 
-        return;  
-    }  
 
+        if (!confirmed) {
 
-    const restoreButton =  
-        screen.querySelector(  
-            '#restore-button'  
-        );  
+            showBackupMessage(
+                screen,
+                '↩️ عملیات بازیابی لغو شد.',
+                true
+            );
 
+            return;
 
-    if (restoreButton) {  
+        }
 
-        restoreButton.disabled =  
-            true;  
 
-        restoreButton.textContent =  
-            'در حال بازیابی...';  
-    }  
+        const restoreButton =
+            screen.querySelector(
+                '#restore-button'
+            );
 
 
-    // --------------------------------------------------------------------  
-    // Restore  
-    // --------------------------------------------------------------------  
+        if (restoreButton) {
 
-    const result =  
-        await restoreProductsMerge(  
-            products  
-        );  
+            restoreButton.disabled =
+                true;
 
 
-    // --------------------------------------------------------------------  
-    // Result  
-    // --------------------------------------------------------------------  
+            restoreButton.textContent =
+                'در حال بازیابی...';
 
-    const added =  
-        Number(result.added) || 0;  
+        }
 
 
-    const updated =  
-        Number(result.updated) || 0;  
+        const result =
+            await restoreProductsMerge(
+                products
+            );
 
 
-    const skipped =  
-        Number(result.skipped) || 0;  
+        const added =
+            Number(
+                result.added
+            ) || 0;
 
 
-    let message =  
-        `✅ بازیابی با موفقیت انجام شد.\n` +  
-        `➕ اضافه‌شده: ${added.toLocaleString('fa-IR')}\n` +  
-        `🔄 به‌روزرسانی‌شده: ${updated.toLocaleString('fa-IR')}`;  
+        const updated =
+            Number(
+                result.updated
+            ) || 0;
 
 
-    if (skipped > 0) {  
+        const skipped =
+            Number(
+                result.skipped
+            ) || 0;
 
-        message +=  
-            `\n⚠️ ردشده: ${skipped.toLocaleString('fa-IR')}`;  
-    }  
 
+        let message =
+            `✅ بازیابی با موفقیت انجام شد.\n` +
+            `➕ اضافه‌شده: ${added.toLocaleString('fa-IR')}\n` +
+            `🔄 به‌روزرسانی‌شده: ${updated.toLocaleString('fa-IR')}`;
 
-    showBackupMessage(  
-        screen,  
-        message,  
-        true  
-    );  
 
+        if (
+            skipped > 0
+        ) {
 
-    // --------------------------------------------------------------------  
-    // Refresh List  
-    // --------------------------------------------------------------------  
+            message +=
+                `\n⚠️ ردشده: ${skipped.toLocaleString('fa-IR')}`;
 
-    await loadProducts(  
-        screen  
-    );  
+        }
 
 
-} catch (error) {  
+        showBackupMessage(
+            screen,
+            message,
+            true
+        );
 
-    console.error(  
-        'SupermarketPOS: خطا در Restore.',  
-        error  
-    );  
 
+        await loadProducts(
+            screen
+        );
 
-    showBackupMessage(  
-        screen,  
-        '❌ بازیابی انجام نشد. فایل یا اطلاعات آن قابل استفاده نیست.',  
-        false  
-    );  
 
+    } catch (error) {
 
-} finally {  
+        console.error(
+            'SupermarketPOS: خطا در Restore.',
+            error
+        );
 
-    const restoreButton =  
-        screen.querySelector(  
-            '#restore-button'  
-        );  
 
+        showBackupMessage(
+            screen,
+            '❌ بازیابی انجام نشد. فایل یا اطلاعات آن قابل استفاده نیست.',
+            false
+        );
 
-    if (restoreButton) {  
 
-        restoreButton.disabled =  
-            false;  
+    } finally {
 
-        restoreButton.textContent =  
-            '📂 بازیابی';  
-    }  
+        const restoreButton =
+            screen.querySelector(
+                '#restore-button'
+            );
+
+
+        if (restoreButton) {
+
+            restoreButton.disabled =
+                false;
+
+
+            restoreButton.textContent =
+                '📂 بازیابی';
+
+        }
+
+    }
+
 }
 
-}
 
 // ============================================================================
 // Backup Message
 // ============================================================================
 
 function showBackupMessage(
-screen,
-message,
-success = true
+    screen,
+    message,
+    success = true
 ) {
 
-let messageBox =  
-    screen.querySelector(  
-        '#backup-message'  
-    );  
+    let messageBox =
+        screen.querySelector(
+            '#backup-message'
+        );
 
 
-if (!messageBox) {  
+    if (!messageBox) {
 
-    messageBox =  
-        document.createElement(  
-            'div'  
-        );  
-
-    messageBox.id =  
-        'backup-message';  
-
-    messageBox.className =  
-        'backup-message';  
-
-    const backupCard =  
-        screen.querySelector(  
-            '.backup-card'  
-        );  
-
-    if (backupCard) {  
-
-        backupCard.insertAdjacentElement(  
-            'afterend',  
-            messageBox  
-        );  
-    }  
-}  
+        messageBox =
+            document.createElement(
+                'div'
+            );
 
 
-messageBox.style.display =  
-    'block';  
+        messageBox.id =
+            'backup-message';
 
-messageBox.style.whiteSpace =  
-    'pre-line';  
 
-messageBox.style.marginTop =  
-    '10px';  
+        messageBox.className =
+            'backup-message';
 
-messageBox.style.padding =  
-    '11px 12px';  
 
-messageBox.style.borderRadius =  
-    '11px';  
+        const backupCard =
+            screen.querySelector(
+                '.backup-card'
+            );
 
-messageBox.style.fontSize =  
-    '12px';  
 
-messageBox.style.lineHeight =  
-    '1.9';  
+        if (backupCard) {
 
-messageBox.style.textAlign =  
-    'center';  
+            backupCard.insertAdjacentElement(
+                'afterend',
+                messageBox
+            );
 
-messageBox.style.border =  
-    '1px solid';  
+        }
 
-messageBox.style.background =  
-    success  
-        ? '#ecfdf5'  
-        : '#fef2f2';  
+    }
 
-messageBox.style.color =  
-    success  
-        ? '#047857'  
-        : '#b91c1c';  
 
-messageBox.style.borderColor =  
-    success  
-        ? '#a7f3d0'  
-        : '#fecaca';  
+    messageBox.style.display =
+        'block';
 
-messageBox.textContent =  
-    message;
+
+    messageBox.style.whiteSpace =
+        'pre-line';
+
+
+    messageBox.style.marginTop =
+        '10px';
+
+
+    messageBox.style.padding =
+        '11px 12px';
+
+
+    messageBox.style.borderRadius =
+        '11px';
+
+
+    messageBox.style.fontSize =
+        '12px';
+
+
+    messageBox.style.lineHeight =
+        '1.9';
+
+
+    messageBox.style.textAlign =
+        'center';
+
+
+    messageBox.style.border =
+        '1px solid';
+
+
+    messageBox.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+
+    messageBox.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+
+    messageBox.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+
+    messageBox.textContent =
+        message;
 
 }
+
 
 // ============================================================================
 // Clear Backup Message
 // ============================================================================
 
 function clearBackupMessage(
-screen
+    screen
 ) {
 
-if (!screen) {  
-    return;  
-}  
+    if (!screen) {
+
+        return;
+
+    }
 
 
-const message =  
-    screen.querySelector(  
-        '#backup-message'  
-    );  
+    const message =
+        screen.querySelector(
+            '#backup-message'
+        );
 
 
-if (!message) {  
-    return;  
-}  
+    if (!message) {
+
+        return;
+
+    }
 
 
-message.remove();
+    message.remove();
 
 }
+
 
 // ============================================================================
 // Load Products
@@ -1281,289 +1336,309 @@ message.remove();
 
 async function loadProducts(screen) {
 
-const list =  
-    screen.querySelector(  
-        '#products-list'  
-    );  
-
-if (!list) {  
-    return;  
-}  
+    const list =
+        screen.querySelector(
+            '#products-list'
+        );
 
 
-list.innerHTML = `  
+    if (!list) {
 
-    <div class="products-loading">  
+        return;
 
-        <div class="placeholder-icon">  
-            ⏳  
-        </div>  
-
-        <p>  
-            در حال خواندن کالاها...  
-        </p>  
-
-    </div>  
-`;  
+    }
 
 
-try {  
+    list.innerHTML = `
 
-    const products =  
-        await getAllProducts();  
+        <div class="products-loading">
 
+            <div class="placeholder-icon">
+                ⏳
+            </div>
 
-    renderProducts(  
-        screen,  
-        products  
-    );  
+            <p>
+                در حال خواندن کالاها...
+            </p>
 
+        </div>
 
-} catch (error) {  
-
-    console.error(  
-        'SupermarketPOS: خطا در خواندن کالاها.',  
-        error  
-    );  
+    `;
 
 
-    list.innerHTML = `  
+    try {
 
-        <div class="products-empty products-error">  
+        const products =
+            await getAllProducts();
 
-            <div class="placeholder-icon">  
-                ⚠️  
-            </div>  
 
-            <h3>  
-                خطا در خواندن کالاها  
-            </h3>  
+        renderProducts(
+            screen,
+            products
+        );
 
-            <p>  
-                اطلاعات کالاها قابل دریافت نیست.  
-            </p>  
 
-        </div>  
-    `;  
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: خطا در خواندن کالاها.',
+            error
+        );
+
+
+        list.innerHTML = `
+
+            <div class="products-empty products-error">
+
+                <div class="placeholder-icon">
+                    ⚠️
+                </div>
+
+                <h3>
+                    خطا در خواندن کالاها
+                </h3>
+
+                <p>
+                    اطلاعات کالاها قابل دریافت نیست.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
 }
 
-}
 
 // ============================================================================
 // Render Products
 // ============================================================================
 
 function renderProducts(
-screen,
-products
+    screen,
+    products
 ) {
 
-const list =  
-    screen.querySelector(  
-        '#products-list'  
-    );  
-
-if (!list) {  
-    return;  
-}  
+    const list =
+        screen.querySelector(
+            '#products-list'
+        );
 
 
-list.innerHTML = '';  
+    if (!list) {
+
+        return;
+
+    }
 
 
-if (  
-    !Array.isArray(products) ||  
-    products.length === 0  
-) {  
-
-    list.innerHTML = `  
-
-        <div class="products-empty">  
-
-            <div class="placeholder-icon">  
-                📦  
-            </div>  
-
-            <h3>  
-                هنوز کالایی ثبت نشده است  
-            </h3>  
-
-            <p>  
-                برای شروع، اولین کالای فروشگاه را اضافه کنید.  
-            </p>  
-
-        </div>  
-    `;  
-
-    return;  
-}  
+    list.innerHTML =
+        '';
 
 
-const title =  
-    document.createElement(  
-        'div'  
-    );  
+    if (
+        !Array.isArray(products) ||
+        products.length === 0
+    ) {
+
+        list.innerHTML = `
+
+            <div class="products-empty">
+
+                <div class="placeholder-icon">
+                    📦
+                </div>
+
+                <h3>
+                    هنوز کالایی ثبت نشده است
+                </h3>
+
+                <p>
+                    برای شروع، اولین کالای فروشگاه را اضافه کنید.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
 
 
-title.className =  
-    'products-list-title';  
+    const title =
+        document.createElement(
+            'div'
+        );
 
 
-title.innerHTML = `  
-    <strong>  
-        کالاهای ثبت‌شده  
-    </strong>  
-
-    <span>  
-        ${products.length.toLocaleString('fa-IR')} کالا  
-    </span>  
-`;  
+    title.className =
+        'products-list-title';
 
 
-list.appendChild(  
-    title  
-);  
+    title.innerHTML = `
+
+        <strong>
+            کالاهای ثبت‌شده
+        </strong>
+
+        <span>
+            ${products.length.toLocaleString('fa-IR')} کالا
+        </span>
+
+    `;
 
 
-products.forEach(  
-    product => {  
+    list.appendChild(
+        title
+    );
 
-        list.appendChild(  
-            createProductCard(  
-                product  
-            )  
-        );  
-    }  
-);
+
+    products.forEach(
+        product => {
+
+            list.appendChild(
+                createProductCard(
+                    product
+                )
+            );
+
+        }
+    );
 
 }
+
 
 // ============================================================================
 // Product Card
 // ============================================================================
 
 function createProductCard(
-product
+    product
 ) {
 
-const card =  
-    document.createElement(  
-        'article'  
-    );  
+    const card =
+        document.createElement(
+            'article'
+        );
 
 
-card.className =  
-    'product-card';  
+    card.className =
+        'product-card';
 
 
-const barcode =  
-    product.barcode || '-';  
+    const barcode =
+        product.barcode || '-';
 
 
-const name =  
-    product.name || 'بدون نام';  
+    const name =
+        product.name ||
+        'بدون نام';
 
 
-const category =  
-    product.category ||  
-    'بدون دسته‌بندی';  
+    const category =
+        product.category ||
+        'بدون دسته‌بندی';
 
 
-const price =  
-    Number(  
-        product.salePrice  
-    );  
+    const price =
+        Number(
+            product.salePrice
+        );
 
 
-const stock =  
-    Number(  
-        product.stock  
-    );  
+    const stock =
+        Number(
+            product.stock
+        );
 
 
-const safePrice =  
-    Number.isFinite(price)  
-        ? price.toLocaleString('fa-IR')  
-        : '۰';  
+    const safePrice =
+        Number.isFinite(price)
+            ? price.toLocaleString('fa-IR')
+            : '۰';
 
 
-const safeStock =  
-    Number.isFinite(stock)  
-        ? stock.toLocaleString('fa-IR')  
-        : '۰';  
+    const safeStock =
+        Number.isFinite(stock)
+            ? stock.toLocaleString('fa-IR')
+            : '۰';
 
 
-card.innerHTML = `  
+    card.innerHTML = `
 
-    <div class="product-card-top">  
+        <div class="product-card-top">
 
-        <div class="product-card-icon">  
-            📦  
-        </div>  
+            <div class="product-card-icon">
+                📦
+            </div>
 
-        <div class="product-card-info">  
+            <div class="product-card-info">
 
-            <h3>  
-                ${escapeHTML(name)}  
-            </h3>  
+                <h3>
+                    ${escapeHTML(name)}
+                </h3>
 
-            <span>  
-                ${escapeHTML(category)}  
-            </span>  
+                <span>
+                    ${escapeHTML(category)}
+                </span>
 
-        </div>  
+            </div>
 
-    </div>  
-
-
-    <div class="product-card-details">  
-
-        <div class="product-detail">  
-
-            <span>  
-                بارکد  
-            </span>  
-
-            <strong>  
-                ${escapeHTML(barcode)}  
-            </strong>  
-
-        </div>  
+        </div>
 
 
-        <div class="product-detail">  
+        <div class="product-card-details">
 
-            <span>  
-                قیمت فروش  
-            </span>  
+            <div class="product-detail">
 
-            <strong>  
-                ${safePrice}  
-                تومان  
-            </strong>  
+                <span>
+                    بارکد
+                </span>
 
-        </div>  
+                <strong>
+                    ${escapeHTML(barcode)}
+                </strong>
 
-
-        <div class="product-detail">  
-
-            <span>  
-                موجودی  
-            </span>  
-
-            <strong>  
-                ${safeStock}  
-            </strong>  
-
-        </div>  
-
-    </div>  
-`;  
+            </div>
 
 
-return card;
+            <div class="product-detail">
+
+                <span>
+                    قیمت فروش
+                </span>
+
+                <strong>
+                    ${safePrice}
+                    تومان
+                </strong>
+
+            </div>
+
+
+            <div class="product-detail">
+
+                <span>
+                    موجودی
+                </span>
+
+                <strong>
+                    ${safeStock}
+                </strong>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    return card;
 
 }
+
 
 // ============================================================================
 // Escape HTML
@@ -1571,519 +1646,579 @@ return card;
 
 function escapeHTML(value) {
 
-return String(value)  
-    .replaceAll(  
-        '&',  
-        '&amp;'  
-    )  
-    .replaceAll(  
-        '<',  
-        '&lt;'  
-    )  
-    .replaceAll(  
-        '>',  
-        '&gt;'  
-    )  
-    .replaceAll(  
-        '"',  
-        '&quot;'  
-    )  
-    .replaceAll(  
-        "'",  
-        '&#039;'  
-    );
+    return String(value)
+
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
 
 }
+
 
 // ============================================================================
 // Clear Product Message
 // ============================================================================
 
 function clearProductMessage(
-screen
+    screen
 ) {
 
-if (!screen) {  
-    return;  
-}  
+    if (!screen) {
+
+        return;
+
+    }
 
 
-const message =  
-    screen.querySelector(  
-        '#product-form-message'  
-    );  
+    const message =
+        screen.querySelector(
+            '#product-form-message'
+        );
 
 
-if (!message) {  
-    return;  
-}  
+    if (!message) {
+
+        return;
+
+    }
 
 
-message.textContent =  
-    '';  
+    message.textContent =
+        '';
 
 
-message.removeAttribute(  
-    'style'  
-);
+    message.removeAttribute(
+        'style'
+    );
 
 }
+
 
 // ============================================================================
 // Product Message
 // ============================================================================
 
 function showProductMessage(
-screen,
-message,
-success = true
+    screen,
+    message,
+    success = true
 ) {
 
-const messageBox =  
-    screen.querySelector(  
-        '#product-form-message'  
-    );  
+    const messageBox =
+        screen.querySelector(
+            '#product-form-message'
+        );
 
 
-if (!messageBox) {  
-    return;  
-}  
+    if (!messageBox) {
+
+        return;
+
+    }
 
 
-messageBox.style.marginTop =  
-    '12px';  
+    messageBox.style.marginTop =
+        '12px';
 
-messageBox.style.padding =  
-    '11px 12px';  
 
-messageBox.style.borderRadius =  
-    '11px';  
+    messageBox.style.padding =
+        '11px 12px';
 
-messageBox.style.fontSize =  
-    '12px';  
 
-messageBox.style.textAlign =  
-    'center';  
+    messageBox.style.borderRadius =
+        '11px';
 
-messageBox.style.border =  
-    '1px solid';  
 
-messageBox.style.background =  
-    success  
-        ? '#ecfdf5'  
-        : '#fef2f2';  
+    messageBox.style.fontSize =
+        '12px';
 
-messageBox.style.color =  
-    success  
-        ? '#047857'  
-        : '#b91c1c';  
 
-messageBox.style.borderColor =  
-    success  
-        ? '#a7f3d0'  
-        : '#fecaca';  
+    messageBox.style.textAlign =
+        'center';
 
-messageBox.textContent =  
-    message;
+
+    messageBox.style.border =
+        '1px solid';
+
+
+    messageBox.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+
+    messageBox.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+
+    messageBox.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+
+    messageBox.textContent =
+        message;
 
 }
+
 
 // ============================================================================
 // Product Form
 // ============================================================================
 
 function setupProductForm(
-screen
+    screen
 ) {
 
-const addButton =  
-    screen.querySelector(  
-        '#add-product-button'  
-    );  
+    const addButton =
+        screen.querySelector(
+            '#add-product-button'
+        );
 
 
-const form =  
-    screen.querySelector(  
-        '#product-form-container'  
-    );  
+    const form =
+        screen.querySelector(
+            '#product-form-container'
+        );
 
 
-const closeButton =  
-    screen.querySelector(  
-        '#close-product-form'  
-    );  
+    const closeButton =
+        screen.querySelector(
+            '#close-product-form'
+        );
 
 
-const cancelButton =  
-    screen.querySelector(  
-        '#cancel-product-button'  
-    );  
+    const cancelButton =
+        screen.querySelector(
+            '#cancel-product-button'
+        );
 
 
-const saveButton =  
-    screen.querySelector(  
-        '#save-product-button'  
-    );  
+    const saveButton =
+        screen.querySelector(
+            '#save-product-button'
+        );
 
 
-if (  
-    !addButton ||  
-    !form  
-) {  
-    return;  
-}  
+    if (
+        !addButton ||
+        !form
+    ) {
 
+        return;
 
-// ------------------------------------------------------------------------  
-// Open  
-// ------------------------------------------------------------------------  
+    }
 
-addButton.addEventListener(  
-    'click',  
-    () => {  
 
-        clearProductMessage(  
-            screen  
-        );  
+    // ------------------------------------------------------------------------
+    // Open
+    // ------------------------------------------------------------------------
 
+    addButton.addEventListener(
+        'click',
+        () => {
 
-        form.style.display =  
-            'block';  
+            clearProductMessage(
+                screen
+            );
 
 
-        const stockInput =  
-            screen.querySelector(  
-                '#product-stock'  
-            );  
+            form.style.display =
+                'block';
 
 
-        if (stockInput) {  
-            stockInput.value =  
-                '';  
-        }  
+            const stockInput =
+                screen.querySelector(
+                    '#product-stock'
+                );
 
 
-        const barcode =  
-            screen.querySelector(  
-                '#product-barcode'  
-            );  
+            if (stockInput) {
 
+                stockInput.value =
+                    '';
 
-        if (barcode) {  
-            barcode.focus();  
-        }  
-    }  
-);  
+            }
 
 
-// ------------------------------------------------------------------------  
-// Close  
-// ------------------------------------------------------------------------  
+            const barcode =
+                screen.querySelector(
+                    '#product-barcode'
+                );
 
-function closeForm() {  
 
-    clearProductMessage(  
-        screen  
-    );  
+            if (barcode) {
 
+                barcode.focus();
 
-    form.style.display =  
-        'none';  
-}  
+            }
 
+        }
+    );
 
-if (closeButton) {  
 
-    closeButton.addEventListener(  
-        'click',  
-        closeForm  
-    );  
-}  
+    // ------------------------------------------------------------------------
+    // Close
+    // ------------------------------------------------------------------------
 
+    function closeForm() {
 
-if (cancelButton) {  
+        clearProductMessage(
+            screen
+        );
 
-    cancelButton.addEventListener(  
-        'click',  
-        closeForm  
-    );  
-}  
 
+        form.style.display =
+            'none';
 
-// ------------------------------------------------------------------------  
-// Save  
-// ------------------------------------------------------------------------  
+    }
 
-if (saveButton) {  
 
-    saveButton.addEventListener(  
-        'click',  
-        async () => {  
+    if (closeButton) {
 
-            clearProductMessage(  
-                screen  
-            );  
+        closeButton.addEventListener(
+            'click',
+            closeForm
+        );
 
+    }
 
-            if (  
-                !APP_STATE.databaseReady  
-            ) {  
 
-                showProductMessage(  
-                    screen,  
-                    '❌ پایگاه داده آماده نیست.',  
-                    false  
-                );  
+    if (cancelButton) {
 
-                return;  
-            }  
+        cancelButton.addEventListener(
+            'click',
+            closeForm
+        );
 
+    }
 
-            const barcodeInput =  
-                screen.querySelector(  
-                    '#product-barcode'  
-                );  
 
+    // ------------------------------------------------------------------------
+    // Save
+    // ------------------------------------------------------------------------
 
-            const nameInput =  
-                screen.querySelector(  
-                    '#product-name'  
-                );  
+    if (saveButton) {
 
+        saveButton.addEventListener(
+            'click',
+            async () => {
 
-            const categoryInput =  
-                screen.querySelector(  
-                    '#product-category'  
-                );  
+                clearProductMessage(
+                    screen
+                );
 
 
-            const priceInput =  
-                screen.querySelector(  
-                    '#product-price'  
-                );  
+                if (
+                    !APP_STATE.databaseReady
+                ) {
 
+                    showProductMessage(
+                        screen,
+                        '❌ پایگاه داده آماده نیست.',
+                        false
+                    );
 
-            const stockInput =  
-                screen.querySelector(  
-                    '#product-stock'  
-                );  
+                    return;
 
+                }
 
-            const barcode =  
-                barcodeInput.value.trim();  
 
+                const barcodeInput =
+                    screen.querySelector(
+                        '#product-barcode'
+                    );
 
-            const name =  
-                nameInput.value.trim();  
 
+                const nameInput =
+                    screen.querySelector(
+                        '#product-name'
+                    );
 
-            const category =  
-                categoryInput.value.trim();  
 
+                const categoryInput =
+                    screen.querySelector(
+                        '#product-category'
+                    );
 
-            const priceText =  
-                priceInput.value.trim();  
 
+                const priceInput =
+                    screen.querySelector(
+                        '#product-price'
+                    );
 
-            const stockText =  
-                stockInput.value.trim();  
 
+                const stockInput =
+                    screen.querySelector(
+                        '#product-stock'
+                    );
 
-            const price =  
-                Number(priceText);  
 
+                const barcode =
+                    barcodeInput.value.trim();
 
-            const stock =  
-                stockText === ''  
-                    ? 0  
-                    : Number(stockText);  
 
+                const name =
+                    nameInput.value.trim();
 
-            // ------------------------------------------------------------  
-            // Validation  
-            // ------------------------------------------------------------  
 
-            if (!barcode) {  
+                const category =
+                    categoryInput.value.trim();
 
-                showProductMessage(  
-                    screen,  
-                    '⚠️ بارکد را وارد کنید.',  
-                    false  
-                );  
 
-                barcodeInput.focus();  
+                const priceText =
+                    priceInput.value.trim();
 
-                return;  
-            }  
 
+                const stockText =
+                    stockInput.value.trim();
 
-            if (!name) {  
 
-                showProductMessage(  
-                    screen,  
-                    '⚠️ نام کالا را وارد کنید.',  
-                    false  
-                );  
+                const price =
+                    Number(
+                        priceText
+                    );
 
-                nameInput.focus();  
 
-                return;  
-            }  
+                const stock =
+                    stockText === ''
+                        ? 0
+                        : Number(
+                            stockText
+                        );
 
 
-            if (  
-                priceText === '' ||  
-                !Number.isFinite(price) ||  
-                price < 0  
-            ) {  
+                // ------------------------------------------------------------
+                // Validation
+                // ------------------------------------------------------------
 
-                showProductMessage(  
-                    screen,  
-                    '⚠️ قیمت فروش را صحیح وارد کنید.',  
-                    false  
-                );  
+                if (!barcode) {
 
-                priceInput.focus();  
+                    showProductMessage(
+                        screen,
+                        '⚠️ بارکد را وارد کنید.',
+                        false
+                    );
 
-                return;  
-            }  
+                    barcodeInput.focus();
 
+                    return;
 
-            if (  
-                !Number.isFinite(stock) ||  
-                stock < 0  
-            ) {  
+                }
 
-                showProductMessage(  
-                    screen,  
-                    '⚠️ موجودی را صحیح وارد کنید.',  
-                    false  
-                );  
 
-                stockInput.focus();  
+                if (!name) {
 
-                return;  
-            }  
+                    showProductMessage(
+                        screen,
+                        '⚠️ نام کالا را وارد کنید.',
+                        false
+                    );
 
+                    nameInput.focus();
 
-            const now =  
-                new Date().toISOString();  
+                    return;
 
+                }
 
-            const product = {  
 
-                barcode: barcode,  
+                if (
+                    priceText === '' ||
+                    !Number.isFinite(price) ||
+                    price < 0
+                ) {
 
-                name: name,  
+                    showProductMessage(
+                        screen,
+                        '⚠️ قیمت فروش را صحیح وارد کنید.',
+                        false
+                    );
 
-                category: category,  
+                    priceInput.focus();
 
-                salePrice: price,  
+                    return;
 
-                stock: stock,  
+                }
 
-                createdAt: now,  
 
-                updatedAt: now  
-            };  
+                if (
+                    !Number.isFinite(stock) ||
+                    stock < 0
+                ) {
 
+                    showProductMessage(
+                        screen,
+                        '⚠️ موجودی را صحیح وارد کنید.',
+                        false
+                    );
 
-            saveButton.disabled =  
-                true;  
+                    stockInput.focus();
 
+                    return;
 
-            saveButton.textContent =  
-                'در حال ذخیره...';  
+                }
 
 
-            try {  
+                const now =
+                    new Date().toISOString();
 
-                const productId =  
-                    await addProduct(  
-                        product  
-                    );  
 
+                const product = {
 
-                console.log(  
-                    'SupermarketPOS: Product saved:',  
-                    productId  
-                );  
+                    barcode:
+                        barcode,
 
+                    name:
+                        name,
 
-                showProductMessage(  
-                    screen,  
-                    '✅ کالا با موفقیت ذخیره شد.',  
-                    true  
-                );  
+                    category:
+                        category,
 
+                    salePrice:
+                        price,
 
-                barcodeInput.value =  
-                    '';  
+                    stock:
+                        stock,
 
-                nameInput.value =  
-                    '';  
+                    createdAt:
+                        now,
 
-                categoryInput.value =  
-                    '';  
+                    updatedAt:
+                        now
 
-                priceInput.value =  
-                    '';  
+                };
 
-                stockInput.value =  
-                    '';  
 
+                saveButton.disabled =
+                    true;
 
-                barcodeInput.focus();  
 
+                saveButton.textContent =
+                    'در حال ذخیره...';
 
-                await loadProducts(  
-                    screen  
-                );  
 
+                try {
 
-            } catch (error) {  
+                    const productId =
+                        await addProduct(
+                            product
+                        );
 
-                console.error(  
-                    'SupermarketPOS: خطا در ذخیره کالا.',  
-                    error  
-                );  
 
+                    console.log(
+                        'SupermarketPOS: Product saved:',
+                        productId
+                    );
 
-                if (  
-                    error &&  
-                    error.name ===  
-                        'ConstraintError'  
-                ) {  
 
-                    showProductMessage(  
-                        screen,  
-                        '⚠️ این بارکد قبلاً ثبت شده است.',  
-                        false  
-                    );  
+                    showProductMessage(
+                        screen,
+                        '✅ کالا با موفقیت ذخیره شد.',
+                        true
+                    );
 
-                } else {  
 
-                    showProductMessage(  
-                        screen,  
-                        '❌ ذخیره کالا انجام نشد.',  
-                        false  
-                    );  
-                }  
+                    barcodeInput.value =
+                        '';
 
 
-            } finally {  
+                    nameInput.value =
+                        '';
 
-                saveButton.disabled =  
-                    false;  
 
-                saveButton.textContent =  
-                    'ذخیره کالا';  
-            }  
-        }  
-    );  
+                    categoryInput.value =
+                        '';
+
+
+                    priceInput.value =
+                        '';
+
+
+                    stockInput.value =
+                        '';
+
+
+                    barcodeInput.focus();
+
+
+                    await loadProducts(
+                        screen
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        'SupermarketPOS: خطا در ذخیره کالا.',
+                        error
+                    );
+
+
+                    if (
+                        error &&
+                        error.name ===
+                            'ConstraintError'
+                    ) {
+
+                        showProductMessage(
+                            screen,
+                            '⚠️ این بارکد قبلاً ثبت شده است.',
+                            false
+                        );
+
+                    } else {
+
+                        showProductMessage(
+                            screen,
+                            '❌ ذخیره کالا انجام نشد.',
+                            false
+                        );
+
+                    }
+
+
+                } finally {
+
+                    saveButton.disabled =
+                        false;
+
+
+                    saveButton.textContent =
+                        'ذخیره کالا';
+
+                }
+
+            }
+        );
+
+    }
+
 }
 
-}
 
 // ============================================================================
 // Navigation
@@ -2091,49 +2226,68 @@ if (saveButton) {
 
 function setupNavigation() {
 
-const cards =  
-    document.querySelectorAll(  
-        '.menu-card'  
-    );  
+    const cards =
+        document.querySelectorAll(
+            '.menu-card'
+        );
 
 
-cards.forEach(  
-    card => {  
+    cards.forEach(
+        card => {
 
-        card.addEventListener(  
-            'click',  
-            () => {  
+            card.addEventListener(
+                'click',
+                () => {
 
-                const action =  
-                    card.getAttribute(  
-                        'data-action'  
-                    );  
-
-
-                if (  
-                    action === 'sales'  
-                ) {  
-
-                    openSalesScreen();  
-
-                    return;  
-                }  
+                    const action =
+                        card.getAttribute(
+                            'data-action'
+                        );
 
 
-                if (  
-                    action === 'products'  
-                ) {  
+                    // --------------------------------------------------------
+                    // SALES
+                    // --------------------------------------------------------
+                    // IMPORTANT:
+                    // Sales is handled by sales.js.
+                    // Do not create a sales screen here.
+                    // --------------------------------------------------------
 
-                    openProductsScreen();  
+                    if (
+                        action === 'sales'
+                    ) {
 
-                    return;  
-                }  
-            }  
-        );  
-    }  
-);
+                        console.log(
+                            'SupermarketPOS: درخواست ورود به بخش فروش'
+                        );
+
+                        return;
+
+                    }
+
+
+                    // --------------------------------------------------------
+                    // PRODUCTS
+                    // --------------------------------------------------------
+
+                    if (
+                        action === 'products'
+                    ) {
+
+                        openProductsScreen();
+
+                        return;
+
+                    }
+
+                }
+            );
+
+        }
+    );
 
 }
+
 
 // ============================================================================
 // Database
@@ -2141,40 +2295,47 @@ cards.forEach(
 
 async function setupDatabase() {
 
-try {  
+    try {
 
-    await initializeDatabase();  
-
-
-    APP_STATE.databaseReady =  
-        true;  
+        await initializeDatabase();
 
 
-    showDatabaseStatus(  
-        '✅ پایگاه داده با موفقیت آماده شد',  
-        true  
-    );  
+        APP_STATE.databaseReady =
+            true;
 
 
-} catch (error) {  
-
-    APP_STATE.databaseReady =  
-        false;  
-
-
-    showDatabaseStatus(  
-        '❌ خطا در راه‌اندازی پایگاه داده',  
-        false  
-    );  
+        showDatabaseStatus(
+            '✅ پایگاه داده با موفقیت آماده شد',
+            true
+        );
 
 
-    console.error(  
-        'SupermarketPOS: خطای دیتابیس',  
-        error  
-    );  
+        console.log(
+            'SupermarketPOS: Database ready.'
+        );
+
+
+    } catch (error) {
+
+        APP_STATE.databaseReady =
+            false;
+
+
+        showDatabaseStatus(
+            '❌ خطا در راه‌اندازی پایگاه داده',
+            false
+        );
+
+
+        console.error(
+            'SupermarketPOS: خطای دیتابیس',
+            error
+        );
+
+    }
+
 }
 
-}
 
 // ============================================================================
 // Initialize
@@ -2182,56 +2343,71 @@ try {
 
 async function initializeApp() {
 
-if (  
-    APP_STATE.initialized  
-) {  
-    return;  
-}  
+    if (
+        APP_STATE.initialized
+    ) {
+
+        return;
+
+    }
 
 
-DOM.app =  
-    document.querySelector(  
-        '#app'  
-    );  
+    DOM.app =
+        document.querySelector(
+            '#app'
+        );
 
 
-if (!DOM.app) {  
-    return;  
-}  
+    if (!DOM.app) {
+
+        console.error(
+            'SupermarketPOS: عنصر #app پیدا نشد.'
+        );
+
+        return;
+
+    }
 
 
-setupHeaderStatus();  
-
-setupNavigation();  
+    setupHeaderStatus();
 
 
-APP_STATE.initialized =  
-    true;  
+    setupNavigation();
 
 
-await setupDatabase();
+    APP_STATE.initialized =
+        true;
+
+
+    await setupDatabase();
+
+
+    console.log(
+        'SupermarketPOS: Application initialized.'
+    );
 
 }
+
 
 // ============================================================================
 // Bootstrap
 // ============================================================================
 
 if (
-document.readyState ===
-'loading'
+    document.readyState ===
+    'loading'
 ) {
 
-document.addEventListener(  
-    'DOMContentLoaded',  
-    initializeApp,  
-    {  
-        once: true  
-    }  
-);
+    document.addEventListener(
+        'DOMContentLoaded',
+        initializeApp,
+        {
+            once: true
+        }
+    );
 
 } else {
 
-initializeApp();
+    initializeApp();
 
 }
