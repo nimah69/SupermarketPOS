@@ -31,7 +31,7 @@ background:
     radial-gradient(
         circle at top right,
         #ccfbf1 0,
-        #f1f5f9 38%,
+        #f1f5f9 40%,
         #f1f5f9 100%
     );
 
@@ -133,10 +133,10 @@ align-items: center;
 justify-content: center;
 
 background:
-    rgba(255, 255, 255, 0.16);
+    rgba(255, 255, 255, 0.15);
 
 border:
-    1px solid rgba(255, 255, 255, 0.18);
+    1px solid rgba(255, 255, 255, 0.22);
 
 border-radius: 15px;
 
@@ -173,7 +173,7 @@ opacity: 0.8;
 }
 
 /* =========================================================
-STATUS AREA
+STATUS CONTAINER
 ========================================================= */
 
 .header-status {
@@ -181,25 +181,13 @@ flex: 0 0 auto;
 
 display: flex;
 
-flex-direction: row;
-
 align-items: center;
 
 justify-content: center;
 
-gap: 6px;
-
-width: auto;
+gap: 7px;
 
 min-width: 0;
-
-padding: 0;
-
-background: transparent;
-
-border: none;
-
-white-space: nowrap;
 
 }
 
@@ -210,7 +198,7 @@ ONLINE BOX
 .status-online {
 height: 38px;
 
-min-width: 64px;
+min-width: 68px;
 
 display: flex;
 
@@ -218,17 +206,21 @@ align-items: center;
 
 justify-content: center;
 
-gap: 5px;
+gap: 6px;
 
-padding: 0 9px;
+padding: 0 10px;
 
-background:
-    rgba(255, 255, 255, 0.14);
+background: #ecfdf5;
+
+color: #047857;
 
 border:
-    1px solid rgba(255, 255, 255, 0.22);
+    1px solid #86efac;
 
-border-radius: 11px;
+border-radius: 12px;
+
+box-shadow:
+    0 4px 10px rgba(16, 185, 129, 0.16);
 
 font-size: 9px;
 
@@ -247,7 +239,7 @@ READY BOX
 .status-ready {
 height: 38px;
 
-min-width: 72px;
+min-width: 82px;
 
 display: flex;
 
@@ -255,17 +247,23 @@ align-items: center;
 
 justify-content: center;
 
-padding: 0 9px;
+padding: 0 10px;
 
-background:
-    rgba(255, 255, 255, 0.10);
+background: #eff6ff;
+
+color: #1d4ed8;
 
 border:
-    1px solid rgba(255, 255, 255, 0.18);
+    1px solid #93c5fd;
 
-border-radius: 11px;
+border-radius: 12px;
+
+box-shadow:
+    0 4px 10px rgba(59, 130, 246, 0.16);
 
 font-size: 9px;
+
+font-weight: bold;
 
 line-height: 1;
 
@@ -274,7 +272,7 @@ white-space: nowrap;
 }
 
 /* =========================================================
-STATUS DOT
+ONLINE DOT
 ========================================================= */
 
 .status-dot {
@@ -285,10 +283,10 @@ flex: 0 0 7px;
 
 border-radius: 50%;
 
-background: #86efac;
+background: #16a34a;
 
 box-shadow:
-    0 0 0 3px rgba(134, 239, 172, 0.12);
+    0 0 0 3px rgba(34, 197, 94, 0.15);
 
 }
 
@@ -316,7 +314,7 @@ align-items: center;
 gap: 14px;
 
 background:
-    rgba(255, 255, 255, 0.94);
+    rgba(255, 255, 255, 0.95);
 
 border:
     1px solid rgba(226, 232, 240, 0.9);
@@ -537,8 +535,8 @@ MOBILE
 @media (max-width: 430px) {
 
 #app {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .app-header {
@@ -565,7 +563,7 @@ MOBILE
 }
 
 .brand-text h1 {
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .brand-text span {
@@ -573,34 +571,27 @@ MOBILE
 }
 
 .header-status {
-    gap: 4px;
+    gap: 5px;
 }
 
 .status-online {
-    min-width: 58px;
+    min-width: 62px;
 
     height: 36px;
 
-    padding: 0 7px;
+    padding: 0 8px;
 
     font-size: 8px;
 }
 
 .status-ready {
-    min-width: 65px;
+    min-width: 74px;
 
     height: 36px;
 
-    padding: 0 7px;
+    padding: 0 8px;
 
     font-size: 8px;
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-
-    flex-basis: 6px;
 }
 
 }
@@ -612,7 +603,7 @@ VERY SMALL PHONES
 @media (max-width: 350px) {
 
 .app-header {
-    padding: 12px;
+    padding: 11px;
 }
 
 .brand-icon {
@@ -625,35 +616,42 @@ VERY SMALL PHONES
 }
 
 .brand-text h1 {
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .brand-text span {
-    font-size: 8px;
+    display: none;
 }
 
 .header-status {
-    gap: 3px;
+    gap: 4px;
 }
 
 .status-online {
-    min-width: 53px;
+    min-width: 56px;
 
     height: 34px;
 
-    padding: 0 5px;
+    padding: 0 6px;
 
     font-size: 7px;
 }
 
 .status-ready {
-    min-width: 60px;
+    min-width: 66px;
 
     height: 34px;
 
-    padding: 0 5px;
+    padding: 0 6px;
 
     font-size: 7px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+
+    flex-basis: 6px;
 }
 
 .menu-grid {
