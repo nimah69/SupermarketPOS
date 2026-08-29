@@ -10,7 +10,8 @@
 // ============================================================================
 
 const APP_STATE = {
-    initialized: false
+    initialized: false,
+    salesInitialized: false
 };
 
 // ============================================================================
@@ -42,20 +43,13 @@ function cacheDOM() {
 // ============================================================================
 
 function setApplicationStatus() {
+
     const statusContainer =
         document.querySelector('.header-status');
 
     if (!statusContainer) {
         return;
     }
-
-    /*
-     * مهم:
-     * وضعیت‌ها در index.html ساخته شده‌اند.
-     *
-     * این تابع نباید محتوای header-status را پاک کند.
-     * بنابراین دیگر innerHTML استفاده نمی‌کنیم.
-     */
 
     const readyStatus =
         statusContainer.querySelector('.status-ready');
@@ -79,7 +73,193 @@ function setApplicationStatus() {
 }
 
 // ============================================================================
-// Start Application
+// Sales Navigation
+// ============================================================================
+
+function setupSalesNavigation() {
+
+    const salesButton =
+        document.querySelector(
+            '.menu-card[data-action="sales"]'
+        );
+
+    if (!salesButton) {
+        console.warn(
+            'SupermarketPOS: دکمه فروش پیدا نشد.'
+        );
+
+        return;
+    }
+
+    salesButton.addEventListener(
+        'click',
+        openSalesScreen
+    );
+}
+
+// ============================================================================
+// Open Sales Screen
+// ============================================================================
+
+function openSalesScreen() {
+
+    const main =
+        document.querySelector('main');
+
+    if (!main) {
+        console.error(
+            'SupermarketPOS: عنصر main پیدا نشد.'
+        );
+
+        return;
+    }
+
+    const homeScreen =
+        document.querySelector('.home-screen');
+
+    if (homeScreen) {
+        homeScreen.style.display = 'none';
+    }
+
+    let salesScreen =
+        document.getElementById('sales-screen');
+
+    if (!salesScreen) {
+
+        salesScreen =
+            createSalesScreen();
+
+        main.appendChild(salesScreen);
+    }
+
+    salesScreen.style.display = 'block';
+
+    salesScreen.setAttribute(
+        'aria-hidden',
+        'false'
+    );
+}
+
+// ============================================================================
+// Create Sales Screen
+// ============================================================================
+
+function createSalesScreen() {
+
+    const screen =
+        document.createElement('section');
+
+    screen.id =
+        'sales-screen';
+
+    screen.className =
+        'sales-screen';
+
+    screen.setAttribute(
+        'aria-hidden',
+        'false'
+    );
+
+    screen.innerHTML = `
+        <div class="sales-header">
+
+            <h2>
+                🛒 فروش و صندوق
+            </h2>
+
+            <p>
+                بخش فروش فروشگاه
+            </p>
+
+        </div>
+
+        <div class="sales-placeholder">
+
+            <div class="placeholder-icon">
+                ▣
+            </div>
+
+            <h3>
+                اسکن یا ورود بارکد
+            </h3>
+
+            <p>
+                سیستم بارکد در مرحله بعد فعال خواهد شد.
+            </p>
+
+        </div>
+
+        <div class="sales-placeholder">
+
+            <div class="placeholder-icon">
+                🛍️
+            </div>
+
+            <h3>
+                سبد خرید
+            </h3>
+
+            <p>
+                هنوز کالایی به سبد اضافه نشده است.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            class="sales-back-button"
+            id="sales-back-button"
+        >
+            ← بازگشت به صفحه اصلی
+        </button>
+    `;
+
+    const backButton =
+        screen.querySelector(
+            '#sales-back-button'
+        );
+
+    if (backButton) {
+
+        backButton.addEventListener(
+            'click',
+            closeSalesScreen
+        );
+    }
+
+    return screen;
+}
+
+// ============================================================================
+// Close Sales Screen
+// ============================================================================
+
+function closeSalesScreen() {
+
+    const salesScreen =
+        document.getElementById('sales-screen');
+
+    const homeScreen =
+        document.querySelector('.home-screen');
+
+    if (salesScreen) {
+
+        salesScreen.style.display =
+            'none';
+
+        salesScreen.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+    }
+
+    if (homeScreen) {
+        homeScreen.style.display = '';
+    }
+}
+
+// ============================================================================
+// Initialize Application
 // ============================================================================
 
 function initializeApp() {
@@ -100,6 +280,8 @@ function initializeApp() {
     }
 
     setApplicationStatus();
+
+    setupSalesNavigation();
 
     APP_STATE.initialized = true;
 
