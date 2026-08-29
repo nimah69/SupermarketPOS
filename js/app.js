@@ -1,11 +1,12 @@
 // js/app.js
 // SupermarketPOS
-// Products Form - Stage 1
+// Product Save - Stage 1
 
 'use strict';
 
 import {
-    initializeDatabase
+    initializeDatabase,
+    addProduct
 } from './database.js';
 
 // ============================================================================
@@ -121,6 +122,61 @@ function showDatabaseStatus(message, success = true) {
         success ? '#a7f3d0' : '#fecaca';
 
     status.textContent =
+        message;
+}
+
+// ============================================================================
+// Product Form Message
+// ============================================================================
+
+function showProductMessage(
+    screen,
+    message,
+    success = true
+) {
+
+    let messageBox =
+        screen.querySelector(
+            '#product-form-message'
+        );
+
+    if (!messageBox) {
+
+        messageBox =
+            document.createElement('div');
+
+        messageBox.id =
+            'product-form-message';
+
+        messageBox.style.cssText = `
+            margin-top: 12px;
+            padding: 11px 12px;
+            border-radius: 11px;
+            font-size: 11px;
+            text-align: center;
+            border: 1px solid;
+        `;
+
+        const actions =
+            screen.querySelector(
+                '.product-form-actions'
+            );
+
+        if (actions) {
+            actions.after(messageBox);
+        }
+    }
+
+    messageBox.style.background =
+        success ? '#ecfdf5' : '#fef2f2';
+
+    messageBox.style.color =
+        success ? '#047857' : '#b91c1c';
+
+    messageBox.style.borderColor =
+        success ? '#a7f3d0' : '#fecaca';
+
+    messageBox.textContent =
         message;
 }
 
@@ -559,9 +615,18 @@ function setupProductForm(screen) {
             '#cancel-product-button'
         );
 
+    const saveButton =
+        screen.querySelector(
+            '#save-product-button'
+        );
+
     if (!addButton || !formContainer) {
         return;
     }
+
+    // ------------------------------------------------------------------------
+    // Open Form
+    // ------------------------------------------------------------------------
 
     addButton.addEventListener(
         'click',
@@ -581,14 +646,21 @@ function setupProductForm(screen) {
         }
     );
 
+    // ------------------------------------------------------------------------
+    // Close Form
+    // ------------------------------------------------------------------------
+
+    function closeForm() {
+
+        formContainer.style.display =
+            'none';
+    }
+
     if (closeButton) {
 
         closeButton.addEventListener(
             'click',
-            () => {
-                formContainer.style.display =
-                    'none';
-            }
+            closeForm
         );
     }
 
@@ -596,9 +668,199 @@ function setupProductForm(screen) {
 
         cancelButton.addEventListener(
             'click',
-            () => {
-                formContainer.style.display =
-                    'none';
+            closeForm
+        );
+    }
+
+    // ------------------------------------------------------------------------
+    // Save Product
+    // ------------------------------------------------------------------------
+
+    if (saveButton) {
+
+        saveButton.addEventListener(
+            'click',
+            async () => {
+
+                if (!APP_STATE.databaseReady) {
+
+                    showProductMessage(
+                        screen,
+                        '❌ پایگاه داده آماده نیست.',
+                        false
+                    );
+
+                    return;
+                }
+
+                const barcode =
+                    screen.querySelector(
+                        '#product-barcode'
+                    ).value.trim();
+
+                const name =
+                    screen.querySelector(
+                        '#product-name'
+                    ).value.trim();
+
+                const category =
+                    screen.querySelector(
+                        '#product-category'
+                    ).value.trim();
+
+                const price =
+                    Number(
+                        screen.querySelector(
+                            '#product-price'
+                        ).value
+                    );
+
+                const stock =
+                    Number(
+                        screen.querySelector(
+                            '#product-stock'
+                        ).value
+                    );
+
+                // ------------------------------------------------------------
+                // Validation
+                // ------------------------------------------------------------
+
+                if (!barcode) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ بارکد کالا را وارد کنید.',
+                        false
+                    );
+
+                    return;
+                }
+
+                if (!name) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ نام کالا را وارد کنید.',
+                        false
+                    );
+
+                    return;
+                }
+
+                if (!Number.isFinite(price) || price < 0) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ قیمت فروش را صحیح وارد کنید.',
+                        false
+                    );
+
+                    return;
+                }
+
+                if (!Number.isFinite(stock) || stock < 0) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ موجودی را صحیح وارد کنید.',
+                        false
+                    );
+
+                    return;
+                }
+
+                // ------------------------------------------------------------
+                // Product Object
+                // ------------------------------------------------------------
+
+                const product = {
+
+                    barcode: barcode,
+
+                    name: name,
+
+                    category: category,
+
+                    salePrice: price,
+
+                    stock: stock,
+
+                    createdAt:
+                        new Date().toISOString(),
+
+                    updatedAt:
+                        new Date().toISOString()
+                };
+
+                // ------------------------------------------------------------
+                // Save
+                // ------------------------------------------------------------
+
+                saveButton.disabled = true;
+
+                saveButton.textContent =
+                    'در حال ذخیره...';
+
+                try {
+
+                    await addProduct(product);
+
+                    showProductMessage(
+                        screen,
+                        '✅ کالا با موفقیت ذخیره شد.',
+                        true
+                    );
+
+                    // --------------------------------------------------------
+                    // Clear Form
+                    // --------------------------------------------------------
+
+                    screen.querySelector(
+                        '#product-barcode'
+                    ).value = '';
+
+                    screen.querySelector(
+                        '#product-name'
+                    ).value = '';
+
+                    screen.querySelector(
+                        '#product-category'
+                    ).value = '';
+
+                    screen.querySelector(
+                        '#product-price'
+                    ).value = '';
+
+                    screen.querySelector(
+                        '#product-stock'
+                    ).value = '0';
+
+                    screen.querySelector(
+                        '#product-barcode'
+                    ).focus();
+
+                } catch (error) {
+
+                    console.error(
+                        'Product save error:',
+                        error
+                    );
+
+                    showProductMessage(
+                        screen,
+                        '❌ ذخیره کالا انجام نشد.',
+                        false
+                    );
+
+                } finally {
+
+                    saveButton.disabled =
+                        false;
+
+                    saveButton.textContent =
+                        'ذخیره کالا';
+                }
             }
         );
     }
@@ -631,13 +893,6 @@ function setupNavigation() {
 
                 if (action === 'products') {
                     openProductsScreen();
-                    return;
-                }
-
-                if (
-                    action === 'reports' ||
-                    action === 'settings'
-                ) {
                     return;
                 }
             }
