@@ -1,11 +1,12 @@
 // js/app.js
 // SupermarketPOS
-// Stable Recovery Version
+// Product Save - Stage 3
 
 'use strict';
 
 import {
-    initializeDatabase
+    initializeDatabase,
+    addProduct
 } from './database.js';
 
 // ============================================================================
@@ -503,6 +504,12 @@ function createProductsScreen() {
 
                 </div>
 
+                <div
+                    id="product-form-message"
+                    class="product-form-message"
+                    aria-live="polite"
+                ></div>
+
             </div>
 
         </div>
@@ -551,6 +558,62 @@ function createProductsScreen() {
 }
 
 // ============================================================================
+// Product Form Message
+// ============================================================================
+
+function showProductMessage(
+    screen,
+    message,
+    success = true
+) {
+
+    const messageBox =
+        screen.querySelector(
+            '#product-form-message'
+        );
+
+    if (!messageBox) {
+        return;
+    }
+
+    messageBox.style.marginTop =
+        '12px';
+
+    messageBox.style.padding =
+        '11px 12px';
+
+    messageBox.style.borderRadius =
+        '11px';
+
+    messageBox.style.fontSize =
+        '12px';
+
+    messageBox.style.textAlign =
+        'center';
+
+    messageBox.style.border =
+        '1px solid';
+
+    messageBox.style.background =
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
+
+    messageBox.style.color =
+        success
+            ? '#047857'
+            : '#b91c1c';
+
+    messageBox.style.borderColor =
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
+
+    messageBox.textContent =
+        message;
+}
+
+// ============================================================================
 // Product Form
 // ============================================================================
 
@@ -576,15 +639,18 @@ function setupProductForm(screen) {
             '#cancel-product-button'
         );
 
+    const saveButton =
+        screen.querySelector(
+            '#save-product-button'
+        );
+
     if (!addButton || !form) {
         return;
     }
 
-    function closeForm() {
-
-        form.style.display =
-            'none';
-    }
+    // ------------------------------------------------------------------------
+    // Open Form
+    // ------------------------------------------------------------------------
 
     addButton.addEventListener(
         'click',
@@ -604,6 +670,16 @@ function setupProductForm(screen) {
         }
     );
 
+    // ------------------------------------------------------------------------
+    // Close Form
+    // ------------------------------------------------------------------------
+
+    function closeForm() {
+
+        form.style.display =
+            'none';
+    }
+
     if (closeButton) {
 
         closeButton.addEventListener(
@@ -620,15 +696,249 @@ function setupProductForm(screen) {
         );
     }
 
-    /*
-     * دکمه ذخیره فعلاً عمداً
-     * هیچ کاری انجام نمی‌دهد.
-     *
-     * در مرحله بعد، ابتدا تابع
-     * addProduct را به database.js
-     * اضافه می‌کنیم و سپس این دکمه
-     * را به دیتابیس متصل خواهیم کرد.
-     */
+    // ------------------------------------------------------------------------
+    // Save Product
+    // ------------------------------------------------------------------------
+
+    if (saveButton) {
+
+        saveButton.addEventListener(
+            'click',
+            async () => {
+
+                if (
+                    !APP_STATE.databaseReady
+                ) {
+
+                    showProductMessage(
+                        screen,
+                        '❌ پایگاه داده آماده نیست.',
+                        false
+                    );
+
+                    return;
+                }
+
+                const barcodeInput =
+                    screen.querySelector(
+                        '#product-barcode'
+                    );
+
+                const nameInput =
+                    screen.querySelector(
+                        '#product-name'
+                    );
+
+                const categoryInput =
+                    screen.querySelector(
+                        '#product-category'
+                    );
+
+                const priceInput =
+                    screen.querySelector(
+                        '#product-price'
+                    );
+
+                const stockInput =
+                    screen.querySelector(
+                        '#product-stock'
+                    );
+
+                const barcode =
+                    barcodeInput.value.trim();
+
+                const name =
+                    nameInput.value.trim();
+
+                const category =
+                    categoryInput.value.trim();
+
+                const price =
+                    Number(
+                        priceInput.value
+                    );
+
+                const stock =
+                    Number(
+                        stockInput.value
+                    );
+
+                // ------------------------------------------------------------
+                // Validation
+                // ------------------------------------------------------------
+
+                if (!barcode) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ بارکد را وارد کنید.',
+                        false
+                    );
+
+                    barcodeInput.focus();
+
+                    return;
+                }
+
+                if (!name) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ نام کالا را وارد کنید.',
+                        false
+                    );
+
+                    nameInput.focus();
+
+                    return;
+                }
+
+                if (
+                    !Number.isFinite(price) ||
+                    price < 0
+                ) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ قیمت فروش را صحیح وارد کنید.',
+                        false
+                    );
+
+                    priceInput.focus();
+
+                    return;
+                }
+
+                if (
+                    !Number.isFinite(stock) ||
+                    stock < 0
+                ) {
+
+                    showProductMessage(
+                        screen,
+                        '⚠️ موجودی را صحیح وارد کنید.',
+                        false
+                    );
+
+                    stockInput.focus();
+
+                    return;
+                }
+
+                const now =
+                    new Date().toISOString();
+
+                const product = {
+
+                    barcode: barcode,
+
+                    name: name,
+
+                    category: category,
+
+                    salePrice: price,
+
+                    stock: stock,
+
+                    createdAt: now,
+
+                    updatedAt: now
+                };
+
+                // ------------------------------------------------------------
+                // Save
+                // ------------------------------------------------------------
+
+                saveButton.disabled =
+                    true;
+
+                saveButton.textContent =
+                    'در حال ذخیره...';
+
+                showProductMessage(
+                    screen,
+                    'در حال ذخیره کالا...',
+                    true
+                );
+
+                try {
+
+                    const productId =
+                        await addProduct(
+                            product
+                        );
+
+                    console.log(
+                        'Product saved:',
+                        productId
+                    );
+
+                    showProductMessage(
+                        screen,
+                        '✅ کالا با موفقیت ذخیره شد.',
+                        true
+                    );
+
+                    // --------------------------------------------------------
+                    // Clear Form
+                    // --------------------------------------------------------
+
+                    barcodeInput.value =
+                        '';
+
+                    nameInput.value =
+                        '';
+
+                    categoryInput.value =
+                        '';
+
+                    priceInput.value =
+                        '';
+
+                    stockInput.value =
+                        '0';
+
+                    barcodeInput.focus();
+
+                } catch (error) {
+
+                    console.error(
+                        'SupermarketPOS: خطا در ذخیره کالا.',
+                        error
+                    );
+
+                    if (
+                        error &&
+                        error.name ===
+                            'ConstraintError'
+                    ) {
+
+                        showProductMessage(
+                            screen,
+                            '⚠️ این بارکد قبلاً ثبت شده است.',
+                            false
+                        );
+
+                    } else {
+
+                        showProductMessage(
+                            screen,
+                            '❌ ذخیره کالا انجام نشد.',
+                            false
+                        );
+                    }
+
+                } finally {
+
+                    saveButton.disabled =
+                        false;
+
+                    saveButton.textContent =
+                        'ذخیره کالا';
+                }
+            }
+        );
+    }
 }
 
 // ============================================================================
@@ -704,14 +1014,14 @@ async function setupDatabase() {
         );
 
         console.error(
-            'Database error:',
+            'SupermarketPOS: خطای دیتابیس',
             error
         );
     }
 }
 
 // ============================================================================
-// Initialize App
+// Initialize Application
 // ============================================================================
 
 async function initializeApp() {
