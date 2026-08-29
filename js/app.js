@@ -77,6 +77,55 @@ function setApplicationStatus() {
 }
 
 // ============================================================================
+// Database Status
+// ============================================================================
+
+function showDatabaseStatus(message, success = true) {
+
+    let status =
+        document.getElementById(
+            'database-test-status'
+        );
+
+    if (!status) {
+
+        status =
+            document.createElement('div');
+
+        status.id =
+            'database-test-status';
+
+        status.style.cssText = `
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            border: 1px solid;
+        `;
+
+        const homeScreen =
+            document.querySelector('.home-screen');
+
+        if (homeScreen) {
+            homeScreen.appendChild(status);
+        }
+    }
+
+    status.style.background =
+        success ? '#ecfdf5' : '#fef2f2';
+
+    status.style.color =
+        success ? '#047857' : '#b91c1c';
+
+    status.style.borderColor =
+        success ? '#a7f3d0' : '#fecaca';
+
+    status.textContent =
+        message;
+}
+
+// ============================================================================
 // Home Screen
 // ============================================================================
 
@@ -114,10 +163,6 @@ function openSalesScreen() {
         document.querySelector('main');
 
     if (!main) {
-        console.error(
-            'SupermarketPOS: عنصر main پیدا نشد.'
-        );
-
         return;
     }
 
@@ -147,11 +192,6 @@ function openSalesScreen() {
     }
 
     salesScreen.style.display = 'block';
-
-    salesScreen.setAttribute(
-        'aria-hidden',
-        'false'
-    );
 }
 
 function createSalesScreen() {
@@ -164,11 +204,6 @@ function createSalesScreen() {
 
     screen.className =
         'sales-screen';
-
-    screen.setAttribute(
-        'aria-hidden',
-        'false'
-    );
 
     screen.innerHTML = `
         <div class="sales-header">
@@ -230,7 +265,6 @@ function createSalesScreen() {
         );
 
     if (backButton) {
-
         backButton.addEventListener(
             'click',
             showHomeScreen
@@ -250,10 +284,6 @@ function openProductsScreen() {
         document.querySelector('main');
 
     if (!main) {
-        console.error(
-            'SupermarketPOS: عنصر main پیدا نشد.'
-        );
-
         return;
     }
 
@@ -283,11 +313,6 @@ function openProductsScreen() {
     }
 
     productsScreen.style.display = 'block';
-
-    productsScreen.setAttribute(
-        'aria-hidden',
-        'false'
-    );
 }
 
 function createProductsScreen() {
@@ -300,11 +325,6 @@ function createProductsScreen() {
 
     screen.className =
         'products-screen';
-
-    screen.setAttribute(
-        'aria-hidden',
-        'false'
-    );
 
     screen.innerHTML = `
         <div class="products-header">
@@ -351,7 +371,6 @@ function createProductsScreen() {
         );
 
     if (backButton) {
-
         backButton.addEventListener(
             'click',
             showHomeScreen
@@ -395,9 +414,7 @@ function setupNavigation() {
                     action === 'reports' ||
                     action === 'settings'
                 ) {
-                    console.log(
-                        `SupermarketPOS: بخش ${action} هنوز ساخته نشده است.`
-                    );
+                    return;
                 }
             }
         );
@@ -416,20 +433,24 @@ async function setupDatabase() {
 
         APP_STATE.databaseReady = true;
 
-        console.log(
-            'SupermarketPOS: اتصال به دیتابیس موفق بود.'
+        showDatabaseStatus(
+            '✅ پایگاه داده با موفقیت آماده شد',
+            true
         );
 
     } catch (error) {
 
         APP_STATE.databaseReady = false;
 
-        console.error(
-            'SupermarketPOS: خطا در دیتابیس:',
-            error
+        showDatabaseStatus(
+            '❌ خطا در راه‌اندازی پایگاه داده',
+            false
         );
 
-        throw error;
+        console.error(
+            'Database error:',
+            error
+        );
     }
 }
 
@@ -446,11 +467,6 @@ async function initializeApp() {
     cacheDOM();
 
     if (!DOM.app) {
-
-        console.error(
-            'SupermarketPOS: عنصر #app پیدا نشد.'
-        );
-
         return;
     }
 
@@ -458,23 +474,9 @@ async function initializeApp() {
 
     setupNavigation();
 
-    try {
+    APP_STATE.initialized = true;
 
-        await setupDatabase();
-
-        APP_STATE.initialized = true;
-
-        console.log(
-            'SupermarketPOS: برنامه با موفقیت راه‌اندازی شد.'
-        );
-
-    } catch (error) {
-
-        console.error(
-            'SupermarketPOS: راه‌اندازی برنامه ناموفق بود.',
-            error
-        );
-    }
+    await setupDatabase();
 }
 
 // ============================================================================
