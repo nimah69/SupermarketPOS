@@ -1,12 +1,11 @@
 // js/app.js
 // SupermarketPOS
-// Product Save - Stage 1
+// Stable Version
 
 'use strict';
 
 import {
-    initializeDatabase,
-    addProduct
+    initializeDatabase
 } from './database.js';
 
 // ============================================================================
@@ -27,19 +26,11 @@ const DOM = {
 };
 
 // ============================================================================
-// Utilities
-// ============================================================================
-
-function getElement(selector) {
-    return document.querySelector(selector);
-}
-
-// ============================================================================
 // DOM Cache
 // ============================================================================
 
 function cacheDOM() {
-    DOM.app = getElement('#app');
+    DOM.app = document.querySelector('#app');
 }
 
 // ============================================================================
@@ -62,6 +53,7 @@ function setApplicationStatus() {
         statusContainer.querySelector('.status-online');
 
     if (readyStatus) {
+
         readyStatus.setAttribute(
             'aria-label',
             'وضعیت: آماده به کار'
@@ -69,6 +61,7 @@ function setApplicationStatus() {
     }
 
     if (onlineStatus) {
+
         onlineStatus.setAttribute(
             'aria-label',
             'اتصال: آنلاین'
@@ -80,7 +73,10 @@ function setApplicationStatus() {
 // Database Status
 // ============================================================================
 
-function showDatabaseStatus(message, success = true) {
+function showDatabaseStatus(
+    message,
+    success = true
+) {
 
     let status =
         document.getElementById(
@@ -113,70 +109,21 @@ function showDatabaseStatus(message, success = true) {
     }
 
     status.style.background =
-        success ? '#ecfdf5' : '#fef2f2';
+        success
+            ? '#ecfdf5'
+            : '#fef2f2';
 
     status.style.color =
-        success ? '#047857' : '#b91c1c';
+        success
+            ? '#047857'
+            : '#b91c1c';
 
     status.style.borderColor =
-        success ? '#a7f3d0' : '#fecaca';
+        success
+            ? '#a7f3d0'
+            : '#fecaca';
 
     status.textContent =
-        message;
-}
-
-// ============================================================================
-// Product Form Message
-// ============================================================================
-
-function showProductMessage(
-    screen,
-    message,
-    success = true
-) {
-
-    let messageBox =
-        screen.querySelector(
-            '#product-form-message'
-        );
-
-    if (!messageBox) {
-
-        messageBox =
-            document.createElement('div');
-
-        messageBox.id =
-            'product-form-message';
-
-        messageBox.style.cssText = `
-            margin-top: 12px;
-            padding: 11px 12px;
-            border-radius: 11px;
-            font-size: 11px;
-            text-align: center;
-            border: 1px solid;
-        `;
-
-        const actions =
-            screen.querySelector(
-                '.product-form-actions'
-            );
-
-        if (actions) {
-            actions.after(messageBox);
-        }
-    }
-
-    messageBox.style.background =
-        success ? '#ecfdf5' : '#fef2f2';
-
-    messageBox.style.color =
-        success ? '#047857' : '#b91c1c';
-
-    messageBox.style.borderColor =
-        success ? '#a7f3d0' : '#fecaca';
-
-    messageBox.textContent =
         message;
 }
 
@@ -243,10 +190,13 @@ function openSalesScreen() {
         salesScreen =
             createSalesScreen();
 
-        main.appendChild(salesScreen);
+        main.appendChild(
+            salesScreen
+        );
     }
 
-    salesScreen.style.display = 'block';
+    salesScreen.style.display =
+        'block';
 }
 
 // ============================================================================
@@ -362,17 +312,22 @@ function openProductsScreen() {
     }
 
     let productsScreen =
-        document.getElementById('products-screen');
+        document.getElementById(
+            'products-screen'
+        );
 
     if (!productsScreen) {
 
         productsScreen =
             createProductsScreen();
 
-        main.appendChild(productsScreen);
+        main.appendChild(
+            productsScreen
+        );
     }
 
-    productsScreen.style.display = 'block';
+    productsScreen.style.display =
+        'block';
 }
 
 // ============================================================================
@@ -426,6 +381,7 @@ function createProductsScreen() {
                 <div class="product-form-header">
 
                     <div>
+
                         <h3>
                             افزودن کالای جدید
                         </h3>
@@ -433,6 +389,7 @@ function createProductsScreen() {
                         <p>
                             اطلاعات کالا را وارد کنید.
                         </p>
+
                     </div>
 
                     <button
@@ -615,18 +572,11 @@ function setupProductForm(screen) {
             '#cancel-product-button'
         );
 
-    const saveButton =
-        screen.querySelector(
-            '#save-product-button'
-        );
-
     if (!addButton || !formContainer) {
         return;
     }
 
-    // ------------------------------------------------------------------------
-    // Open Form
-    // ------------------------------------------------------------------------
+    // Open
 
     addButton.addEventListener(
         'click',
@@ -646,9 +596,7 @@ function setupProductForm(screen) {
         }
     );
 
-    // ------------------------------------------------------------------------
-    // Close Form
-    // ------------------------------------------------------------------------
+    // Close
 
     function closeForm() {
 
@@ -671,199 +619,6 @@ function setupProductForm(screen) {
             closeForm
         );
     }
-
-    // ------------------------------------------------------------------------
-    // Save Product
-    // ------------------------------------------------------------------------
-
-    if (saveButton) {
-
-        saveButton.addEventListener(
-            'click',
-            async () => {
-
-                if (!APP_STATE.databaseReady) {
-
-                    showProductMessage(
-                        screen,
-                        '❌ پایگاه داده آماده نیست.',
-                        false
-                    );
-
-                    return;
-                }
-
-                const barcode =
-                    screen.querySelector(
-                        '#product-barcode'
-                    ).value.trim();
-
-                const name =
-                    screen.querySelector(
-                        '#product-name'
-                    ).value.trim();
-
-                const category =
-                    screen.querySelector(
-                        '#product-category'
-                    ).value.trim();
-
-                const price =
-                    Number(
-                        screen.querySelector(
-                            '#product-price'
-                        ).value
-                    );
-
-                const stock =
-                    Number(
-                        screen.querySelector(
-                            '#product-stock'
-                        ).value
-                    );
-
-                // ------------------------------------------------------------
-                // Validation
-                // ------------------------------------------------------------
-
-                if (!barcode) {
-
-                    showProductMessage(
-                        screen,
-                        '⚠️ بارکد کالا را وارد کنید.',
-                        false
-                    );
-
-                    return;
-                }
-
-                if (!name) {
-
-                    showProductMessage(
-                        screen,
-                        '⚠️ نام کالا را وارد کنید.',
-                        false
-                    );
-
-                    return;
-                }
-
-                if (!Number.isFinite(price) || price < 0) {
-
-                    showProductMessage(
-                        screen,
-                        '⚠️ قیمت فروش را صحیح وارد کنید.',
-                        false
-                    );
-
-                    return;
-                }
-
-                if (!Number.isFinite(stock) || stock < 0) {
-
-                    showProductMessage(
-                        screen,
-                        '⚠️ موجودی را صحیح وارد کنید.',
-                        false
-                    );
-
-                    return;
-                }
-
-                // ------------------------------------------------------------
-                // Product Object
-                // ------------------------------------------------------------
-
-                const product = {
-
-                    barcode: barcode,
-
-                    name: name,
-
-                    category: category,
-
-                    salePrice: price,
-
-                    stock: stock,
-
-                    createdAt:
-                        new Date().toISOString(),
-
-                    updatedAt:
-                        new Date().toISOString()
-                };
-
-                // ------------------------------------------------------------
-                // Save
-                // ------------------------------------------------------------
-
-                saveButton.disabled = true;
-
-                saveButton.textContent =
-                    'در حال ذخیره...';
-
-                try {
-
-                    await addProduct(product);
-
-                    showProductMessage(
-                        screen,
-                        '✅ کالا با موفقیت ذخیره شد.',
-                        true
-                    );
-
-                    // --------------------------------------------------------
-                    // Clear Form
-                    // --------------------------------------------------------
-
-                    screen.querySelector(
-                        '#product-barcode'
-                    ).value = '';
-
-                    screen.querySelector(
-                        '#product-name'
-                    ).value = '';
-
-                    screen.querySelector(
-                        '#product-category'
-                    ).value = '';
-
-                    screen.querySelector(
-                        '#product-price'
-                    ).value = '';
-
-                    screen.querySelector(
-                        '#product-stock'
-                    ).value = '0';
-
-                    screen.querySelector(
-                        '#product-barcode'
-                    ).focus();
-
-                } catch (error) {
-
-                    console.error(
-                        'Product save error:',
-                        error
-                    );
-
-                    showProductMessage(
-                        screen,
-                        '❌ ذخیره کالا انجام نشد.',
-                        false
-                    );
-
-                } finally {
-
-                    saveButton.disabled =
-                        false;
-
-                    saveButton.textContent =
-                        'ذخیره کالا';
-                }
-            }
-        );
-    }
 }
 
 // ============================================================================
@@ -873,31 +628,43 @@ function setupProductForm(screen) {
 function setupNavigation() {
 
     const menuCards =
-        document.querySelectorAll('.menu-card');
-
-    menuCards.forEach(card => {
-
-        card.addEventListener(
-            'click',
-            () => {
-
-                const action =
-                    card.getAttribute(
-                        'data-action'
-                    );
-
-                if (action === 'sales') {
-                    openSalesScreen();
-                    return;
-                }
-
-                if (action === 'products') {
-                    openProductsScreen();
-                    return;
-                }
-            }
+        document.querySelectorAll(
+            '.menu-card'
         );
-    });
+
+    menuCards.forEach(
+        card => {
+
+            card.addEventListener(
+                'click',
+                () => {
+
+                    const action =
+                        card.getAttribute(
+                            'data-action'
+                        );
+
+                    if (
+                        action === 'sales'
+                    ) {
+
+                        openSalesScreen();
+
+                        return;
+                    }
+
+                    if (
+                        action === 'products'
+                    ) {
+
+                        openProductsScreen();
+
+                        return;
+                    }
+                }
+            );
+        }
+    );
 }
 
 // ============================================================================
@@ -910,7 +677,8 @@ async function setupDatabase() {
 
         await initializeDatabase();
 
-        APP_STATE.databaseReady = true;
+        APP_STATE.databaseReady =
+            true;
 
         showDatabaseStatus(
             '✅ پایگاه داده با موفقیت آماده شد',
@@ -919,7 +687,8 @@ async function setupDatabase() {
 
     } catch (error) {
 
-        APP_STATE.databaseReady = false;
+        APP_STATE.databaseReady =
+            false;
 
         showDatabaseStatus(
             '❌ خطا در راه‌اندازی پایگاه داده',
@@ -934,7 +703,7 @@ async function setupDatabase() {
 }
 
 // ============================================================================
-// Initialize Application
+// Initialize
 // ============================================================================
 
 async function initializeApp() {
@@ -953,7 +722,8 @@ async function initializeApp() {
 
     setupNavigation();
 
-    APP_STATE.initialized = true;
+    APP_STATE.initialized =
+        true;
 
     await setupDatabase();
 }
@@ -962,12 +732,17 @@ async function initializeApp() {
 // Bootstrap
 // ============================================================================
 
-if (document.readyState === 'loading') {
+if (
+    document.readyState ===
+    'loading'
+) {
 
     document.addEventListener(
         'DOMContentLoaded',
         initializeApp,
-        { once: true }
+        {
+            once: true
+        }
     );
 
 } else {
