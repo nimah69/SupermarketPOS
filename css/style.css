@@ -2094,3 +2094,908 @@ input:focus-visible {
             1 !important;
     }
 }
+/* =========================================================
+   SupermarketPOS
+   Sales Screen - Stage 5
+   Real Cart + Barcode UI
+========================================================= */
+
+
+/* =========================================================
+   Sales Barcode Card
+========================================================= */
+
+.sales-barcode-card {
+    background: var(--surface);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: var(--radius-lg);
+
+    padding: 16px;
+
+    margin-bottom: 12px;
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+/* =========================================================
+   Sales Section Header
+========================================================= */
+
+.sales-section-header {
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    margin-bottom: 14px;
+}
+
+
+.sales-section-icon {
+    width: 43px;
+    height: 43px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background:
+        var(--primary-soft);
+
+    color:
+        var(--primary);
+
+    font-size: 20px;
+
+    font-weight: 800;
+}
+
+
+.sales-section-header h3 {
+    margin: 0;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.sales-section-header p {
+    margin: 4px 0 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   Barcode Row
+========================================================= */
+
+.sales-barcode-row {
+    display: grid;
+
+    grid-template-columns:
+        1fr 105px;
+
+    gap: 8px;
+
+    width: 100%;
+}
+
+
+.sales-barcode-input {
+    width: 100%;
+
+    min-height: 48px;
+
+    padding:
+        9px
+        12px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 13px;
+
+    background:
+        #ffffff;
+
+    color:
+        var(--text);
+
+    font-size: 13px;
+
+    direction: ltr;
+
+    text-align: left;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.sales-barcode-input:focus {
+    border-color:
+        var(--primary);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(15, 118, 110, 0.10);
+}
+
+
+.sales-barcode-input::placeholder {
+    color: #94a3b8;
+
+    direction: rtl;
+
+    text-align: right;
+}
+
+
+/* =========================================================
+   Add Button
+========================================================= */
+
+.sales-add-button {
+    min-height: 48px;
+
+    padding:
+        8px
+        10px;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+
+    color: #ffffff;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    box-shadow:
+        0 7px 17px
+        rgba(15, 118, 110, 0.17);
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.sales-add-button:active {
+    transform: scale(0.97);
+}
+
+
+/* =========================================================
+   Sales Message
+========================================================= */
+
+.sales-barcode-message {
+    min-height: 0;
+
+    margin-top: 9px;
+
+    padding:
+        0
+        11px;
+
+    border-radius: 10px;
+
+    font-size: 10px;
+
+    line-height: 1.7;
+
+    transition:
+        padding 0.15s ease;
+}
+
+
+.sales-barcode-message:not(:empty) {
+    padding:
+        8px
+        11px;
+}
+
+
+.sales-message-info {
+    background: #eff6ff;
+
+    color: #1d4ed8;
+
+    border:
+        1px solid
+        #bfdbfe;
+}
+
+
+.sales-message-success {
+    background: #ecfdf5;
+
+    color: #047857;
+
+    border:
+        1px solid
+        #a7f3d0;
+}
+
+
+.sales-message-error {
+    background: #fef2f2;
+
+    color: #b91c1c;
+
+    border:
+        1px solid
+        #fecaca;
+}
+
+
+/* =========================================================
+   Cart Card
+========================================================= */
+
+.sales-cart-card {
+    background: var(--surface);
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: var(--radius-lg);
+
+    margin-bottom: 12px;
+
+    overflow: hidden;
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+/* =========================================================
+   Cart Header
+========================================================= */
+
+.sales-cart-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding:
+        14px
+        15px;
+
+    border-bottom:
+        1px solid
+        #f1f5f9;
+}
+
+
+.sales-cart-header-left {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 0;
+}
+
+
+.sales-cart-header h3 {
+    margin: 0;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.sales-cart-icon {
+    width: 37px;
+    height: 37px;
+
+    border-radius: 11px;
+
+    background:
+        var(--green-soft);
+
+    font-size: 17px;
+}
+
+
+.sales-cart-count {
+    flex-shrink: 0;
+
+    padding:
+        5px
+        9px;
+
+    border-radius: 9px;
+
+    background:
+        #f1f5f9;
+
+    color:
+        #475569;
+
+    font-size: 9px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   Cart Items
+========================================================= */
+
+.sales-cart-items {
+    padding: 10px;
+}
+
+
+/* =========================================================
+   Empty Cart
+========================================================= */
+
+.sales-cart-empty {
+    padding:
+        28px
+        15px;
+
+    text-align: center;
+}
+
+
+.sales-empty-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin:
+        0
+        auto
+        10px;
+
+    border-radius: 15px;
+
+    background:
+        #f1f5f9;
+
+    font-size: 23px;
+}
+
+
+.sales-cart-empty h3 {
+    margin:
+        0
+        0
+        5px;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+.sales-cart-empty p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 10px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   Cart Item
+========================================================= */
+
+.sales-cart-item {
+    padding: 12px;
+
+    margin-bottom: 8px;
+
+    border:
+        1px solid
+        #e2e8f0;
+
+    border-radius: 14px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 3px 10px
+        rgba(15, 23, 42, 0.035);
+}
+
+
+.sales-cart-item:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   Cart Item Top
+========================================================= */
+
+.sales-cart-item-top {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 8px;
+
+    margin-bottom: 9px;
+}
+
+
+.sales-cart-item-info {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.sales-cart-item-info h4 {
+    margin: 0;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.sales-cart-item-info span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: var(--muted);
+
+    font-size: 9px;
+
+    direction: ltr;
+
+    text-align: right;
+}
+
+
+/* =========================================================
+   Remove Item
+========================================================= */
+
+.sales-remove-item {
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background:
+        var(--red-soft);
+
+    color:
+        var(--red);
+
+    font-size: 19px;
+
+    line-height: 1;
+}
+
+
+.sales-remove-item:active {
+    transform: scale(0.92);
+}
+
+
+/* =========================================================
+   Price Row
+========================================================= */
+
+.sales-cart-price-row {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 8px;
+
+    padding:
+        8px
+        0;
+
+    border-top:
+        1px solid
+        #f1f5f9;
+}
+
+
+.sales-cart-price-row span {
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+
+.sales-cart-price-row strong {
+    color: var(--primary-dark);
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   Quantity Controls
+========================================================= */
+
+.sales-quantity-controls {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    margin-top: 7px;
+}
+
+
+.sales-quantity-button {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        #f1f5f9;
+
+    color:
+        #334155;
+
+    font-size: 20px;
+
+    font-weight: 800;
+
+    line-height: 1;
+}
+
+
+.sales-quantity-button:active {
+    transform: scale(0.92);
+}
+
+
+.sales-quantity-button:disabled {
+    opacity: 0.4;
+
+    background:
+        #f8fafc;
+}
+
+
+.sales-quantity {
+    min-width: 35px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   Stock Info
+========================================================= */
+
+.sales-stock-info {
+    display: block;
+
+    margin-top: 8px;
+
+    padding-top: 7px;
+
+    border-top:
+        1px dashed
+        #e2e8f0;
+
+    color:
+        var(--muted);
+
+    font-size: 8px;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   Total
+========================================================= */
+
+.sales-total-card {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding:
+        16px;
+
+    margin-bottom: 10px;
+
+    border:
+        1px solid
+        #99f6e4;
+
+    border-radius: var(--radius-lg);
+
+    background:
+        linear-gradient(
+            135deg,
+            #f0fdfa,
+            #ecfeff
+        );
+
+    box-shadow:
+        0 6px 18px
+        rgba(15, 118, 110, 0.08);
+}
+
+
+.sales-total-info {
+    min-width: 0;
+}
+
+
+.sales-total-info span {
+    display: block;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    color:
+        var(--text);
+}
+
+
+.sales-total-info small {
+    display: block;
+
+    margin-top: 4px;
+
+    color:
+        var(--muted);
+
+    font-size: 9px;
+}
+
+
+.sales-total-card > strong {
+    flex-shrink: 0;
+
+    color:
+        var(--primary-dark);
+
+    font-size: 17px;
+
+    font-weight: 900;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   Sales Actions
+========================================================= */
+
+.sales-actions {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1.35fr;
+
+    gap: 8px;
+
+    margin-bottom: 10px;
+}
+
+
+.sales-clear-button,
+.sales-checkout-button {
+    min-height: 47px;
+
+    border-radius: 13px;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+
+.sales-clear-button:active,
+.sales-checkout-button:active {
+    transform: scale(0.97);
+}
+
+
+.sales-clear-button {
+    background:
+        #fff1f2;
+
+    color:
+        #be123c;
+
+    border:
+        1px solid
+        #fecdd3;
+}
+
+
+.sales-checkout-button {
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+
+    color:
+        #ffffff;
+
+    box-shadow:
+        0 8px 18px
+        rgba(15, 118, 110, 0.18);
+}
+
+
+.sales-checkout-button:disabled,
+.sales-clear-button:disabled {
+    opacity: 0.5;
+
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   Sales Back Button
+========================================================= */
+
+.sales-screen .sales-back-button {
+    margin-top: 0;
+
+    margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 430px) {
+
+    .sales-barcode-row {
+        grid-template-columns:
+            1fr 92px;
+    }
+
+    .sales-add-button {
+        font-size: 10px;
+    }
+
+    .sales-total-card > strong {
+        font-size: 15px;
+    }
+}
+
+
+@media (max-width: 380px) {
+
+    .sales-barcode-row {
+        grid-template-columns:
+            1fr;
+    }
+
+    .sales-add-button {
+        width: 100%;
+    }
+
+    .sales-actions {
+        grid-template-columns:
+            1fr;
+    }
+
+    .sales-total-card {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .sales-total-card > strong {
+        width: 100%;
+
+        text-align: right;
+    }
+}
+
+
+/* =========================================================
+   Accessibility
+========================================================= */
+
+.sales-screen button:focus-visible,
+.sales-screen input:focus-visible {
+    outline:
+        3px solid
+        rgba(37, 99, 235, 0.22);
+
+    outline-offset: 2px;
+   }
