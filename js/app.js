@@ -10,8 +10,7 @@
 // ============================================================================
 
 const APP_STATE = {
-    initialized: false,
-    salesInitialized: false
+    initialized: false
 };
 
 // ============================================================================
@@ -73,32 +72,35 @@ function setApplicationStatus() {
 }
 
 // ============================================================================
-// Sales Navigation
+// Home Screen
 // ============================================================================
 
-function setupSalesNavigation() {
+function showHomeScreen() {
 
-    const salesButton =
-        document.querySelector(
-            '.menu-card[data-action="sales"]'
-        );
+    const homeScreen =
+        document.querySelector('.home-screen');
 
-    if (!salesButton) {
-        console.warn(
-            'SupermarketPOS: دکمه فروش پیدا نشد.'
-        );
+    const salesScreen =
+        document.getElementById('sales-screen');
 
-        return;
+    const productsScreen =
+        document.getElementById('products-screen');
+
+    if (salesScreen) {
+        salesScreen.style.display = 'none';
     }
 
-    salesButton.addEventListener(
-        'click',
-        openSalesScreen
-    );
+    if (productsScreen) {
+        productsScreen.style.display = 'none';
+    }
+
+    if (homeScreen) {
+        homeScreen.style.display = '';
+    }
 }
 
 // ============================================================================
-// Open Sales Screen
+// Sales Screen
 // ============================================================================
 
 function openSalesScreen() {
@@ -121,6 +123,13 @@ function openSalesScreen() {
         homeScreen.style.display = 'none';
     }
 
+    const productsScreen =
+        document.getElementById('products-screen');
+
+    if (productsScreen) {
+        productsScreen.style.display = 'none';
+    }
+
     let salesScreen =
         document.getElementById('sales-screen');
 
@@ -139,10 +148,6 @@ function openSalesScreen() {
         'false'
     );
 }
-
-// ============================================================================
-// Create Sales Screen
-// ============================================================================
 
 function createSalesScreen() {
 
@@ -223,7 +228,7 @@ function createSalesScreen() {
 
         backButton.addEventListener(
             'click',
-            closeSalesScreen
+            showHomeScreen
         );
     }
 
@@ -231,31 +236,167 @@ function createSalesScreen() {
 }
 
 // ============================================================================
-// Close Sales Screen
+// Products Screen
 // ============================================================================
 
-function closeSalesScreen() {
+function openProductsScreen() {
 
-    const salesScreen =
-        document.getElementById('sales-screen');
+    const main =
+        document.querySelector('main');
+
+    if (!main) {
+        console.error(
+            'SupermarketPOS: عنصر main پیدا نشد.'
+        );
+
+        return;
+    }
 
     const homeScreen =
         document.querySelector('.home-screen');
 
+    if (homeScreen) {
+        homeScreen.style.display = 'none';
+    }
+
+    const salesScreen =
+        document.getElementById('sales-screen');
+
     if (salesScreen) {
+        salesScreen.style.display = 'none';
+    }
 
-        salesScreen.style.display =
-            'none';
+    let productsScreen =
+        document.getElementById('products-screen');
 
-        salesScreen.setAttribute(
-            'aria-hidden',
-            'true'
+    if (!productsScreen) {
+
+        productsScreen =
+            createProductsScreen();
+
+        main.appendChild(productsScreen);
+    }
+
+    productsScreen.style.display = 'block';
+
+    productsScreen.setAttribute(
+        'aria-hidden',
+        'false'
+    );
+}
+
+function createProductsScreen() {
+
+    const screen =
+        document.createElement('section');
+
+    screen.id =
+        'products-screen';
+
+    screen.className =
+        'products-screen';
+
+    screen.setAttribute(
+        'aria-hidden',
+        'false'
+    );
+
+    screen.innerHTML = `
+        <div class="products-header">
+
+            <h2>
+                📦 مدیریت کالاها
+            </h2>
+
+            <p>
+                مدیریت محصولات و موجودی فروشگاه
+            </p>
+
+        </div>
+
+        <div class="products-placeholder">
+
+            <div class="placeholder-icon">
+                📦
+            </div>
+
+            <h3>
+                مدیریت محصولات
+            </h3>
+
+            <p>
+                در مرحله بعد، افزودن، ویرایش،
+                حذف و جستجوی کالاها را اضافه می‌کنیم.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            class="products-back-button"
+            id="products-back-button"
+        >
+            ← بازگشت به صفحه اصلی
+        </button>
+    `;
+
+    const backButton =
+        screen.querySelector(
+            '#products-back-button'
+        );
+
+    if (backButton) {
+
+        backButton.addEventListener(
+            'click',
+            showHomeScreen
         );
     }
 
-    if (homeScreen) {
-        homeScreen.style.display = '';
-    }
+    return screen;
+}
+
+// ============================================================================
+// Navigation
+// ============================================================================
+
+function setupNavigation() {
+
+    const menuCards =
+        document.querySelectorAll('.menu-card');
+
+    menuCards.forEach(card => {
+
+        card.addEventListener(
+            'click',
+            () => {
+
+                const action =
+                    card.getAttribute(
+                        'data-action'
+                    );
+
+                if (action === 'sales') {
+                    openSalesScreen();
+                    return;
+                }
+
+                if (action === 'products') {
+                    openProductsScreen();
+                    return;
+                }
+
+                if (
+                    action === 'reports' ||
+                    action === 'settings'
+                ) {
+                    console.log(
+                        `SupermarketPOS: بخش ${action} هنوز ساخته نشده است.`
+                    );
+                }
+            }
+        );
+    });
 }
 
 // ============================================================================
@@ -281,7 +422,7 @@ function initializeApp() {
 
     setApplicationStatus();
 
-    setupSalesNavigation();
+    setupNavigation();
 
     APP_STATE.initialized = true;
 
