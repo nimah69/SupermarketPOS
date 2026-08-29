@@ -1,0 +1,631 @@
+/* ==========================================================================
+   SupermarketPOS
+   Global Modal System
+   Stage 5.1
+   ========================================================================== */
+
+
+/* ==========================================================================
+   Body Lock
+   ========================================================================== */
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+/* ==========================================================================
+   Overlay
+   ========================================================================== */
+
+.supermarket-modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 99999;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 18px;
+
+    background:
+        rgba(15, 23, 42, 0.52);
+
+    backdrop-filter:
+        blur(7px);
+
+    -webkit-backdrop-filter:
+        blur(7px);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.22s ease,
+        visibility 0.22s ease;
+
+}
+
+
+/* ==========================================================================
+   Visible
+   ========================================================================== */
+
+.supermarket-modal-overlay.is-visible {
+
+    opacity: 1;
+
+    visibility: visible;
+
+    pointer-events: auto;
+
+}
+
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+
+.supermarket-modal {
+
+    position: relative;
+
+    width: min(
+        100%,
+        430px
+    );
+
+    max-height: calc(
+        100vh - 36px
+    );
+
+    overflow-y: auto;
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid
+        rgba(148, 163, 184, 0.22);
+
+    border-radius:
+        24px;
+
+    box-shadow:
+        0 25px 70px
+        rgba(15, 23, 42, 0.24);
+
+    padding:
+        28px 22px 22px;
+
+    text-align:
+        center;
+
+    direction:
+        rtl;
+
+    transform:
+        translateY(18px)
+        scale(0.96);
+
+    opacity:
+        0;
+
+    transition:
+        transform 0.24s cubic-bezier(
+            0.22,
+            1,
+            0.36,
+            1
+        ),
+        opacity 0.2s ease;
+
+}
+
+
+/* ==========================================================================
+   Modal Animation
+   ========================================================================== */
+
+.supermarket-modal-overlay.is-visible
+.supermarket-modal {
+
+    transform:
+        translateY(0)
+        scale(1);
+
+    opacity:
+        1;
+
+}
+
+
+/* ==========================================================================
+   Close
+   ========================================================================== */
+
+.supermarket-modal-close {
+
+    position:
+        absolute;
+
+    top:
+        12px;
+
+    left:
+        12px;
+
+    width:
+        34px;
+
+    height:
+        34px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        0;
+
+    border-radius:
+        50%;
+
+    background:
+        #f1f5f9;
+
+    color:
+        #475569;
+
+    font-size:
+        23px;
+
+    line-height:
+        1;
+
+    cursor:
+        pointer;
+
+    transition:
+        background 0.18s ease,
+        transform 0.18s ease;
+
+}
+
+
+.supermarket-modal-close:hover {
+
+    background:
+        #e2e8f0;
+
+    transform:
+        rotate(6deg);
+
+}
+
+
+.supermarket-modal-close:active {
+
+    transform:
+        scale(0.92);
+
+}
+
+
+/* ==========================================================================
+   Icon
+   ========================================================================== */
+
+.supermarket-modal-icon {
+
+    width:
+        68px;
+
+    height:
+        68px;
+
+    margin:
+        2px auto 16px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        20px;
+
+    background:
+        #f1f5f9;
+
+    font-size:
+        30px;
+
+}
+
+
+/* ==========================================================================
+   Types
+   ========================================================================== */
+
+.supermarket-modal-success
+.supermarket-modal-icon {
+
+    background:
+        #ecfdf5;
+
+}
+
+
+.supermarket-modal-error
+.supermarket-modal-icon {
+
+    background:
+        #fef2f2;
+
+}
+
+
+.supermarket-modal-warning
+.supermarket-modal-icon {
+
+    background:
+        #fffbeb;
+
+}
+
+
+.supermarket-modal-confirm
+.supermarket-modal-icon {
+
+    background:
+        #eff6ff;
+
+}
+
+
+/* ==========================================================================
+   Content
+   ========================================================================== */
+
+.supermarket-modal-content {
+
+    width:
+        100%;
+
+}
+
+
+.supermarket-modal-title {
+
+    margin:
+        0 0 10px;
+
+    color:
+        #0f172a;
+
+    font-size:
+        19px;
+
+    font-weight:
+        800;
+
+    line-height:
+        1.6;
+
+}
+
+
+.supermarket-modal-message {
+
+    color:
+        #64748b;
+
+    font-size:
+        13px;
+
+    line-height:
+        2;
+
+}
+
+
+.supermarket-modal-message p {
+
+    margin:
+        0;
+
+}
+
+
+/* ==========================================================================
+   Actions
+   ========================================================================== */
+
+.supermarket-modal-actions {
+
+    display:
+        flex;
+
+    gap:
+        10px;
+
+    margin-top:
+        22px;
+
+}
+
+
+.supermarket-modal-button {
+
+    flex:
+        1;
+
+    min-height:
+        46px;
+
+    padding:
+        10px 16px;
+
+    border:
+        0;
+
+    border-radius:
+        14px;
+
+    font-family:
+        inherit;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+    transition:
+        transform 0.16s ease,
+        opacity 0.16s ease,
+        box-shadow 0.16s ease;
+
+}
+
+
+.supermarket-modal-button:hover {
+
+    transform:
+        translateY(-1px);
+
+}
+
+
+.supermarket-modal-button:active {
+
+    transform:
+        scale(0.97);
+
+}
+
+
+.supermarket-modal-button:disabled {
+
+    opacity:
+        0.55;
+
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+
+}
+
+
+/* ==========================================================================
+   Primary
+   ========================================================================== */
+
+.modal-button-primary {
+
+    background:
+        #2563eb;
+
+    color:
+        #ffffff;
+
+    box-shadow:
+        0 8px 20px
+        rgba(37, 99, 235, 0.22);
+
+}
+
+
+/* ==========================================================================
+   Secondary
+   ========================================================================== */
+
+.modal-button-secondary {
+
+    background:
+        #f1f5f9;
+
+    color:
+        #334155;
+
+}
+
+
+/* ==========================================================================
+   Success
+   ========================================================================== */
+
+.supermarket-modal-success
+.modal-button-primary {
+
+    background:
+        #059669;
+
+    box-shadow:
+        0 8px 20px
+        rgba(5, 150, 105, 0.20);
+
+}
+
+
+/* ==========================================================================
+   Error
+   ========================================================================== */
+
+.supermarket-modal-error
+.modal-button-primary {
+
+    background:
+        #dc2626;
+
+    box-shadow:
+        0 8px 20px
+        rgba(220, 38, 38, 0.20);
+
+}
+
+
+/* ==========================================================================
+   Warning
+   ========================================================================== */
+
+.supermarket-modal-warning
+.modal-button-primary {
+
+    background:
+        #d97706;
+
+    box-shadow:
+        0 8px 20px
+        rgba(217, 119, 6, 0.20);
+
+}
+
+
+/* ==========================================================================
+   Confirm
+   ========================================================================== */
+
+.supermarket-modal-confirm
+.modal-button-primary {
+
+    background:
+        #2563eb;
+
+}
+
+
+/* ==========================================================================
+   Mobile
+   ========================================================================== */
+
+@media (
+    max-width: 480px
+) {
+
+    .supermarket-modal-overlay {
+
+        padding:
+            14px;
+
+    }
+
+
+    .supermarket-modal {
+
+        width:
+            100%;
+
+        border-radius:
+            22px;
+
+        padding:
+            26px 17px 18px;
+
+    }
+
+
+    .supermarket-modal-icon {
+
+        width:
+            62px;
+
+        height:
+            62px;
+
+        font-size:
+            27px;
+
+    }
+
+
+    .supermarket-modal-title {
+
+        font-size:
+            18px;
+
+    }
+
+
+    .supermarket-modal-message {
+
+        font-size:
+            12px;
+
+    }
+
+
+    .supermarket-modal-button {
+
+        min-height:
+            44px;
+
+        font-size:
+            12px;
+
+    }
+
+}
+
+
+/* ==========================================================================
+   Reduced Motion
+   ========================================================================== */
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    .supermarket-modal-overlay,
+    .supermarket-modal {
+
+        transition:
+            none;
+
+    }
+
+}
