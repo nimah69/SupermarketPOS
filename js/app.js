@@ -30,7 +30,7 @@ function getElement(selector) {
 }
 
 // ============================================================================
-// Application Initialization
+// DOM Cache
 // ============================================================================
 
 function cacheDOM() {
@@ -38,7 +38,7 @@ function cacheDOM() {
 }
 
 // ============================================================================
-// Status
+// Application Status
 // ============================================================================
 
 function setApplicationStatus() {
@@ -49,20 +49,33 @@ function setApplicationStatus() {
         return;
     }
 
-    statusContainer.innerHTML = '';
+    /*
+     * مهم:
+     * وضعیت‌ها در index.html ساخته شده‌اند.
+     *
+     * این تابع نباید محتوای header-status را پاک کند.
+     * بنابراین دیگر innerHTML استفاده نمی‌کنیم.
+     */
 
-    const statusDot =
-        document.createElement('span');
+    const readyStatus =
+        statusContainer.querySelector('.status-ready');
 
-    statusDot.className = 'status-dot';
+    const onlineStatus =
+        statusContainer.querySelector('.status-online');
 
-    const statusText =
-        document.createElement('span');
+    if (readyStatus) {
+        readyStatus.setAttribute(
+            'aria-label',
+            'وضعیت: آماده به کار'
+        );
+    }
 
-    statusText.textContent = 'آماده به کار';
-
-    statusContainer.appendChild(statusDot);
-    statusContainer.appendChild(statusText);
+    if (onlineStatus) {
+        onlineStatus.setAttribute(
+            'aria-label',
+            'اتصال: آنلاین'
+        );
+    }
 }
 
 // ============================================================================
@@ -70,6 +83,7 @@ function setApplicationStatus() {
 // ============================================================================
 
 function initializeApp() {
+
     if (APP_STATE.initialized) {
         return;
     }
@@ -77,6 +91,7 @@ function initializeApp() {
     cacheDOM();
 
     if (!DOM.app) {
+
         console.error(
             'SupermarketPOS: عنصر #app پیدا نشد.'
         );
