@@ -24,8 +24,7 @@ let salesCart = [];
 
 function formatPrice(value) {
 
-    const number =
-        Number(value) || 0;
+    const number = Number(value) || 0;
 
     return number.toLocaleString('fa-IR');
 }
@@ -33,15 +32,14 @@ function formatPrice(value) {
 
 function normalizeBarcode(value) {
 
-    return String(value || '').trim();
+    return String(value ?? '').trim();
 }
 
 
 function findCartItem(barcode) {
 
     return salesCart.find(
-        item =>
-            item.barcode === barcode
+        item => item.barcode === barcode
     );
 }
 
@@ -53,8 +51,8 @@ function calculateCartTotal() {
 
             return total +
                 (
-                    item.salePrice *
-                    item.quantity
+                    Number(item.salePrice) *
+                    Number(item.quantity)
                 );
 
         },
@@ -69,7 +67,7 @@ function calculateCartCount() {
         (total, item) => {
 
             return total +
-                item.quantity;
+                Number(item.quantity);
 
         },
         0
@@ -78,467 +76,10 @@ function calculateCartCount() {
 
 
 // ============================================================================
-// Create Sales Screen
+// Sales Message
 // ============================================================================
 
-function createSalesScreen() {
-
-    const existingScreen =
-        document.getElementById(
-            'sales-screen'
-        );
-
-    if (existingScreen) {
-
-        return existingScreen;
-    }
-
-
-    const screen =
-        document.createElement('section');
-
-    screen.id =
-        'sales-screen';
-
-    screen.className =
-        'sales-screen';
-
-    screen.setAttribute(
-        'aria-hidden',
-        'false'
-    );
-
-
-    // ========================================================================
-    // Header
-    // ========================================================================
-
-    const header =
-        document.createElement('div');
-
-    header.className =
-        'sales-header';
-
-
-    const title =
-        document.createElement('h2');
-
-    title.textContent =
-        '🛒 فروش و صندوق';
-
-
-    const description =
-        document.createElement('p');
-
-    description.textContent =
-        'بارکد کالا را وارد کنید یا اسکن کنید تا به سبد خرید اضافه شود.';
-
-
-    header.appendChild(title);
-    header.appendChild(description);
-
-
-    // ========================================================================
-    // Barcode Section
-    // ========================================================================
-
-    const barcodeCard =
-        document.createElement('div');
-
-    barcodeCard.className =
-        'sales-barcode-card';
-
-
-    const barcodeTitle =
-        document.createElement('h3');
-
-    barcodeTitle.textContent =
-        '▣ افزودن کالا';
-
-
-    const barcodeDescription =
-        document.createElement('p');
-
-    barcodeDescription.textContent =
-        'بارکد را وارد کنید و دکمه افزودن را بزنید.';
-
-
-    const barcodeRow =
-        document.createElement('div');
-
-    barcodeRow.className =
-        'sales-barcode-row';
-
-
-    const barcodeInput =
-        document.createElement('input');
-
-    barcodeInput.type =
-        'text';
-
-    barcodeInput.inputMode =
-        'numeric';
-
-    barcodeInput.autocomplete =
-        'off';
-
-    barcodeInput.id =
-        'sales-barcode-input';
-
-    barcodeInput.className =
-        'sales-barcode-input';
-
-    barcodeInput.placeholder =
-        'بارکد کالا';
-
-
-    const addButton =
-        document.createElement('button');
-
-    addButton.type =
-        'button';
-
-    addButton.className =
-        'sales-add-button';
-
-    addButton.textContent =
-        'افزودن';
-
-
-    barcodeRow.appendChild(
-        barcodeInput
-    );
-
-    barcodeRow.appendChild(
-        addButton
-    );
-
-
-    const barcodeMessage =
-        document.createElement('div');
-
-    barcodeMessage.id =
-        'sales-barcode-message';
-
-    barcodeMessage.className =
-        'sales-barcode-message';
-
-    barcodeMessage.setAttribute(
-        'role',
-        'status'
-    );
-
-
-    barcodeCard.appendChild(
-        barcodeTitle
-    );
-
-    barcodeCard.appendChild(
-        barcodeDescription
-    );
-
-    barcodeCard.appendChild(
-        barcodeRow
-    );
-
-    barcodeCard.appendChild(
-        barcodeMessage
-    );
-
-
-    // ========================================================================
-    // Cart
-    // ========================================================================
-
-    const cartCard =
-        document.createElement('div');
-
-    cartCard.className =
-        'sales-cart-card';
-
-
-    const cartHeader =
-        document.createElement('div');
-
-    cartHeader.className =
-        'sales-cart-header';
-
-
-    const cartTitle =
-        document.createElement('h3');
-
-    cartTitle.textContent =
-        '🛍️ سبد خرید';
-
-
-    const cartCount =
-        document.createElement('span');
-
-    cartCount.id =
-        'sales-cart-count';
-
-    cartCount.className =
-        'sales-cart-count';
-
-    cartCount.textContent =
-        '۰ کالا';
-
-
-    cartHeader.appendChild(
-        cartTitle
-    );
-
-    cartHeader.appendChild(
-        cartCount
-    );
-
-
-    const cartItems =
-        document.createElement('div');
-
-    cartItems.id =
-        'sales-cart-items';
-
-    cartItems.className =
-        'sales-cart-items';
-
-
-    cartCard.appendChild(
-        cartHeader
-    );
-
-    cartCard.appendChild(
-        cartItems
-    );
-
-
-    // ========================================================================
-    // Total
-    // ========================================================================
-
-    const totalCard =
-        document.createElement('div');
-
-    totalCard.className =
-        'sales-total-card';
-
-
-    const totalLabel =
-        document.createElement('span');
-
-    totalLabel.textContent =
-        'مبلغ قابل پرداخت';
-
-
-    const totalValue =
-        document.createElement('strong');
-
-    totalValue.id =
-        'sales-total-value';
-
-    totalValue.textContent =
-        '۰ تومان';
-
-
-    totalCard.appendChild(
-        totalLabel
-    );
-
-    totalCard.appendChild(
-        totalValue
-    );
-
-
-    // ========================================================================
-    // Checkout Button
-    // ========================================================================
-
-    const checkoutButton =
-        document.createElement('button');
-
-    checkoutButton.type =
-        'button';
-
-    checkoutButton.id =
-        'sales-checkout-button';
-
-    checkoutButton.className =
-        'sales-checkout-button';
-
-    checkoutButton.textContent =
-        'ثبت فروش';
-
-    checkoutButton.disabled =
-        true;
-
-
-    checkoutButton.addEventListener(
-        'click',
-        () => {
-
-            showSalesMessage(
-                'ثبت نهایی فروش در مرحله بعد فعال خواهد شد.',
-                'info'
-            );
-
-        }
-    );
-
-
-    // ========================================================================
-    // Clear Cart Button
-    // ========================================================================
-
-    const clearButton =
-        document.createElement('button');
-
-    clearButton.type =
-        'button';
-
-    clearButton.className =
-        'sales-clear-button';
-
-    clearButton.textContent =
-        'پاک کردن سبد';
-
-
-    clearButton.addEventListener(
-        'click',
-        clearCart
-    );
-
-
-    // ========================================================================
-    // Back Button
-    // ========================================================================
-
-    const backButton =
-        document.createElement('button');
-
-    backButton.type =
-        'button';
-
-    backButton.className =
-        'sales-back-button';
-
-    backButton.textContent =
-        '← بازگشت به صفحه اصلی';
-
-
-    backButton.addEventListener(
-        'click',
-        () => {
-
-            screen.style.display =
-                'none';
-
-            screen.setAttribute(
-                'aria-hidden',
-                'true'
-            );
-
-
-            const homeScreen =
-                document.querySelector(
-                    '.home-screen'
-                );
-
-            if (homeScreen) {
-
-                homeScreen.style.display =
-                    '';
-            }
-
-        }
-    );
-
-
-    // ========================================================================
-    // Assemble
-    // ========================================================================
-
-    screen.appendChild(
-        header
-    );
-
-    screen.appendChild(
-        barcodeCard
-    );
-
-    screen.appendChild(
-        cartCard
-    );
-
-    screen.appendChild(
-        totalCard
-    );
-
-    screen.appendChild(
-        checkoutButton
-    );
-
-    screen.appendChild(
-        clearButton
-    );
-
-    screen.appendChild(
-        backButton
-    );
-
-
-    // ========================================================================
-    // Events
-    // ========================================================================
-
-    addButton.addEventListener(
-        'click',
-        () => {
-
-            addProductByBarcode(
-                barcodeInput.value
-            );
-
-        }
-    );
-
-
-    barcodeInput.addEventListener(
-        'keydown',
-        event => {
-
-            if (
-                event.key === 'Enter'
-            ) {
-
-                event.preventDefault();
-
-                addProductByBarcode(
-                    barcodeInput.value
-                );
-            }
-        }
-    );
-
-
-    // ========================================================================
-    // Initial Render
-    // ========================================================================
-
-    renderCart();
-
-
-    return screen;
-}
-
-
-// ============================================================================
-// Show Sales Message
-// ============================================================================
-
-function showSalesMessage(
-    message,
-    type = 'info'
-) {
+function showSalesMessage(message, type = 'info') {
 
     const element =
         document.getElementById(
@@ -549,9 +90,7 @@ function showSalesMessage(
         return;
     }
 
-
-    element.textContent =
-        message;
+    element.textContent = message;
 
     element.className =
         'sales-barcode-message ' +
@@ -560,12 +99,38 @@ function showSalesMessage(
 
 
 // ============================================================================
+// Focus Barcode
+// ============================================================================
+
+function focusBarcodeInput() {
+
+    const input =
+        document.getElementById(
+            'sales-barcode-input'
+        );
+
+    if (!input) {
+        return;
+    }
+
+    setTimeout(
+        () => {
+
+            input.focus();
+
+            input.select();
+
+        },
+        50
+    );
+}
+
+
+// ============================================================================
 // Add Product By Barcode
 // ============================================================================
 
-async function addProductByBarcode(
-    barcodeValue
-) {
+async function addProductByBarcode(barcodeValue) {
 
     const barcode =
         normalizeBarcode(
@@ -600,6 +165,10 @@ async function addProductByBarcode(
             );
 
 
+        // ---------------------------------------------------------------
+        // Product Not Found
+        // ---------------------------------------------------------------
+
         if (!product) {
 
             showSalesMessage(
@@ -612,6 +181,10 @@ async function addProductByBarcode(
             return;
         }
 
+
+        // ---------------------------------------------------------------
+        // Stock
+        // ---------------------------------------------------------------
 
         const stock =
             Number(product.stock) || 0;
@@ -630,6 +203,10 @@ async function addProductByBarcode(
         }
 
 
+        // ---------------------------------------------------------------
+        // Price
+        // ---------------------------------------------------------------
+
         const salePrice =
             Number(product.salePrice) || 0;
 
@@ -647,6 +224,10 @@ async function addProductByBarcode(
         }
 
 
+        // ---------------------------------------------------------------
+        // Existing Item
+        // ---------------------------------------------------------------
+
         const existingItem =
             findCartItem(
                 barcode
@@ -656,8 +237,7 @@ async function addProductByBarcode(
         if (existingItem) {
 
             if (
-                existingItem.quantity >=
-                stock
+                existingItem.quantity >= stock
             ) {
 
                 showSalesMessage(
@@ -672,6 +252,7 @@ async function addProductByBarcode(
 
 
             existingItem.quantity += 1;
+
 
         } else {
 
@@ -718,6 +299,7 @@ async function addProductByBarcode(
                 'sales-barcode-input'
             );
 
+
         if (input) {
 
             input.value = '';
@@ -725,10 +307,11 @@ async function addProductByBarcode(
             input.focus();
         }
 
+
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: خطا در افزودن کالا:',
+            'SupermarketPOS: خطا در جستجوی کالا:',
             error
         );
 
@@ -747,14 +330,13 @@ async function addProductByBarcode(
 // Increase Quantity
 // ============================================================================
 
-function increaseQuantity(
-    barcode
-) {
+function increaseQuantity(barcode) {
 
     const item =
         findCartItem(
             barcode
         );
+
 
     if (!item) {
         return;
@@ -767,7 +349,7 @@ function increaseQuantity(
     ) {
 
         showSalesMessage(
-            `موجودی «${item.name}» بیشتر از ${formatPrice(item.stock)} عدد نیست.`,
+            `موجودی «${item.name}» فقط ${formatPrice(item.stock)} عدد است.`,
             'error'
         );
 
@@ -776,6 +358,7 @@ function increaseQuantity(
 
 
     item.quantity += 1;
+
 
     renderCart();
 
@@ -791,14 +374,13 @@ function increaseQuantity(
 // Decrease Quantity
 // ============================================================================
 
-function decreaseQuantity(
-    barcode
-) {
+function decreaseQuantity(barcode) {
 
     const item =
         findCartItem(
             barcode
         );
+
 
     if (!item) {
         return;
@@ -819,6 +401,7 @@ function decreaseQuantity(
 
     item.quantity -= 1;
 
+
     renderCart();
 
 
@@ -830,12 +413,10 @@ function decreaseQuantity(
 
 
 // ============================================================================
-// Remove From Cart
+// Remove Item
 // ============================================================================
 
-function removeFromCart(
-    barcode
-) {
+function removeFromCart(barcode) {
 
     const index =
         salesCart.findIndex(
@@ -934,6 +515,12 @@ function renderCart() {
         );
 
 
+    const clearButton =
+        document.getElementById(
+            'sales-clear-button'
+        );
+
+
     if (
         !cartItems ||
         !cartCount ||
@@ -944,8 +531,7 @@ function renderCart() {
     }
 
 
-    cartItems.innerHTML =
-        '';
+    cartItems.innerHTML = '';
 
 
     const totalCount =
@@ -971,6 +557,13 @@ function renderCart() {
     }
 
 
+    if (clearButton) {
+
+        clearButton.disabled =
+            salesCart.length === 0;
+    }
+
+
     // ------------------------------------------------------------------------
     // Empty Cart
     // ------------------------------------------------------------------------
@@ -990,7 +583,7 @@ function renderCart() {
             document.createElement('div');
 
         icon.className =
-            'placeholder-icon';
+            'sales-empty-icon';
 
         icon.textContent =
             '🛍️';
@@ -1007,7 +600,7 @@ function renderCart() {
             document.createElement('p');
 
         text.textContent =
-            'بارکد یک کالا را وارد کنید تا به سبد اضافه شود.';
+            'بارکد کالا را وارد کنید تا محصول به سبد اضافه شود.';
 
 
         empty.appendChild(
@@ -1047,7 +640,7 @@ function renderCart() {
 
 
             // ---------------------------------------------------------------
-            // Top
+            // Item Top
             // ---------------------------------------------------------------
 
             const top =
@@ -1127,7 +720,7 @@ function renderCart() {
 
 
             // ---------------------------------------------------------------
-            // Price
+            // Price Row
             // ---------------------------------------------------------------
 
             const priceRow =
@@ -1255,7 +848,7 @@ function renderCart() {
                     true;
 
                 increaseButton.title =
-                    'موجودی کالا تمام شده است';
+                    'موجودی کالا به حداکثر رسیده است';
             }
 
 
@@ -1282,14 +875,21 @@ function renderCart() {
             stockInfo.className =
                 'sales-stock-info';
 
+
+            const remaining =
+                Math.max(
+                    0,
+                    item.stock -
+                    item.quantity
+                );
+
+
             stockInfo.textContent =
-                `موجودی: ${formatPrice(
-                    item.stock
-                )}`;
+                `موجودی پس از فروش: ${formatPrice(remaining)}`;
 
 
             // ---------------------------------------------------------------
-            // Assemble Item
+            // Assemble
             // ---------------------------------------------------------------
 
             card.appendChild(
@@ -1318,28 +918,583 @@ function renderCart() {
 
 
 // ============================================================================
-// Focus Barcode Input
+// Create Sales Screen
 // ============================================================================
 
-function focusBarcodeInput() {
+function createSalesScreen() {
 
-    const input =
+    const existingScreen =
         document.getElementById(
-            'sales-barcode-input'
+            'sales-screen'
         );
 
 
-    if (input) {
+    if (existingScreen) {
 
-        setTimeout(
-            () => {
-
-                input.focus();
-
-            },
-            50
-        );
+        return existingScreen;
     }
+
+
+    const screen =
+        document.createElement('section');
+
+
+    screen.id =
+        'sales-screen';
+
+    screen.className =
+        'sales-screen';
+
+
+    screen.setAttribute(
+        'aria-hidden',
+        'false'
+    );
+
+
+    // ========================================================================
+    // Header
+    // ========================================================================
+
+    const header =
+        document.createElement('div');
+
+    header.className =
+        'sales-header';
+
+
+    const title =
+        document.createElement('h2');
+
+    title.textContent =
+        '🛒 فروش و صندوق';
+
+
+    const description =
+        document.createElement('p');
+
+    description.textContent =
+        'بارکد کالا را وارد کنید یا با بارکدخوان اسکن کنید.';
+
+
+    header.appendChild(
+        title
+    );
+
+    header.appendChild(
+        description
+    );
+
+
+    // ========================================================================
+    // Barcode Card
+    // ========================================================================
+
+    const barcodeCard =
+        document.createElement('div');
+
+    barcodeCard.className =
+        'sales-barcode-card';
+
+
+    const barcodeHeader =
+        document.createElement('div');
+
+    barcodeHeader.className =
+        'sales-section-header';
+
+
+    const barcodeIcon =
+        document.createElement('div');
+
+    barcodeIcon.className =
+        'sales-section-icon';
+
+    barcodeIcon.textContent =
+        '▣';
+
+
+    const barcodeHeaderText =
+        document.createElement('div');
+
+
+    const barcodeTitle =
+        document.createElement('h3');
+
+    barcodeTitle.textContent =
+        'افزودن کالا';
+
+
+    const barcodeDescription =
+        document.createElement('p');
+
+    barcodeDescription.textContent =
+        'بارکد را وارد کنید و روی «افزودن کالا» بزنید.';
+
+
+    barcodeHeaderText.appendChild(
+        barcodeTitle
+    );
+
+    barcodeHeaderText.appendChild(
+        barcodeDescription
+    );
+
+
+    barcodeHeader.appendChild(
+        barcodeIcon
+    );
+
+    barcodeHeader.appendChild(
+        barcodeHeaderText
+    );
+
+
+    const barcodeRow =
+        document.createElement('div');
+
+    barcodeRow.className =
+        'sales-barcode-row';
+
+
+    const barcodeInput =
+        document.createElement('input');
+
+
+    barcodeInput.type =
+        'text';
+
+    barcodeInput.inputMode =
+        'numeric';
+
+    barcodeInput.autocomplete =
+        'off';
+
+    barcodeInput.id =
+        'sales-barcode-input';
+
+    barcodeInput.className =
+        'sales-barcode-input';
+
+    barcodeInput.placeholder =
+        'بارکد کالا را وارد کنید';
+
+    barcodeInput.setAttribute(
+        'aria-label',
+        'بارکد کالا'
+    );
+
+
+    const addButton =
+        document.createElement('button');
+
+
+    addButton.type =
+        'button';
+
+    addButton.className =
+        'sales-add-button';
+
+    addButton.textContent =
+        'افزودن کالا';
+
+
+    barcodeRow.appendChild(
+        barcodeInput
+    );
+
+    barcodeRow.appendChild(
+        addButton
+    );
+
+
+    const barcodeMessage =
+        document.createElement('div');
+
+
+    barcodeMessage.id =
+        'sales-barcode-message';
+
+    barcodeMessage.className =
+        'sales-barcode-message';
+
+    barcodeMessage.setAttribute(
+        'role',
+        'status'
+    );
+
+    barcodeMessage.setAttribute(
+        'aria-live',
+        'polite'
+    );
+
+
+    barcodeCard.appendChild(
+        barcodeHeader
+    );
+
+    barcodeCard.appendChild(
+        barcodeRow
+    );
+
+    barcodeCard.appendChild(
+        barcodeMessage
+    );
+
+
+    // ========================================================================
+    // Cart Card
+    // ========================================================================
+
+    const cartCard =
+        document.createElement('div');
+
+    cartCard.className =
+        'sales-cart-card';
+
+
+    const cartHeader =
+        document.createElement('div');
+
+    cartHeader.className =
+        'sales-cart-header';
+
+
+    const cartHeaderLeft =
+        document.createElement('div');
+
+    cartHeaderLeft.className =
+        'sales-cart-header-left';
+
+
+    const cartIcon =
+        document.createElement('div');
+
+    cartIcon.className =
+        'sales-section-icon sales-cart-icon';
+
+    cartIcon.textContent =
+        '🛍️';
+
+
+    const cartTitle =
+        document.createElement('h3');
+
+    cartTitle.textContent =
+        'سبد خرید';
+
+
+    cartHeaderLeft.appendChild(
+        cartIcon
+    );
+
+    cartHeaderLeft.appendChild(
+        cartTitle
+    );
+
+
+    const cartCount =
+        document.createElement('span');
+
+
+    cartCount.id =
+        'sales-cart-count';
+
+    cartCount.className =
+        'sales-cart-count';
+
+    cartCount.textContent =
+        '۰ کالا';
+
+
+    cartHeader.appendChild(
+        cartHeaderLeft
+    );
+
+    cartHeader.appendChild(
+        cartCount
+    );
+
+
+    const cartItems =
+        document.createElement('div');
+
+
+    cartItems.id =
+        'sales-cart-items';
+
+    cartItems.className =
+        'sales-cart-items';
+
+
+    cartCard.appendChild(
+        cartHeader
+    );
+
+    cartCard.appendChild(
+        cartItems
+    );
+
+
+    // ========================================================================
+    // Total Card
+    // ========================================================================
+
+    const totalCard =
+        document.createElement('div');
+
+    totalCard.className =
+        'sales-total-card';
+
+
+    const totalInfo =
+        document.createElement('div');
+
+    totalInfo.className =
+        'sales-total-info';
+
+
+    const totalLabel =
+        document.createElement('span');
+
+    totalLabel.textContent =
+        'مبلغ قابل پرداخت';
+
+
+    const totalHint =
+        document.createElement('small');
+
+    totalHint.textContent =
+        'جمع کل سبد خرید';
+
+
+    totalInfo.appendChild(
+        totalLabel
+    );
+
+    totalInfo.appendChild(
+        totalHint
+    );
+
+
+    const totalValue =
+        document.createElement('strong');
+
+    totalValue.id =
+        'sales-total-value';
+
+    totalValue.textContent =
+        '۰ تومان';
+
+
+    totalCard.appendChild(
+        totalInfo
+    );
+
+    totalCard.appendChild(
+        totalValue
+    );
+
+
+    // ========================================================================
+    // Actions
+    // ========================================================================
+
+    const actions =
+        document.createElement('div');
+
+    actions.className =
+        'sales-actions';
+
+
+    const clearButton =
+        document.createElement('button');
+
+
+    clearButton.type =
+        'button';
+
+    clearButton.id =
+        'sales-clear-button';
+
+    clearButton.className =
+        'sales-clear-button';
+
+    clearButton.textContent =
+        'پاک کردن سبد';
+
+    clearButton.disabled =
+        true;
+
+
+    clearButton.addEventListener(
+        'click',
+        clearCart
+    );
+
+
+    const checkoutButton =
+        document.createElement('button');
+
+
+    checkoutButton.type =
+        'button';
+
+    checkoutButton.id =
+        'sales-checkout-button';
+
+    checkoutButton.className =
+        'sales-checkout-button';
+
+    checkoutButton.textContent =
+        'ثبت فروش';
+
+    checkoutButton.disabled =
+        true;
+
+
+    checkoutButton.addEventListener(
+        'click',
+        () => {
+
+            showSalesMessage(
+                'ثبت نهایی فروش در مرحله بعد فعال خواهد شد.',
+                'info'
+            );
+
+        }
+    );
+
+
+    actions.appendChild(
+        clearButton
+    );
+
+    actions.appendChild(
+        checkoutButton
+    );
+
+
+    // ========================================================================
+    // Back Button
+    // ========================================================================
+
+    const backButton =
+        document.createElement('button');
+
+
+    backButton.type =
+        'button';
+
+    backButton.className =
+        'sales-back-button';
+
+    backButton.textContent =
+        '← بازگشت به صفحه اصلی';
+
+
+    backButton.addEventListener(
+        'click',
+        () => {
+
+            screen.style.display =
+                'none';
+
+
+            screen.setAttribute(
+                'aria-hidden',
+                'true'
+            );
+
+
+            const homeScreen =
+                document.querySelector(
+                    '.home-screen'
+                );
+
+
+            if (homeScreen) {
+
+                homeScreen.style.display =
+                    '';
+            }
+
+        }
+    );
+
+
+    // ========================================================================
+    // Assemble
+    // ========================================================================
+
+    screen.appendChild(
+        header
+    );
+
+    screen.appendChild(
+        barcodeCard
+    );
+
+    screen.appendChild(
+        cartCard
+    );
+
+    screen.appendChild(
+        totalCard
+    );
+
+    screen.appendChild(
+        actions
+    );
+
+    screen.appendChild(
+        backButton
+    );
+
+
+    // ========================================================================
+    // Events
+    // ========================================================================
+
+    addButton.addEventListener(
+        'click',
+        () => {
+
+            addProductByBarcode(
+                barcodeInput.value
+            );
+
+        }
+    );
+
+
+    barcodeInput.addEventListener(
+        'keydown',
+        event => {
+
+            if (
+                event.key === 'Enter'
+            ) {
+
+                event.preventDefault();
+
+                addProductByBarcode(
+                    barcodeInput.value
+                );
+            }
+
+        }
+    );
+
+
+    // ========================================================================
+    // Initial Render
+    // ========================================================================
+
+    renderCart();
+
+
+    return screen;
 }
 
 
@@ -1350,7 +1505,9 @@ function focusBarcodeInput() {
 function openSalesScreen() {
 
     const main =
-        document.querySelector('main');
+        document.querySelector(
+            'main'
+        );
 
 
     if (!main) {
@@ -1430,6 +1587,21 @@ function setupSalesButton() {
 
         return;
     }
+
+
+    // Prevent duplicate listeners
+
+    if (
+        salesButton.dataset.salesReady ===
+        'true'
+    ) {
+
+        return;
+    }
+
+
+    salesButton.dataset.salesReady =
+        'true';
 
 
     salesButton.addEventListener(
