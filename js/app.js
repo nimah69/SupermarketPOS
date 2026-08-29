@@ -1,7 +1,6 @@
 // js/app.js
 // SupermarketPOS
-// Application Entry Point
-// Version: 0.1
+// Products Form - Stage 1
 
 'use strict';
 
@@ -194,6 +193,10 @@ function openSalesScreen() {
     salesScreen.style.display = 'block';
 }
 
+// ============================================================================
+// Create Sales Screen
+// ============================================================================
+
 function createSalesScreen() {
 
     const screen =
@@ -265,6 +268,7 @@ function createSalesScreen() {
         );
 
     if (backButton) {
+
         backButton.addEventListener(
             'click',
             showHomeScreen
@@ -315,6 +319,10 @@ function openProductsScreen() {
     productsScreen.style.display = 'block';
 }
 
+// ============================================================================
+// Create Products Screen
+// ============================================================================
+
 function createProductsScreen() {
 
     const screen =
@@ -339,6 +347,149 @@ function createProductsScreen() {
 
         </div>
 
+        <div class="products-actions">
+
+            <button
+                type="button"
+                class="add-product-button"
+                id="add-product-button"
+            >
+                ＋ افزودن کالا
+            </button>
+
+        </div>
+
+        <div
+            id="product-form-container"
+            class="product-form-container"
+            style="display: none;"
+        >
+
+            <div class="product-form">
+
+                <div class="product-form-header">
+
+                    <div>
+                        <h3>
+                            افزودن کالای جدید
+                        </h3>
+
+                        <p>
+                            اطلاعات کالا را وارد کنید.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="close-product-form"
+                        id="close-product-form"
+                        aria-label="بستن فرم"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+                <div class="form-field">
+
+                    <label for="product-barcode">
+                        بارکد
+                    </label>
+
+                    <input
+                        type="text"
+                        id="product-barcode"
+                        inputmode="numeric"
+                        placeholder="بارکد کالا"
+                    >
+
+                </div>
+
+                <div class="form-field">
+
+                    <label for="product-name">
+                        نام کالا
+                    </label>
+
+                    <input
+                        type="text"
+                        id="product-name"
+                        placeholder="مثلاً نوشابه"
+                    >
+
+                </div>
+
+                <div class="form-field">
+
+                    <label for="product-category">
+                        دسته‌بندی
+                    </label>
+
+                    <input
+                        type="text"
+                        id="product-category"
+                        placeholder="مثلاً نوشیدنی"
+                    >
+
+                </div>
+
+                <div class="form-field">
+
+                    <label for="product-price">
+                        قیمت فروش
+                    </label>
+
+                    <input
+                        type="number"
+                        id="product-price"
+                        inputmode="numeric"
+                        min="0"
+                        placeholder="قیمت به تومان"
+                    >
+
+                </div>
+
+                <div class="form-field">
+
+                    <label for="product-stock">
+                        موجودی
+                    </label>
+
+                    <input
+                        type="number"
+                        id="product-stock"
+                        inputmode="numeric"
+                        min="0"
+                        value="0"
+                        placeholder="تعداد موجود"
+                    >
+
+                </div>
+
+                <div class="product-form-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-product-button"
+                        id="cancel-product-button"
+                    >
+                        انصراف
+                    </button>
+
+                    <button
+                        type="button"
+                        class="save-product-button"
+                        id="save-product-button"
+                    >
+                        ذخیره کالا
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
         <div class="products-placeholder">
 
             <div class="placeholder-icon">
@@ -346,12 +497,11 @@ function createProductsScreen() {
             </div>
 
             <h3>
-                مدیریت محصولات
+                هنوز کالایی نمایش داده نشده است
             </h3>
 
             <p>
-                در مرحله بعد، افزودن، ویرایش،
-                حذف و جستجوی کالاها را اضافه می‌کنیم.
+                در مرحله بعد کالاها را در این قسمت نمایش می‌دهیم.
             </p>
 
         </div>
@@ -365,12 +515,15 @@ function createProductsScreen() {
         </button>
     `;
 
+    setupProductForm(screen);
+
     const backButton =
         screen.querySelector(
             '#products-back-button'
         );
 
     if (backButton) {
+
         backButton.addEventListener(
             'click',
             showHomeScreen
@@ -378,6 +531,77 @@ function createProductsScreen() {
     }
 
     return screen;
+}
+
+// ============================================================================
+// Product Form
+// ============================================================================
+
+function setupProductForm(screen) {
+
+    const addButton =
+        screen.querySelector(
+            '#add-product-button'
+        );
+
+    const formContainer =
+        screen.querySelector(
+            '#product-form-container'
+        );
+
+    const closeButton =
+        screen.querySelector(
+            '#close-product-form'
+        );
+
+    const cancelButton =
+        screen.querySelector(
+            '#cancel-product-button'
+        );
+
+    if (!addButton || !formContainer) {
+        return;
+    }
+
+    addButton.addEventListener(
+        'click',
+        () => {
+
+            formContainer.style.display =
+                'block';
+
+            const barcodeInput =
+                screen.querySelector(
+                    '#product-barcode'
+                );
+
+            if (barcodeInput) {
+                barcodeInput.focus();
+            }
+        }
+    );
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            'click',
+            () => {
+                formContainer.style.display =
+                    'none';
+            }
+        );
+    }
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            'click',
+            () => {
+                formContainer.style.display =
+                    'none';
+            }
+        );
+    }
 }
 
 // ============================================================================
