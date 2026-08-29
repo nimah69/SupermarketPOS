@@ -1,6 +1,7 @@
 // js/database.js
 // SupermarketPOS
-// Database Layer - Stage 3
+// Database Layer
+// Backup / Restore Preparation
 // Version: 1
 
 'use strict';
@@ -240,82 +241,183 @@ export async function initializeDatabase() {
 // Add Product
 // ============================================================================
 
-export async function addProduct(product) {
+export function addProduct(product) {
 
-    if (
-        !product ||
-        typeof product !== 'object'
-    ) {
+    return openDatabase()
+        .then(db => {
 
-        throw new Error(
-            'اطلاعات کالا معتبر نیست.'
-        );
-    }
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'products',
+                            'readwrite'
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+                    const request =
+                        store.add(product);
 
 
-    const db =
-        await openDatabase();
+                    request.onsuccess =
+                        () => {
+
+                            resolve(
+                                request.result
+                            );
+                        };
 
 
-    return new Promise((resolve, reject) => {
+                    request.onerror =
+                        () => {
 
-        const transaction =
-            db.transaction(
-                'products',
-                'readwrite'
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+
+
+                    transaction.onerror =
+                        () => {
+
+                            reject(
+                                transaction.error
+                            );
+                        };
+                }
             );
+        });
+}
 
 
-        const store =
-            transaction.objectStore(
-                'products'
+// ============================================================================
+// Get Product
+// ============================================================================
+
+export function getProduct(id) {
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'products',
+                            'readonly'
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+                    const request =
+                        store.get(id);
+
+
+                    request.onsuccess =
+                        () => {
+
+                            resolve(
+                                request.result
+                            );
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+                }
             );
+        });
+}
 
 
-        const request =
-            store.add(product);
+// ============================================================================
+// Get Product By Barcode
+// ============================================================================
+
+export function getProductByBarcode(
+    barcode
+) {
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'products',
+                            'readonly'
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+                    const index =
+                        store.index(
+                            'barcode'
+                        );
+
+                    const request =
+                        index.get(barcode);
 
 
-        request.onsuccess = event => {
+                    request.onsuccess =
+                        () => {
 
-            console.log(
-                'SupermarketPOS: کالا با موفقیت اضافه شد.'
+                            resolve(
+                                request.result
+                            );
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+                }
             );
-
-
-            resolve(
-                event.target.result
-            );
-        };
-
-
-        request.onerror = () => {
-
-            console.error(
-                'SupermarketPOS: خطا در افزودن کالا.',
-                request.error
-            );
-
-
-            reject(
-                request.error ||
-                new Error(
-                    'خطا در افزودن کالا'
-                )
-            );
-        };
-
-
-        transaction.onabort = () => {
-
-            reject(
-                transaction.error ||
-                new Error(
-                    'تراکنش افزودن کالا لغو شد.'
-                )
-            );
-        };
-    });
+        });
 }
 
 
@@ -323,74 +425,214 @@ export async function addProduct(product) {
 // Get All Products
 // ============================================================================
 
-export async function getAllProducts() {
+export function getAllProducts() {
 
-    const db =
-        await openDatabase();
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'products',
+                            'readonly'
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+                    const request =
+                        store.getAll();
 
 
-    return new Promise((resolve, reject) => {
+                    request.onsuccess =
+                        () => {
 
-        const transaction =
-            db.transaction(
-                'products',
-                'readonly'
+                            resolve(
+                                request.result
+                            );
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+                }
             );
+        });
+}
 
 
-        const store =
-            transaction.objectStore(
-                'products'
+// ============================================================================
+// Update Product
+// ============================================================================
+
+export function updateProduct(
+    product
+) {
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'products',
+                            'readwrite'
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+                    const request =
+                        store.put(product);
+
+
+                    request.onsuccess =
+                        () => {
+
+                            resolve(
+                                request.result
+                            );
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+
+
+                    transaction.onerror =
+                        () => {
+
+                            reject(
+                                transaction.error
+                            );
+                        };
+                }
             );
+        });
+}
 
 
-        const request =
-            store.getAll();
+// ============================================================================
+// Delete Product
+// ============================================================================
+
+export function deleteProduct(
+    id
+) {
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'products',
+                            'readwrite'
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+                    const request =
+                        store.delete(id);
 
 
-        request.onsuccess = event => {
+                    request.onsuccess =
+                        () => {
 
-            const products =
-                event.target.result || [];
+                            resolve(
+                                true
+                            );
+                        };
 
 
-            console.log(
-                'SupermarketPOS: تعداد کالاهای خوانده‌شده:',
-                products.length
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+
+
+                    transaction.onerror =
+                        () => {
+
+                            reject(
+                                transaction.error
+                            );
+                        };
+                }
             );
+        });
+}
 
 
-            resolve(
-                products
-            );
-        };
+// ============================================================================
+// BACKUP - Get All Products
+// ============================================================================
+//
+// این تابع فعلاً فقط داده‌های کالاها را برای سیستم Backup آماده می‌کند.
+// هیچ اطلاعاتی را حذف یا تغییر نمی‌دهد.
+//
+
+export async function getProductsForBackup() {
+
+    const products =
+        await getAllProducts();
 
 
-        request.onerror = () => {
+    return {
+        version: 1,
 
-            console.error(
-                'SupermarketPOS: خطا در خواندن کالاها.',
-                request.error
-            );
+        type: 'SupermarketPOS',
 
+        createdAt:
+            new Date().toISOString(),
 
-            reject(
-                request.error ||
-                new Error(
-                    'خطا در خواندن کالاها'
-                )
-            );
-        };
-
-
-        transaction.onabort = () => {
-
-            reject(
-                transaction.error ||
-                new Error(
-                    'تراکنش خواندن کالاها لغو شد.'
-                )
-            );
-        };
-    });
+        products: products
+    };
 }
