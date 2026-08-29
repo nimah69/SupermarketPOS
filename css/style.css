@@ -69,12 +69,14 @@ HEADER
 ========================================================= */
 
 .app-header {
+width: 100%;
+
 background:
-linear-gradient(
-135deg,
-#0f766e,
-#0d9488
-);
+    linear-gradient(
+        135deg,
+        #0f766e,
+        #0d9488
+    );
 
 color: #ffffff;
 
@@ -90,6 +92,8 @@ box-shadow:
 }
 
 .header-content {
+width: 100%;
+
 display: flex;
 
 align-items: center;
@@ -97,8 +101,6 @@ align-items: center;
 justify-content: space-between;
 
 gap: 12px;
-
-width: 100%;
 
 }
 
@@ -171,47 +173,45 @@ opacity: 0.8;
 }
 
 /* =========================================================
-STATUS BOX
+STATUS AREA
 ========================================================= */
 
 .header-status {
 flex: 0 0 auto;
 
-width: 92px;
-
-min-height: 56px;
-
 display: flex;
 
-flex-direction: column;
+flex-direction: row;
 
 align-items: center;
 
 justify-content: center;
 
-gap: 3px;
+gap: 6px;
 
-padding: 7px 8px;
+width: auto;
 
-background:
-    rgba(255, 255, 255, 0.13);
+min-width: 0;
 
-border:
-    1px solid rgba(255, 255, 255, 0.20);
+padding: 0;
 
-border-radius: 13px;
+background: transparent;
 
-text-align: center;
+border: none;
 
 white-space: nowrap;
 
-overflow: hidden;
-
 }
 
-/* خط اول وضعیت */
+/* =========================================================
+ONLINE BOX
+========================================================= */
 
 .status-online {
+height: 38px;
+
+min-width: 64px;
+
 display: flex;
 
 align-items: center;
@@ -220,32 +220,62 @@ justify-content: center;
 
 gap: 5px;
 
-width: 100%;
+padding: 0 9px;
 
-font-size: 10px;
+background:
+    rgba(255, 255, 255, 0.14);
+
+border:
+    1px solid rgba(255, 255, 255, 0.22);
+
+border-radius: 11px;
+
+font-size: 9px;
 
 font-weight: bold;
 
-line-height: 1.5;
+line-height: 1;
+
+white-space: nowrap;
 
 }
 
-/* متن آماده به کار */
+/* =========================================================
+READY BOX
+========================================================= */
 
 .status-ready {
-display: block;
+height: 38px;
 
-width: 100%;
+min-width: 72px;
 
-font-size: 8px;
+display: flex;
 
-line-height: 1.5;
+align-items: center;
 
-opacity: 0.75;
+justify-content: center;
+
+padding: 0 9px;
+
+background:
+    rgba(255, 255, 255, 0.10);
+
+border:
+    1px solid rgba(255, 255, 255, 0.18);
+
+border-radius: 11px;
+
+font-size: 9px;
+
+line-height: 1;
+
+white-space: nowrap;
 
 }
 
-/* نقطه سبز */
+/* =========================================================
+STATUS DOT
+========================================================= */
 
 .status-dot {
 width: 7px;
@@ -258,7 +288,7 @@ border-radius: 50%;
 background: #86efac;
 
 box-shadow:
-    0 0 0 3px rgba(134, 239, 172, 0.13);
+    0 0 0 3px rgba(134, 239, 172, 0.12);
 
 }
 
@@ -543,19 +573,34 @@ MOBILE
 }
 
 .header-status {
-    width: 82px;
-
-    min-height: 54px;
-
-    padding: 6px;
+    gap: 4px;
 }
 
 .status-online {
-    font-size: 9px;
+    min-width: 58px;
+
+    height: 36px;
+
+    padding: 0 7px;
+
+    font-size: 8px;
 }
 
 .status-ready {
-    font-size: 7px;
+    min-width: 65px;
+
+    height: 36px;
+
+    padding: 0 7px;
+
+    font-size: 8px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+
+    flex-basis: 6px;
 }
 
 }
@@ -570,8 +615,17 @@ VERY SMALL PHONES
     padding: 12px;
 }
 
+.brand-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-basis: 40px;
+
+    font-size: 20px;
+}
+
 .brand-text h1 {
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .brand-text span {
@@ -579,16 +633,26 @@ VERY SMALL PHONES
 }
 
 .header-status {
-    width: 76px;
-
-    min-height: 52px;
+    gap: 3px;
 }
 
 .status-online {
-    font-size: 8px;
+    min-width: 53px;
+
+    height: 34px;
+
+    padding: 0 5px;
+
+    font-size: 7px;
 }
 
 .status-ready {
+    min-width: 60px;
+
+    height: 34px;
+
+    padding: 0 5px;
+
     font-size: 7px;
 }
 
