@@ -1,8 +1,9 @@
 // js/database.js
 // SupermarketPOS
 // Database Layer
+// Products + Sales + Sale Items
 // Backup / Restore
-// Version: 1
+// Version: 1.1
 
 'use strict';
 
@@ -28,6 +29,7 @@ export function openDatabase() {
                 DB_NAME,
                 DB_VERSION
             );
+
 
         request.onupgradeneeded = event => {
 
@@ -168,6 +170,12 @@ export function openDatabase() {
                 event.target.result;
 
 
+            db.onversionchange = () => {
+
+                db.close();
+            };
+
+
             resolve(db);
         };
 
@@ -177,7 +185,7 @@ export function openDatabase() {
             reject(
                 request.error ||
                 new Error(
-                    'خطا در باز کردن پایگاه داده'
+                    'خطا در باز کردن پایگاه داده.'
                 )
             );
         };
@@ -202,7 +210,9 @@ export async function initializeDatabase() {
     const db =
         await openDatabase();
 
-    return db;
+    db.close();
+
+    return true;
 }
 
 
@@ -224,10 +234,12 @@ export function addProduct(product) {
                             'readwrite'
                         );
 
+
                     const store =
                         transaction.objectStore(
                             'products'
                         );
+
 
                     const request =
                         store.add(product);
@@ -251,19 +263,31 @@ export function addProduct(product) {
                         };
 
 
-                    transaction.oncomplete =
-                        () => {
-
-                            db.close();
-                        };
-
-
                     transaction.onerror =
                         () => {
 
                             reject(
                                 transaction.error
                             );
+                        };
+
+
+                    transaction.onabort =
+                        () => {
+
+                            reject(
+                                transaction.error ||
+                                new Error(
+                                    'عملیات ذخیره کالا لغو شد.'
+                                )
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
                         };
                 }
             );
@@ -289,10 +313,12 @@ export function getProduct(id) {
                             'readonly'
                         );
 
+
                     const store =
                         transaction.objectStore(
                             'products'
                         );
+
 
                     const request =
                         store.get(id);
@@ -335,6 +361,12 @@ export function getProductByBarcode(
     barcode
 ) {
 
+    const normalizedBarcode =
+        String(
+            barcode || ''
+        ).trim();
+
+
     return openDatabase()
         .then(db => {
 
@@ -347,18 +379,23 @@ export function getProductByBarcode(
                             'readonly'
                         );
 
+
                     const store =
                         transaction.objectStore(
                             'products'
                         );
+
 
                     const index =
                         store.index(
                             'barcode'
                         );
 
+
                     const request =
-                        index.get(barcode);
+                        index.get(
+                            normalizedBarcode
+                        );
 
 
                     request.onsuccess =
@@ -408,10 +445,12 @@ export function getAllProducts() {
                             'readonly'
                         );
 
+
                     const store =
                         transaction.objectStore(
                             'products'
                         );
+
 
                     const request =
                         store.getAll();
@@ -466,10 +505,12 @@ export function updateProduct(
                             'readwrite'
                         );
 
+
                     const store =
                         transaction.objectStore(
                             'products'
                         );
+
 
                     const request =
                         store.put(product);
@@ -493,19 +534,31 @@ export function updateProduct(
                         };
 
 
-                    transaction.oncomplete =
-                        () => {
-
-                            db.close();
-                        };
-
-
                     transaction.onerror =
                         () => {
 
                             reject(
                                 transaction.error
                             );
+                        };
+
+
+                    transaction.onabort =
+                        () => {
+
+                            reject(
+                                transaction.error ||
+                                new Error(
+                                    'به‌روزرسانی کالا لغو شد.'
+                                )
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
                         };
                 }
             );
@@ -533,10 +586,12 @@ export function deleteProduct(
                             'readwrite'
                         );
 
+
                     const store =
                         transaction.objectStore(
                             'products'
                         );
+
 
                     const request =
                         store.delete(id);
@@ -558,19 +613,575 @@ export function deleteProduct(
                         };
 
 
-                    transaction.oncomplete =
-                        () => {
-
-                            db.close();
-                        };
-
-
                     transaction.onerror =
                         () => {
 
                             reject(
                                 transaction.error
                             );
+                        };
+
+
+                    transaction.onabort =
+                        () => {
+
+                            reject(
+                                transaction.error ||
+                                new Error(
+                                    'حذف کالا لغو شد.'
+                                )
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+                }
+            );
+        });
+}
+
+
+// ============================================================================
+// Register Sale
+// ============================================================================
+//
+// این تابع:
+// 1. موجودی واقعی کالاها را دوباره بررسی می‌کند.
+// 2. فروش را در sales ذخیره می‌کند.
+// 3. اقلام فروش را در saleItems ذخیره می‌کند.
+// 4. موجودی products را کاهش می‌دهد.
+// 5. همه عملیات را داخل یک Transaction انجام می‌دهد.
+//
+// اگر یکی از مراحل شکست بخورد، کل Transaction لغو می‌شود.
+//
+// ============================================================================
+
+export function registerSale(
+    cartItems
+) {
+
+    if (
+        !Array.isArray(cartItems) ||
+        cartItems.length === 0
+    ) {
+
+        return Promise.reject(
+            new Error(
+                'سبد خرید خالی است.'
+            )
+        );
+    }
+
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            [
+                                'products',
+                                'sales',
+                                'saleItems'
+                            ],
+                            'readwrite'
+                        );
+
+
+                    const productsStore =
+                        transaction.objectStore(
+                            'products'
+                        );
+
+
+                    const salesStore =
+                        transaction.objectStore(
+                            'sales'
+                        );
+
+
+                    const saleItemsStore =
+                        transaction.objectStore(
+                            'saleItems'
+                        );
+
+
+                    let saleRecord = null;
+
+                    let saleId = null;
+
+
+                    const preparedItems = [];
+
+
+                    // --------------------------------------------------------
+                    // Validation
+                    // --------------------------------------------------------
+
+                    try {
+
+                        cartItems.forEach(
+                            item => {
+
+                                if (
+                                    !item ||
+                                    item.productId === undefined ||
+                                    item.productId === null
+                                ) {
+
+                                    throw new Error(
+                                        'اطلاعات یکی از کالاهای سبد معتبر نیست.'
+                                    );
+                                }
+
+
+                                const quantity =
+                                    Number(
+                                        item.quantity
+                                    );
+
+
+                                if (
+                                    !Number.isInteger(
+                                        quantity
+                                    ) ||
+                                    quantity <= 0
+                                ) {
+
+                                    throw new Error(
+                                        'تعداد یکی از کالاهای سبد معتبر نیست.'
+                                    );
+                                }
+
+
+                                preparedItems.push({
+
+                                    productId:
+                                        item.productId,
+
+                                    barcode:
+                                        String(
+                                            item.barcode || ''
+                                        ).trim(),
+
+                                    name:
+                                        String(
+                                            item.name || 'بدون نام'
+                                        ),
+
+                                    quantity:
+                                        quantity,
+
+                                    salePrice:
+                                        Number(
+                                            item.salePrice
+                                        ) || 0,
+
+                                    total:
+                                        (
+                                            Number(
+                                                item.salePrice
+                                            ) || 0
+                                        ) * quantity
+                                });
+                            }
+                        );
+
+
+                        if (
+                            preparedItems.length === 0
+                        ) {
+
+                            throw new Error(
+                                'سبد خرید خالی است.'
+                            );
+                        }
+
+
+                        // ----------------------------------------------------
+                        // Create Sale
+                        // ----------------------------------------------------
+
+                        const timestamp =
+                            new Date().toISOString();
+
+
+                        const total =
+                            preparedItems.reduce(
+                                (
+                                    sum,
+                                    item
+                                ) => {
+
+                                    return sum +
+                                        item.total;
+
+                                },
+                                0
+                            );
+
+
+                        saleRecord = {
+
+                            timestamp:
+                                timestamp,
+
+                            total:
+                                total,
+
+                            itemCount:
+                                preparedItems.reduce(
+                                    (
+                                        sum,
+                                        item
+                                    ) => {
+
+                                        return sum +
+                                            item.quantity;
+
+                                    },
+                                    0
+                                ),
+
+                            status:
+                                'completed'
+                        };
+
+
+                        const saleRequest =
+                            salesStore.add(
+                                saleRecord
+                            );
+
+
+                        saleRequest.onsuccess =
+                            () => {
+
+                                saleId =
+                                    saleRequest.result;
+
+
+                                preparedItems.forEach(
+                                    item => {
+
+                                        const productRequest =
+                                            productsStore.get(
+                                                item.productId
+                                            );
+
+
+                                        productRequest.onsuccess =
+                                            () => {
+
+                                                const product =
+                                                    productRequest.result;
+
+
+                                                if (
+                                                    !product
+                                                ) {
+
+                                                    transaction.abort();
+
+                                                    return;
+                                                }
+
+
+                                                const currentStock =
+                                                    Number(
+                                                        product.stock
+                                                    ) || 0;
+
+
+                                                if (
+                                                    currentStock <
+                                                    item.quantity
+                                                ) {
+
+                                                    transaction.abort();
+
+                                                    return;
+                                                }
+
+
+                                                const newStock =
+                                                    currentStock -
+                                                    item.quantity;
+
+
+                                                product.stock =
+                                                    newStock;
+
+
+                                                product.updatedAt =
+                                                    timestamp;
+
+
+                                                const updateRequest =
+                                                    productsStore.put(
+                                                        product
+                                                    );
+
+
+                                                updateRequest.onsuccess =
+                                                    () => {
+
+                                                        const saleItem = {
+
+                                                            saleId:
+                                                                saleId,
+
+                                                            productId:
+                                                                item.productId,
+
+                                                            barcode:
+                                                                item.barcode,
+
+                                                            name:
+                                                                item.name,
+
+                                                            quantity:
+                                                                item.quantity,
+
+                                                            salePrice:
+                                                                item.salePrice,
+
+                                                            total:
+                                                                item.total
+                                                        };
+
+
+                                                        saleItemsStore.add(
+                                                            saleItem
+                                                        );
+                                                    };
+
+
+                                                updateRequest.onerror =
+                                                    () => {
+
+                                                        transaction.abort();
+                                                    };
+                                            };
+
+
+                                        productRequest.onerror =
+                                            () => {
+
+                                                transaction.abort();
+                                            };
+                                    }
+                                );
+                            };
+
+
+                        saleRequest.onerror =
+                            () => {
+
+                                transaction.abort();
+                            };
+
+
+                    } catch (error) {
+
+                        transaction.abort();
+
+
+                        reject(error);
+
+                        return;
+                    }
+
+
+                    // --------------------------------------------------------
+                    // Transaction Complete
+                    // --------------------------------------------------------
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+
+
+                            resolve({
+
+                                success:
+                                    true,
+
+                                saleId:
+                                    saleId,
+
+                                total:
+                                    saleRecord.total,
+
+                                itemCount:
+                                    saleRecord.itemCount,
+
+                                timestamp:
+                                    saleRecord.timestamp
+                            });
+                        };
+
+
+                    transaction.onerror =
+                        () => {
+
+                            db.close();
+
+
+                            reject(
+                                transaction.error ||
+                                new Error(
+                                    'ثبت فروش انجام نشد.'
+                                )
+                            );
+                        };
+
+
+                    transaction.onabort =
+                        () => {
+
+                            db.close();
+
+
+                            reject(
+                                transaction.error ||
+                                new Error(
+                                    'ثبت فروش لغو شد. موجودی کالا ممکن است کافی نباشد.'
+                                )
+                            );
+                        };
+                }
+            );
+        });
+}
+
+
+// ============================================================================
+// Get All Sales
+// ============================================================================
+
+export function getAllSales() {
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'sales',
+                            'readonly'
+                        );
+
+
+                    const store =
+                        transaction.objectStore(
+                            'sales'
+                        );
+
+
+                    const request =
+                        store.getAll();
+
+
+                    request.onsuccess =
+                        () => {
+
+                            resolve(
+                                request.result
+                            );
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
+                        };
+                }
+            );
+        });
+}
+
+
+// ============================================================================
+// Get Sale Items
+// ============================================================================
+
+export function getSaleItems(
+    saleId
+) {
+
+    return openDatabase()
+        .then(db => {
+
+            return new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        db.transaction(
+                            'saleItems',
+                            'readonly'
+                        );
+
+
+                    const store =
+                        transaction.objectStore(
+                            'saleItems'
+                        );
+
+
+                    const index =
+                        store.index(
+                            'saleId'
+                        );
+
+
+                    const request =
+                        index.getAll(
+                            saleId
+                        );
+
+
+                    request.onsuccess =
+                        () => {
+
+                            resolve(
+                                request.result
+                            );
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            reject(
+                                request.error
+                            );
+                        };
+
+
+                    transaction.oncomplete =
+                        () => {
+
+                            db.close();
                         };
                 }
             );
@@ -592,7 +1203,8 @@ export async function getProductsForBackup() {
 
         version: 1,
 
-        type: 'SupermarketPOS',
+        type:
+            'SupermarketPOS',
 
         createdAt:
             new Date().toISOString(),
@@ -605,15 +1217,6 @@ export async function getProductsForBackup() {
 
 // ============================================================================
 // RESTORE - MERGE
-// ============================================================================
-//
-// کالاهای موجود در فایل Backup با کالاهای فعلی ادغام می‌شوند.
-//
-// قانون:
-// - اگر بارکد وجود نداشته باشد → کالا اضافه می‌شود.
-// - اگر بارکد وجود داشته باشد → اطلاعات کالا به‌روزرسانی می‌شود.
-// - کالاهای فعلی که در Backup نیستند → حذف نمی‌شوند.
-//
 // ============================================================================
 
 export async function restoreProductsMerge(
@@ -652,6 +1255,12 @@ export async function restoreProductsMerge(
                 );
 
 
+            const index =
+                store.index(
+                    'barcode'
+                );
+
+
             let added = 0;
 
             let updated = 0;
@@ -662,141 +1271,140 @@ export async function restoreProductsMerge(
             backupProducts.forEach(
                 backupProduct => {
 
-                    try {
-
-                        if (
-                            !backupProduct ||
-                            !backupProduct.barcode
-                        ) {
-
-                            skipped++;
-
-                            return;
-                        }
-
-
-                        const barcode =
-                            String(
-                                backupProduct.barcode
-                            ).trim();
-
-
-                        if (!barcode) {
-
-                            skipped++;
-
-                            return;
-                        }
-
-
-                        const index =
-                            store.index(
-                                'barcode'
-                            );
-
-
-                        const request =
-                            index.get(
-                                barcode
-                            );
-
-
-                        request.onsuccess =
-                            () => {
-
-                                const existing =
-                                    request.result;
-
-
-                                const now =
-                                    new Date()
-                                        .toISOString();
-
-
-                                const product = {
-
-                                    barcode:
-                                        barcode,
-
-                                    name:
-                                        backupProduct.name ||
-                                        'بدون نام',
-
-                                    category:
-                                        backupProduct.category ||
-                                        '',
-
-                                    salePrice:
-                                        Number(
-                                            backupProduct.salePrice
-                                        ) || 0,
-
-                                    stock:
-                                        Number(
-                                            backupProduct.stock
-                                        ) || 0,
-
-                                    createdAt:
-                                        existing &&
-                                        existing.createdAt
-                                            ? existing.createdAt
-                                            : (
-                                                backupProduct.createdAt ||
-                                                now
-                                            ),
-
-                                    updatedAt:
-                                        now
-                                };
-
-
-                                if (existing) {
-
-                                    product.id =
-                                        existing.id;
-
-
-                                    const updateRequest =
-                                        store.put(
-                                            product
-                                        );
-
-
-                                    updateRequest.onsuccess =
-                                        () => {
-
-                                            updated++;
-                                        };
-
-
-                                } else {
-
-                                    const addRequest =
-                                        store.add(
-                                            product
-                                        );
-
-
-                                    addRequest.onsuccess =
-                                        () => {
-
-                                            added++;
-                                        };
-                                }
-                            };
-
-
-                        request.onerror =
-                            () => {
-
-                                skipped++;
-                            };
-
-
-                    } catch (error) {
+                    if (
+                        !backupProduct ||
+                        !backupProduct.barcode
+                    ) {
 
                         skipped++;
+
+                        return;
                     }
+
+
+                    const barcode =
+                        String(
+                            backupProduct.barcode
+                        ).trim();
+
+
+                    if (!barcode) {
+
+                        skipped++;
+
+                        return;
+                    }
+
+
+                    const request =
+                        index.get(
+                            barcode
+                        );
+
+
+                    request.onsuccess =
+                        () => {
+
+                            const existing =
+                                request.result;
+
+
+                            const now =
+                                new Date()
+                                    .toISOString();
+
+
+                            const product = {
+
+                                barcode:
+                                    barcode,
+
+                                name:
+                                    backupProduct.name ||
+                                    'بدون نام',
+
+                                category:
+                                    backupProduct.category ||
+                                    '',
+
+                                salePrice:
+                                    Number(
+                                        backupProduct.salePrice
+                                    ) || 0,
+
+                                stock:
+                                    Number(
+                                        backupProduct.stock
+                                    ) || 0,
+
+                                createdAt:
+                                    existing &&
+                                    existing.createdAt
+                                        ? existing.createdAt
+                                        : (
+                                            backupProduct.createdAt ||
+                                            now
+                                        ),
+
+                                updatedAt:
+                                    now
+                            };
+
+
+                            if (existing) {
+
+                                product.id =
+                                    existing.id;
+
+
+                                const updateRequest =
+                                    store.put(
+                                        product
+                                    );
+
+
+                                updateRequest.onsuccess =
+                                    () => {
+
+                                        updated++;
+                                    };
+
+
+                                updateRequest.onerror =
+                                    () => {
+
+                                        skipped++;
+                                    };
+
+                            } else {
+
+                                const addRequest =
+                                    store.add(
+                                        product
+                                    );
+
+
+                                addRequest.onsuccess =
+                                    () => {
+
+                                        added++;
+                                    };
+
+
+                                addRequest.onerror =
+                                    () => {
+
+                                        skipped++;
+                                    };
+                            }
+                        };
+
+
+                    request.onerror =
+                        () => {
+
+                            skipped++;
+                        };
                 }
             );
 
