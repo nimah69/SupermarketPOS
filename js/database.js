@@ -1,6 +1,6 @@
 // js/database.js
 // SupermarketPOS
-// Database Layer - Stage 1
+// Database Layer - Stage 2
 // Version: 1
 
 'use strict';
@@ -40,7 +40,7 @@ export function openDatabase() {
 
 
             // Products
-            // فعلاً فقط ساختار اولیه را ایجاد می‌کنیم.
+            // ----------------------------------------------------------------
 
             if (
                 !db.objectStoreNames.contains(
@@ -87,7 +87,7 @@ export function openDatabase() {
 
 
             // Sales
-            // برای مراحل بعدی آماده می‌شود.
+            // ----------------------------------------------------------------
 
             if (
                 !db.objectStoreNames.contains(
@@ -116,7 +116,7 @@ export function openDatabase() {
 
 
             // Sale Items
-            // برای مراحل بعدی آماده می‌شود.
+            // ----------------------------------------------------------------
 
             if (
                 !db.objectStoreNames.contains(
@@ -233,4 +233,87 @@ export async function initializeDatabase() {
 
 
     return db;
+}
+
+
+// ============================================================================
+// Add Product
+// ============================================================================
+
+export async function addProduct(product) {
+
+    if (
+        !product ||
+        typeof product !== 'object'
+    ) {
+
+        throw new Error(
+            'اطلاعات کالا معتبر نیست.'
+        );
+    }
+
+
+    const db =
+        await openDatabase();
+
+
+    return new Promise((resolve, reject) => {
+
+        const transaction =
+            db.transaction(
+                'products',
+                'readwrite'
+            );
+
+
+        const store =
+            transaction.objectStore(
+                'products'
+            );
+
+
+        const request =
+            store.add(product);
+
+
+        request.onsuccess = event => {
+
+            console.log(
+                'SupermarketPOS: کالا با موفقیت اضافه شد.'
+            );
+
+
+            resolve(
+                event.target.result
+            );
+        };
+
+
+        request.onerror = () => {
+
+            console.error(
+                'SupermarketPOS: خطا در افزودن کالا.',
+                request.error
+            );
+
+
+            reject(
+                request.error ||
+                new Error(
+                    'خطا در افزودن کالا'
+                )
+            );
+        };
+
+
+        transaction.onabort = () => {
+
+            reject(
+                transaction.error ||
+                new Error(
+                    'تراکنش افزودن کالا لغو شد.'
+                )
+            );
+        };
+    });
 }
