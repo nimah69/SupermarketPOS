@@ -1,25 +1,15 @@
 // js/sales.js
 // SupermarketPOS
 // Sales / POS Module
-// Unified Modal Architecture
+// Complete Replacement
 
 'use strict';
 
 import {
     getProductByBarcode,
-    updateProduct,
-    addSale
+    createSale
 } from './database.js';
 
-import {
-    showAppConfirm,
-    showAppMessage
-} from './app.js';
-
-
-// ============================================================
-// Sales State
-// ============================================================
 
 const SALES_STATE = {
 
@@ -27,36 +17,23 @@ const SALES_STATE = {
 
     cart: [],
 
-    databaseReady: false,
-
-    onBack: null
+    databaseReady: false
 
 };
 
 
-// ============================================================
-// Helpers
-// ============================================================
+/* ============================================================
+   Helpers
+   ============================================================ */
 
-function $(selector, root = document) {
+function $(
+    selector,
+    root = document
+) {
 
-    return root.querySelector(selector);
-
-}
-
-
-function createElement(tag, className = '') {
-
-    const element =
-        document.createElement(tag);
-
-    if (className) {
-        element.className =
-            className;
-    }
-
-    return element;
-
+    return root.querySelector(
+        selector
+    );
 }
 
 
@@ -64,7 +41,9 @@ function formatPrice(value) {
 
     return (
         Number(value) || 0
-    ).toLocaleString('fa-IR');
+    ).toLocaleString(
+        'fa-IR'
+    );
 
 }
 
@@ -73,7 +52,9 @@ function formatNumber(value) {
 
     return (
         Number(value) || 0
-    ).toLocaleString('fa-IR');
+    ).toLocaleString(
+        'fa-IR'
+    );
 
 }
 
@@ -81,18 +62,38 @@ function formatNumber(value) {
 function escapeHTML(value) {
 
     return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
 
 }
 
 
-// ============================================================
-// Initialize
-// ============================================================
+/* ============================================================
+   Initialize
+   ============================================================ */
 
 export function initializeSalesScreen(
     screen,
@@ -108,48 +109,36 @@ export function initializeSalesScreen(
         options.databaseReady !== false;
 
 
-    SALES_STATE.onBack =
-        typeof options.onBack === 'function'
-            ? options.onBack
-            : null;
-
-
     if (
-        SALES_STATE.initialized &&
-        screen.dataset.salesReady === 'true'
+        !SALES_STATE.initialized
     ) {
 
-        refreshSalesScreen(screen);
+        SALES_STATE.cart = [];
 
-        return;
+        buildSalesScreen(
+            screen
+        );
+
+        bindSalesEvents(
+            screen
+        );
+
+        SALES_STATE.initialized =
+            true;
+
     }
 
 
-    SALES_STATE.cart =
-        [];
-
-
-    buildSalesScreen(screen);
-
-    bindSalesEvents(screen);
-
-
-    SALES_STATE.initialized =
-        true;
-
-
-    screen.dataset.salesReady =
-        'true';
-
-
-    refreshSalesScreen(screen);
+    refreshSalesScreen(
+        screen
+    );
 
 }
 
 
-// ============================================================
-// Build Sales Screen
-// ============================================================
+/* ============================================================
+   Build
+   ============================================================ */
 
 function buildSalesScreen(screen) {
 
@@ -160,7 +149,7 @@ function buildSalesScreen(screen) {
             <div class="sales-header-main">
 
                 <div class="sales-title-icon">
-                    🛒
+                    💳
                 </div>
 
                 <div>
@@ -177,11 +166,23 @@ function buildSalesScreen(screen) {
 
             </div>
 
+
+            <button
+                type="button"
+                class="sales-close-button"
+                id="sales-close-button"
+                aria-label="بازگشت"
+            >
+                ×
+            </button>
+
         </div>
 
 
         <div class="sales-layout">
 
+
+            <!-- SEARCH -->
 
             <section class="sales-card sales-search-card">
 
@@ -214,7 +215,7 @@ function buildSalesScreen(screen) {
                         class="sales-barcode-input"
                         inputmode="numeric"
                         autocomplete="off"
-                        placeholder="بارکد کالا را وارد کنید..."
+                        placeholder="بارکد کالا..."
                     >
 
                     <button
@@ -236,25 +237,31 @@ function buildSalesScreen(screen) {
             </section>
 
 
+            <!-- CART -->
+
             <section class="sales-card sales-cart-card">
 
-                <div class="sales-card-header">
+                <div class="sales-search-card">
 
-                    <div>
+                    <div class="sales-card-header">
 
-                        <h3>
-                            سبد خرید
-                        </h3>
+                        <div>
 
-                        <p id="sales-cart-count">
-                            ۰ کالا
-                        </p>
+                            <h3>
+                                سبد خرید
+                            </h3>
+
+                            <p id="sales-cart-count">
+                                ۰ کالا
+                            </p>
+
+                        </div>
+
+                        <span class="sales-card-icon">
+                            🛍️
+                        </span>
 
                     </div>
-
-                    <span class="sales-card-icon">
-                        🛍️
-                    </span>
 
                 </div>
 
@@ -266,6 +273,8 @@ function buildSalesScreen(screen) {
 
             </section>
 
+
+            <!-- CHECKOUT -->
 
             <section class="sales-card sales-checkout-card">
 
@@ -322,34 +331,24 @@ function buildSalesScreen(screen) {
 
                 <div
                     id="sales-checkout-message"
-                    class="sales-message"
+                    class="sales-message sales-checkout-message"
                 ></div>
 
             </section>
 
         </div>
 
-
-        <button
-            type="button"
-            class="sales-back-button"
-            id="sales-back-button"
-        >
-            ← بازگشت به صفحه اصلی
-        </button>
-
     `;
-
 }
 
 
-// ============================================================
-// Events
-// ============================================================
+/* ============================================================
+   Events
+   ============================================================ */
 
 function bindSalesEvents(screen) {
 
-    const barcodeInput =
+    const input =
         $('#sales-barcode-input', screen);
 
     const addButton =
@@ -361,21 +360,25 @@ function bindSalesEvents(screen) {
     const clearButton =
         $('#sales-clear-button', screen);
 
-    const backButton =
-        $('#sales-back-button', screen);
+    const closeButton =
+        $('#sales-close-button', screen);
 
 
-    if (barcodeInput) {
+    if (input) {
 
-        barcodeInput.addEventListener(
+        input.addEventListener(
             'keydown',
             event => {
 
-                if (event.key === 'Enter') {
+                if (
+                    event.key === 'Enter'
+                ) {
 
                     event.preventDefault();
 
-                    addProductByBarcode(screen);
+                    addProductByBarcode(
+                        screen
+                    );
 
                 }
 
@@ -391,7 +394,9 @@ function bindSalesEvents(screen) {
             'click',
             () => {
 
-                addProductByBarcode(screen);
+                addProductByBarcode(
+                    screen
+                );
 
             }
         );
@@ -405,7 +410,9 @@ function bindSalesEvents(screen) {
             'click',
             () => {
 
-                requestSaleConfirmation(screen);
+                submitSale(
+                    screen
+                );
 
             }
         );
@@ -419,7 +426,9 @@ function bindSalesEvents(screen) {
             'click',
             () => {
 
-                clearCart(screen);
+                clearCart(
+                    screen
+                );
 
             }
         );
@@ -427,143 +436,13 @@ function bindSalesEvents(screen) {
     }
 
 
-    if (backButton) {
+    if (closeButton) {
 
-        backButton.addEventListener(
+        closeButton.addEventListener(
             'click',
             () => {
 
-                if (
-                    SALES_STATE.cart.length > 0
-                ) {
-
-                    showAppConfirm({
-
-                        title:
-                            'خروج از فروش',
-
-                        message:
-                            'سبد خرید شما هنوز دارای کالا است. آیا می‌خواهید بدون ثبت فروش خارج شوید؟',
-
-                        icon:
-                            '⚠️',
-
-                        type:
-                            'warning',
-
-                        confirmText:
-                            'خروج',
-
-                        cancelText:
-                            'ادامه فروش'
-
-                    }).then(
-                        confirmed => {
-
-                            if (confirmed) {
-
-                                SALES_STATE.cart =
-                                    [];
-
-                                if (
-                                    SALES_STATE.onBack
-                                ) {
-
-                                    SALES_STATE.onBack();
-
-                                }
-
-                            }
-
-                        }
-                    );
-
-                } else {
-
-                    if (
-                        SALES_STATE.onBack
-                    ) {
-
-                        SALES_STATE.onBack();
-
-                    }
-
-                }
-
-            }
-        );
-
-    }
-
-
-    const list =
-        $('#sales-cart-list', screen);
-
-
-    if (list) {
-
-        list.addEventListener(
-            'click',
-            event => {
-
-                const button =
-                    event.target.closest(
-                        '[data-cart-action]'
-                    );
-
-
-                if (!button) {
-                    return;
-                }
-
-
-                const index =
-                    Number(
-                        button.dataset.cartIndex
-                    );
-
-
-                if (
-                    !Number.isInteger(index)
-                ) {
-                    return;
-                }
-
-
-                const action =
-                    button.dataset.cartAction;
-
-
-                if (action === 'increase') {
-
-                    changeCartQuantity(
-                        screen,
-                        index,
-                        1
-                    );
-
-                }
-
-
-                if (action === 'decrease') {
-
-                    changeCartQuantity(
-                        screen,
-                        index,
-                        -1
-                    );
-
-                }
-
-
-                if (action === 'remove') {
-
-                    removeCartItem(
-                        screen,
-                        index
-                    );
-
-                }
+                closeSalesScreen();
 
             }
         );
@@ -573,11 +452,13 @@ function bindSalesEvents(screen) {
 }
 
 
-// ============================================================
-// Add Product
-// ============================================================
+/* ============================================================
+   Add Product
+   ============================================================ */
 
-async function addProductByBarcode(screen) {
+async function addProductByBarcode(
+    screen
+) {
 
     const input =
         $('#sales-barcode-input', screen);
@@ -595,7 +476,9 @@ async function addProductByBarcode(screen) {
         input.value.trim();
 
 
-    clearSalesMessages(screen);
+    clearSalesMessage(
+        screen
+    );
 
 
     if (!barcode) {
@@ -612,7 +495,9 @@ async function addProductByBarcode(screen) {
     }
 
 
-    if (!SALES_STATE.databaseReady) {
+    if (
+        !SALES_STATE.databaseReady
+    ) {
 
         showSalesMessage(
             screen,
@@ -626,11 +511,10 @@ async function addProductByBarcode(screen) {
 
     if (button) {
 
-        button.disabled =
-            true;
+        button.disabled = true;
 
         button.textContent =
-            'در حال بررسی...';
+            'بررسی...';
 
     }
 
@@ -665,7 +549,7 @@ async function addProductByBarcode(screen) {
 
             showSalesMessage(
                 screen,
-                `⚠️ موجودی «${product.name || 'این کالا'}» تمام شده است.`,
+                `⚠️ موجودی «${product.name}» تمام شده است.`,
                 false
             );
 
@@ -675,24 +559,18 @@ async function addProductByBarcode(screen) {
         }
 
 
-        const existingIndex =
-            SALES_STATE.cart.findIndex(
+        const existing =
+            SALES_STATE.cart.find(
                 item =>
                     String(item.productId) ===
                     String(product.id)
             );
 
 
-        if (existingIndex !== -1) {
-
-            const item =
-                SALES_STATE.cart[
-                    existingIndex
-                ];
-
+        if (existing) {
 
             if (
-                item.quantity >= stock
+                existing.quantity >= stock
             ) {
 
                 showSalesMessage(
@@ -701,13 +579,11 @@ async function addProductByBarcode(screen) {
                     false
                 );
 
-                input.select();
-
                 return;
             }
 
 
-            item.quantity += 1;
+            existing.quantity += 1;
 
         } else {
 
@@ -723,7 +599,9 @@ async function addProductByBarcode(screen) {
                     product.name,
 
                 salePrice:
-                    Number(product.salePrice) || 0,
+                    Number(
+                        product.salePrice
+                    ) || 0,
 
                 availableStock:
                     stock,
@@ -739,12 +617,14 @@ async function addProductByBarcode(screen) {
         input.value = '';
 
 
-        refreshSalesScreen(screen);
+        refreshSalesScreen(
+            screen
+        );
 
 
         showSalesMessage(
             screen,
-            `✅ «${product.name}» به سبد اضافه شد.`,
+            `✓ «${product.name}» به سبد اضافه شد.`,
             true
         );
 
@@ -759,10 +639,9 @@ async function addProductByBarcode(screen) {
             error
         );
 
-
         showSalesMessage(
             screen,
-            '❌ هنگام جستجوی کالا خطایی رخ داد.',
+            '❌ خطایی هنگام جستجوی کالا رخ داد.',
             false
         );
 
@@ -784,9 +663,9 @@ async function addProductByBarcode(screen) {
 }
 
 
-// ============================================================
-// Quantity
-// ============================================================
+/* ============================================================
+   Quantity
+   ============================================================ */
 
 function changeCartQuantity(
     screen,
@@ -809,9 +688,13 @@ function changeCartQuantity(
 
     if (next <= 0) {
 
-        removeCartItem(
-            screen,
-            index
+        SALES_STATE.cart.splice(
+            index,
+            1
+        );
+
+        refreshSalesScreen(
+            screen
         );
 
         return;
@@ -837,14 +720,16 @@ function changeCartQuantity(
         next;
 
 
-    refreshSalesScreen(screen);
+    refreshSalesScreen(
+        screen
+    );
 
 }
 
 
-// ============================================================
-// Remove
-// ============================================================
+/* ============================================================
+   Remove
+   ============================================================ */
 
 function removeCartItem(
     screen,
@@ -860,59 +745,29 @@ function removeCartItem(
     }
 
 
-    showAppConfirm({
-
-        title:
-            'حذف کالا',
-
-        message:
-            `آیا می‌خواهید «${item.name}» از سبد خرید حذف شود؟`,
-
-        icon:
-            '🗑️',
-
-        type:
-            'danger',
-
-        confirmText:
-            'حذف کالا',
-
-        cancelText:
-            'انصراف'
-
-    }).then(
-        confirmed => {
-
-            if (!confirmed) {
-                return;
-            }
+    SALES_STATE.cart.splice(
+        index,
+        1
+    );
 
 
-            SALES_STATE.cart.splice(
-                index,
-                1
-            );
+    refreshSalesScreen(
+        screen
+    );
 
 
-            refreshSalesScreen(
-                screen
-            );
-
-
-            showAppMessage(
-                'کالا از سبد حذف شد.',
-                'success'
-            );
-
-        }
+    showSalesMessage(
+        screen,
+        `✓ «${item.name}» از سبد حذف شد.`,
+        true
     );
 
 }
 
 
-// ============================================================
-// Clear Cart
-// ============================================================
+/* ============================================================
+   Clear Cart
+   ============================================================ */
 
 function clearCart(screen) {
 
@@ -930,314 +785,26 @@ function clearCart(screen) {
     }
 
 
-    showAppConfirm({
-
-        title:
-            'خالی کردن سبد',
-
-        message:
-            'تمام کالاهای موجود در سبد خرید حذف می‌شوند. آیا ادامه می‌دهید؟',
-
-        icon:
-            '🗑️',
-
-        type:
-            'warning',
-
-        confirmText:
-            'خالی کردن سبد',
-
-        cancelText:
-            'انصراف'
-
-    }).then(
-        confirmed => {
-
-            if (!confirmed) {
-                return;
-            }
+    SALES_STATE.cart = [];
 
 
-            SALES_STATE.cart =
-                [];
+    refreshSalesScreen(
+        screen
+    );
 
 
-            refreshSalesScreen(
-                screen
-            );
-
-
-            showAppMessage(
-                'سبد خرید خالی شد.',
-                'success'
-            );
-
-        }
+    showSalesMessage(
+        screen,
+        '✓ سبد خرید خالی شد.',
+        true
     );
 
 }
 
 
-// ============================================================
-// Sale Confirmation
-// ============================================================
-
-function requestSaleConfirmation(screen) {
-
-    if (
-        SALES_STATE.cart.length === 0
-    ) {
-
-        showSalesMessage(
-            screen,
-            '⚠️ سبد خرید خالی است.',
-            false
-        );
-
-        return;
-    }
-
-
-    const quantity =
-        SALES_STATE.cart.reduce(
-            (sum, item) =>
-                sum + item.quantity,
-            0
-        );
-
-
-    const total =
-        SALES_STATE.cart.reduce(
-            (sum, item) =>
-                sum +
-                (
-                    item.quantity *
-                    item.salePrice
-                ),
-            0
-        );
-
-
-    showAppConfirm({
-
-        title:
-            'ثبت فروش',
-
-        message:
-            `تعداد کالا: ${formatNumber(quantity)}\nمبلغ کل: ${formatPrice(total)} تومان\n\nآیا از ثبت این فروش مطمئن هستید؟`,
-
-        icon:
-            '🧾',
-
-        type:
-            'success',
-
-        confirmText:
-            'ثبت فروش',
-
-        cancelText:
-            'انصراف'
-
-    }).then(
-        confirmed => {
-
-            if (!confirmed) {
-                return;
-            }
-
-
-            completeSale(
-                screen
-            );
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// Complete Sale
-// ============================================================
-
-async function completeSale(screen) {
-
-    const submit =
-        $('#sales-submit-button', screen);
-
-
-    if (submit) {
-
-        submit.disabled =
-            true;
-
-        submit.textContent =
-            'در حال ثبت...';
-
-    }
-
-
-    try {
-
-        const now =
-            new Date().toISOString();
-
-
-        const totalQuantity =
-            SALES_STATE.cart.reduce(
-                (sum, item) =>
-                    sum + item.quantity,
-                0
-            );
-
-
-        const totalPrice =
-            SALES_STATE.cart.reduce(
-                (sum, item) =>
-                    sum +
-                    (
-                        item.quantity *
-                        item.salePrice
-                    ),
-                0
-            );
-
-
-        /*
-         * ثبت فروش در database.js
-         *
-         * در صورتی که addSale در database.js
-         * وجود داشته باشد، فروش ذخیره می‌شود.
-         */
-
-        if (typeof addSale === 'function') {
-
-            await addSale({
-
-                timestamp:
-                    now,
-
-                totalQuantity,
-
-                totalPrice
-
-            });
-
-        }
-
-
-        /*
-         * کاهش موجودی
-         */
-
-        for (
-            const item of SALES_STATE.cart
-        ) {
-
-            const product =
-                await getProductByBarcode(
-                    item.barcode
-                );
-
-
-            if (!product) {
-                continue;
-            }
-
-
-            const currentStock =
-                Number(product.stock) || 0;
-
-
-            const newStock =
-                Math.max(
-                    0,
-                    currentStock -
-                    item.quantity
-                );
-
-
-            await updateProduct({
-
-                ...product,
-
-                stock:
-                    newStock,
-
-                updatedAt:
-                    now
-
-            });
-
-        }
-
-
-        SALES_STATE.cart =
-            [];
-
-
-        refreshSalesScreen(
-            screen
-        );
-
-
-        showAppMessage(
-            'فروش با موفقیت ثبت شد.',
-            'success'
-        );
-
-
-        const input =
-            $('#sales-barcode-input', screen);
-
-        if (input) {
-            input.focus();
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            'SupermarketPOS: Sale error',
-            error
-        );
-
-
-        showAppMessage(
-            '❌ ثبت فروش انجام نشد.',
-            'danger'
-        );
-
-
-    } finally {
-
-        if (submit) {
-
-            submit.disabled =
-                false;
-
-            submit.textContent =
-                '✓ ثبت فروش';
-
-        }
-
-    }
-
-}
-
-
-// ============================================================
-// Render
-// ============================================================
-
-function refreshSalesScreen(screen) {
-
-    renderCart(screen);
-
-    updateSalesSummary(screen);
-
-}
-
+/* ============================================================
+   Render
+   ============================================================ */
 
 function renderCart(screen) {
 
@@ -1253,8 +820,7 @@ function renderCart(screen) {
     }
 
 
-    list.innerHTML =
-        '';
+    list.innerHTML = '';
 
 
     if (
@@ -1283,8 +849,10 @@ function renderCart(screen) {
 
 
         if (count) {
+
             count.textContent =
                 '۰ کالا';
+
         }
 
 
@@ -1297,15 +865,107 @@ function renderCart(screen) {
 
 
     SALES_STATE.cart.forEach(
-        (item, index) => {
+        (item,index) => {
 
             const card =
-                createCartItem(
-                    item,
-                    index
+                document.createElement(
+                    'article'
                 );
 
-            fragment.appendChild(card);
+
+            card.className =
+                'sales-cart-item';
+
+
+            const lineTotal =
+                item.quantity *
+                item.salePrice;
+
+
+            card.innerHTML = `
+
+                <div class="sales-cart-item-main">
+
+                    <div class="sales-cart-product-icon">
+                        📦
+                    </div>
+
+                    <div class="sales-cart-product-info">
+
+                        <h4>
+                            ${escapeHTML(item.name)}
+                        </h4>
+
+                        <span>
+                            بارکد:
+                            ${escapeHTML(item.barcode)}
+                        </span>
+
+                        <strong>
+                            ${formatPrice(item.salePrice)}
+                            تومان
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="sales-cart-item-bottom">
+
+                    <div class="sales-quantity-control">
+
+                        <button
+                            type="button"
+                            class="sales-quantity-button"
+                            data-action="decrease"
+                            data-index="${index}"
+                        >
+                            −
+                        </button>
+
+                        <strong
+                            class="sales-quantity-number"
+                        >
+                            ${formatNumber(item.quantity)}
+                        </strong>
+
+                        <button
+                            type="button"
+                            class="sales-quantity-button"
+                            data-action="increase"
+                            data-index="${index}"
+                        >
+                            +
+                        </button>
+
+                    </div>
+
+
+                    <strong class="sales-line-total">
+                        ${formatPrice(lineTotal)}
+                        تومان
+                    </strong>
+
+
+                    <button
+                        type="button"
+                        class="sales-remove-button"
+                        data-action="remove"
+                        data-index="${index}"
+                        aria-label="حذف کالا"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+            `;
+
+
+            fragment.appendChild(
+                card
+            );
 
         }
     );
@@ -1316,135 +976,302 @@ function renderCart(screen) {
     );
 
 
-    const totalQuantity =
-        SALES_STATE.cart.reduce(
-            (sum, item) =>
-                sum + item.quantity,
-            0
-        );
-
-
     if (count) {
 
+        const total =
+            SALES_STATE.cart.reduce(
+                (
+                    sum,
+                    item
+                ) =>
+                    sum +
+                    item.quantity,
+                0
+            );
+
+
         count.textContent =
-            `${formatNumber(totalQuantity)} عدد کالا`;
+            `${formatNumber(total)} عدد کالا`;
 
     }
 
 }
 
 
-// ============================================================
-// Cart Item
-// ============================================================
+/* ============================================================
+   Cart Events
+   ============================================================ */
 
-function createCartItem(
-    item,
-    index
-) {
+function bindCartEvents(screen) {
 
-    const card =
-        createElement(
-            'article',
-            'sales-cart-item'
-        );
+    const list =
+        $('#sales-cart-list', screen);
 
 
-    const lineTotal =
-        item.quantity *
-        item.salePrice;
+    if (!list) {
+        return;
+    }
 
 
-    card.innerHTML = `
+    list.onclick =
+        event => {
 
-        <div class="sales-cart-item-main">
-
-            <div class="sales-cart-product-icon">
-                📦
-            </div>
-
-            <div class="sales-cart-product-info">
-
-                <h4>
-                    ${escapeHTML(item.name || 'بدون نام')}
-                </h4>
-
-                <span>
-                    بارکد:
-                    ${escapeHTML(item.barcode || '-')}
-                </span>
-
-                <strong>
-                    ${formatPrice(item.salePrice)} تومان
-                </strong>
-
-            </div>
-
-        </div>
+            const button =
+                event.target.closest(
+                    'button[data-action]'
+                );
 
 
-        <div class="sales-cart-item-bottom">
-
-            <div class="sales-quantity-control">
-
-                <button
-                    type="button"
-                    class="sales-quantity-button"
-                    data-cart-action="increase"
-                    data-cart-index="${index}"
-                >
-                    +
-                </button>
-
-                <strong>
-                    ${formatNumber(item.quantity)}
-                </strong>
-
-                <button
-                    type="button"
-                    class="sales-quantity-button"
-                    data-cart-action="decrease"
-                    data-cart-index="${index}"
-                >
-                    −
-                </button>
-
-            </div>
+            if (!button) {
+                return;
+            }
 
 
-            <div class="sales-cart-line-total">
-
-                ${formatPrice(lineTotal)}
-                تومان
-
-            </div>
+            const action =
+                button.dataset.action;
 
 
-            <button
-                type="button"
-                class="sales-remove-button"
-                data-cart-action="remove"
-                data-cart-index="${index}"
-                aria-label="حذف کالا"
-            >
-                ×
-            </button>
-
-        </div>
-
-    `;
+            const index =
+                Number(
+                    button.dataset.index
+                );
 
 
-    return card;
+            if (
+                action === 'increase'
+            ) {
+
+                changeCartQuantity(
+                    screen,
+                    index,
+                    1
+                );
+
+            }
+
+
+            if (
+                action === 'decrease'
+            ) {
+
+                changeCartQuantity(
+                    screen,
+                    index,
+                    -1
+                );
+
+            }
+
+
+            if (
+                action === 'remove'
+            ) {
+
+                removeCartItem(
+                    screen,
+                    index
+                );
+
+            }
+
+        };
 
 }
 
 
-// ============================================================
-// Summary
-// ============================================================
+/* ============================================================
+   Checkout
+   ============================================================ */
 
-function updateSalesSummary(screen) {
+async function submitSale(screen) {
+
+    if (
+        SALES_STATE.cart.length === 0
+    ) {
+
+        showSalesMessage(
+            screen,
+            '⚠️ سبد خرید خالی است.',
+            false
+        );
+
+        return;
+    }
+
+
+    if (
+        !SALES_STATE.databaseReady
+    ) {
+
+        showSalesMessage(
+            screen,
+            '❌ پایگاه داده آماده نیست.',
+            false
+        );
+
+        return;
+    }
+
+
+    const button =
+        $('#sales-submit-button', screen);
+
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            'در حال ثبت فروش...';
+
+    }
+
+
+    try {
+
+        const totalQuantity =
+            SALES_STATE.cart.reduce(
+                (
+                    sum,
+                    item
+                ) =>
+                    sum +
+                    item.quantity,
+                0
+            );
+
+
+        const totalPrice =
+            SALES_STATE.cart.reduce(
+                (
+                    sum,
+                    item
+                ) =>
+                    sum +
+                    (
+                        item.quantity *
+                        item.salePrice
+                    ),
+                0
+            );
+
+
+        const sale = {
+
+            timestamp:
+                new Date().toISOString(),
+
+            totalQuantity,
+
+            totalPrice
+
+        };
+
+
+        const items =
+            SALES_STATE.cart.map(
+                item => ({
+
+                    productId:
+                        item.productId,
+
+                    barcode:
+                        item.barcode,
+
+                    name:
+                        item.name,
+
+                    salePrice:
+                        item.salePrice,
+
+                    quantity:
+                        item.quantity
+
+                })
+            );
+
+
+        await createSale(
+            sale,
+            items
+        );
+
+
+        SALES_STATE.cart = [];
+
+
+        refreshSalesScreen(
+            screen
+        );
+
+
+        showSalesMessage(
+            screen,
+            '✓ فروش با موفقیت ثبت شد.',
+            true
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: sale error',
+            error
+        );
+
+
+        showSalesMessage(
+            screen,
+            '❌ ثبت فروش انجام نشد. موجودی یا اطلاعات کالا را بررسی کنید.',
+            false
+        );
+
+
+    } finally {
+
+        if (button) {
+
+            button.disabled =
+                false;
+
+            button.textContent =
+                '✓ ثبت فروش';
+
+        }
+
+    }
+
+}
+
+
+/* ============================================================
+   Refresh
+   ============================================================ */
+
+function refreshSalesScreen(screen) {
+
+    renderCart(
+        screen
+    );
+
+
+    renderSummary(
+        screen
+    );
+
+
+    bindCartEvents(
+        screen
+    );
+
+}
+
+
+/* ============================================================
+   Summary
+   ============================================================ */
+
+function renderSummary(screen) {
 
     const quantityElement =
         $('#sales-total-quantity', screen);
@@ -1455,15 +1282,22 @@ function updateSalesSummary(screen) {
 
     const totalQuantity =
         SALES_STATE.cart.reduce(
-            (sum, item) =>
-                sum + item.quantity,
+            (
+                sum,
+                item
+            ) =>
+                sum +
+                item.quantity,
             0
         );
 
 
     const totalPrice =
         SALES_STATE.cart.reduce(
-            (sum, item) =>
+            (
+                sum,
+                item
+            ) =>
                 sum +
                 (
                     item.quantity *
@@ -1476,7 +1310,9 @@ function updateSalesSummary(screen) {
     if (quantityElement) {
 
         quantityElement.textContent =
-            formatNumber(totalQuantity);
+            formatNumber(
+                totalQuantity
+            );
 
     }
 
@@ -1491,29 +1327,18 @@ function updateSalesSummary(screen) {
 }
 
 
-// ============================================================
-// Messages
-// ============================================================
+/* ============================================================
+   Messages
+   ============================================================ */
 
 function showSalesMessage(
     screen,
     message,
-    success = true
+    success
 ) {
 
-    const boxes = [
-
-        $('#sales-search-message', screen),
-
-        $('#sales-checkout-message', screen)
-
-    ];
-
-
     const box =
-        boxes.find(
-            item => item
-        );
+        $('#sales-search-message', screen);
 
 
     if (!box) {
@@ -1521,43 +1346,72 @@ function showSalesMessage(
     }
 
 
-    box.className =
-        success
-            ? 'sales-message message-success'
-            : 'sales-message message-danger';
-
-
     box.textContent =
         message;
+
+
+    box.className =
+        `sales-message ${
+            success
+                ? 'sales-message-success'
+                : 'sales-message-danger'
+        }`;
 
 }
 
 
-function clearSalesMessages(screen) {
+function clearSalesMessage(screen) {
 
-    const boxes = [
-
-        $('#sales-search-message', screen),
-
-        $('#sales-checkout-message', screen)
-
-    ];
+    const box =
+        $('#sales-search-message', screen);
 
 
-    boxes.forEach(
-        box => {
+    if (!box) {
+        return;
+    }
 
-            if (!box) {
-                return;
-            }
 
-            box.textContent =
-                '';
+    box.textContent =
+        '';
 
-            box.className =
-                'sales-message';
 
-        }
-    );
+    box.className =
+        'sales-message';
+
+}
+
+
+/* ============================================================
+   Close
+   ============================================================ */
+
+function closeSalesScreen() {
+
+    const sales =
+        document.getElementById(
+            'sales-screen'
+        );
+
+
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
+
+
+    if (sales) {
+
+        sales.style.display =
+            'none';
+
+    }
+
+
+    if (home) {
+
+        home.style.display =
+            '';
+
+    }
 
 }
