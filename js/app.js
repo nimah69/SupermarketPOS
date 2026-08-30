@@ -2,42 +2,27 @@
 // SupermarketPOS
 // Main Application
 // Application / Navigation Layer
-// Stage 9.1 - Reports Integration
+// Stage 9 - Stable Static Imports
 // Complete Replacement
 
 'use strict';
 
 
 /* ============================================================
-   Database
+   Static Imports
 ============================================================ */
 
 import {
     initializeDatabase
 } from './database.js';
 
-
-/* ============================================================
-   Sales Module
-============================================================ */
-
 import {
     initializeSalesScreen
 } from './sales.js';
 
-
-/* ============================================================
-   Products Module
-============================================================ */
-
 import {
     initializeProductsScreen
 } from './products.js';
-
-
-/* ============================================================
-   Reports Module
-============================================================ */
 
 import {
     initializeReportsScreen
@@ -52,7 +37,15 @@ const APP_STATE = {
 
     initialized: false,
 
-    databaseReady: false
+    databaseReady: false,
+
+    currentScreen: 'home',
+
+    salesInitialized: false,
+
+    productsInitialized: false,
+
+    reportsInitialized: false
 
 };
 
@@ -63,7 +56,17 @@ const APP_STATE = {
 
 const DOM = {
 
-    app: null
+    app: null,
+
+    main: null,
+
+    home: null,
+
+    sales: null,
+
+    products: null,
+
+    reports: null
 
 };
 
@@ -74,7 +77,7 @@ const DOM = {
 
 function escapeHTML(value) {
 
-    return String(value)
+    return String(value ?? '')
 
         .replaceAll(
             '&',
@@ -99,6 +102,45 @@ function escapeHTML(value) {
         .replaceAll(
             "'",
             '&#039;'
+        );
+
+}
+
+
+/* ============================================================
+   DOM Cache
+============================================================ */
+
+function cacheDOM() {
+
+    DOM.app =
+        document.querySelector(
+            '#app'
+        );
+
+    DOM.main =
+        document.querySelector(
+            'main'
+        );
+
+    DOM.home =
+        document.querySelector(
+            '.home-screen'
+        );
+
+    DOM.sales =
+        document.getElementById(
+            'sales-screen'
+        );
+
+    DOM.products =
+        document.getElementById(
+            'products-screen'
+        );
+
+    DOM.reports =
+        document.getElementById(
+            'reports-screen'
         );
 
 }
@@ -131,15 +173,9 @@ function showDatabaseStatus(
             'database-test-status';
 
 
-        const home =
-            document.querySelector(
-                '.home-screen'
-            );
+        if (DOM.home) {
 
-
-        if (home) {
-
-            home.appendChild(
+            DOM.home.appendChild(
                 status
             );
 
@@ -249,50 +285,176 @@ function setupHeaderStatus() {
 
 
 /* ============================================================
-   Screen Helpers
+   Screen Getters
 ============================================================ */
 
 function getHomeScreen() {
 
-    return document.querySelector(
-        '.home-screen'
-    );
+    if (!DOM.home) {
+
+        DOM.home =
+            document.querySelector(
+                '.home-screen'
+            );
+
+    }
+
+
+    return DOM.home;
 
 }
 
 
 function getSalesScreen() {
 
-    return document.getElementById(
-        'sales-screen'
-    );
+    return DOM.sales;
 
 }
 
 
 function getProductsScreen() {
 
-    return document.getElementById(
-        'products-screen'
-    );
+    return DOM.products;
 
 }
 
 
 function getReportsScreen() {
 
-    return document.getElementById(
-        'reports-screen'
-    );
+    return DOM.reports;
 
 }
 
 
 /* ============================================================
-   Hide Secondary Screens
+   Create Screen
 ============================================================ */
 
-function hideAllSecondaryScreens() {
+function createScreen(
+    id,
+    className
+) {
+
+    if (!DOM.main) {
+        return null;
+    }
+
+
+    let screen =
+        document.getElementById(
+            id
+        );
+
+
+    if (screen) {
+        return screen;
+    }
+
+
+    screen =
+        document.createElement(
+            'section'
+        );
+
+
+    screen.id =
+        id;
+
+
+    screen.className =
+        className;
+
+
+    screen.style.display =
+        'none';
+
+
+    DOM.main.appendChild(
+        screen
+    );
+
+
+    if (id === 'sales-screen') {
+
+        DOM.sales =
+            screen;
+
+    }
+
+
+    if (id === 'products-screen') {
+
+        DOM.products =
+            screen;
+
+    }
+
+
+    if (id === 'reports-screen') {
+
+        DOM.reports =
+            screen;
+
+    }
+
+
+    return screen;
+
+}
+
+
+/* ============================================================
+   Ensure Screens
+============================================================ */
+
+function ensureScreens() {
+
+    if (!DOM.main) {
+        return;
+    }
+
+
+    if (!getSalesScreen()) {
+
+        createScreen(
+            'sales-screen',
+            'sales-screen'
+        );
+
+    }
+
+
+    if (!getProductsScreen()) {
+
+        createScreen(
+            'products-screen',
+            'products-screen'
+        );
+
+    }
+
+
+    if (!getReportsScreen()) {
+
+        createScreen(
+            'reports-screen',
+            'reports-screen'
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   Hide All Screens
+============================================================ */
+
+function hideAllScreens() {
+
+    const home =
+        getHomeScreen();
+
 
     const sales =
         getSalesScreen();
@@ -304,6 +466,14 @@ function hideAllSecondaryScreens() {
 
     const reports =
         getReportsScreen();
+
+
+    if (home) {
+
+        home.style.display =
+            'none';
+
+    }
 
 
     if (sales) {
@@ -333,12 +503,12 @@ function hideAllSecondaryScreens() {
 
 
 /* ============================================================
-   Home Screen
+   Show Home
 ============================================================ */
 
 function showHomeScreen() {
 
-    hideAllSecondaryScreens();
+    hideAllScreens();
 
 
     const home =
@@ -352,197 +522,58 @@ function showHomeScreen() {
 
     }
 
-}
 
-
-/* ============================================================
-   Sales Screen
-============================================================ */
-
-function openSalesScreen() {
-
-    const main =
-        document.querySelector(
-            'main'
-        );
-
-
-    if (!main) {
-        return;
-    }
-
-
-    const home =
-        getHomeScreen();
-
-
-    if (home) {
-
-        home.style.display =
-            'none';
-
-    }
-
-
-    const products =
-        getProductsScreen();
-
-
-    if (products) {
-
-        products.style.display =
-            'none';
-
-    }
-
-
-    const reports =
-        getReportsScreen();
-
-
-    if (reports) {
-
-        reports.style.display =
-            'none';
-
-    }
-
-
-    let sales =
-        getSalesScreen();
-
-
-    if (!sales) {
-
-        sales =
-            document.createElement(
-                'section'
-            );
-
-
-        sales.id =
-            'sales-screen';
-
-
-        sales.className =
-            'sales-screen';
-
-
-        main.appendChild(
-            sales
-        );
-
-    }
-
-
-    sales.style.display =
-        'block';
-
-
-    initializeSalesScreen(
-        sales,
-        {
-
-            databaseReady:
-                APP_STATE.databaseReady,
-
-            onBack:
-                showHomeScreen
-
-        }
-    );
+    APP_STATE.currentScreen =
+        'home';
 
 }
 
 
 /* ============================================================
-   Products Screen
+   Open Sales
 ============================================================ */
 
-async function openProductsScreen() {
+async function openSalesScreen() {
 
-    const main =
-        document.querySelector(
-            'main'
-        );
-
-
-    if (!main) {
+    if (!DOM.main) {
         return;
     }
 
 
-    const home =
-        getHomeScreen();
+    ensureScreens();
 
 
-    if (home) {
-
-        home.style.display =
-            'none';
-
-    }
+    hideAllScreens();
 
 
-    const sales =
+    const screen =
         getSalesScreen();
 
 
-    if (sales) {
+    if (!screen) {
 
-        sales.style.display =
-            'none';
-
-    }
-
-
-    const reports =
-        getReportsScreen();
-
-
-    if (reports) {
-
-        reports.style.display =
-            'none';
-
-    }
-
-
-    let products =
-        getProductsScreen();
-
-
-    if (!products) {
-
-        products =
-            document.createElement(
-                'section'
-            );
-
-
-        products.id =
-            'products-screen';
-
-
-        products.className =
-            'products-screen';
-
-
-        main.appendChild(
-            products
+        showAppMessage(
+            'خطا در ایجاد بخش فروش.',
+            'danger'
         );
 
+        return;
+
     }
 
 
-    products.style.display =
+    screen.style.display =
         'block';
+
+
+    APP_STATE.currentScreen =
+        'sales';
 
 
     try {
 
-        await initializeProductsScreen(
-            products,
+        await initializeSalesScreen(
+            screen,
             {
 
                 databaseReady:
@@ -553,6 +584,90 @@ async function openProductsScreen() {
 
             }
         );
+
+
+        APP_STATE.salesInitialized =
+            true;
+
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: Sales initialization error',
+            error
+        );
+
+
+        showAppMessage(
+            'خطا در باز کردن بخش فروش.',
+            'danger'
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   Open Products
+============================================================ */
+
+async function openProductsScreen() {
+
+    if (!DOM.main) {
+        return;
+    }
+
+
+    ensureScreens();
+
+
+    hideAllScreens();
+
+
+    const screen =
+        getProductsScreen();
+
+
+    if (!screen) {
+
+        showAppMessage(
+            'خطا در ایجاد بخش کالاها.',
+            'danger'
+        );
+
+        return;
+
+    }
+
+
+    screen.style.display =
+        'block';
+
+
+    APP_STATE.currentScreen =
+        'products';
+
+
+    try {
+
+        await initializeProductsScreen(
+            screen,
+            {
+
+                databaseReady:
+                    APP_STATE.databaseReady,
+
+                onBack:
+                    showHomeScreen
+
+            }
+        );
+
+
+        APP_STATE.productsInitialized =
+            true;
+
 
     } catch (error) {
 
@@ -573,93 +688,50 @@ async function openProductsScreen() {
 
 
 /* ============================================================
-   Reports Screen
+   Open Reports
 ============================================================ */
 
 async function openReportsScreen() {
 
-    const main =
-        document.querySelector(
-            'main'
-        );
-
-
-    if (!main) {
+    if (!DOM.main) {
         return;
     }
 
 
-    const home =
-        getHomeScreen();
+    ensureScreens();
 
 
-    if (home) {
-
-        home.style.display =
-            'none';
-
-    }
+    hideAllScreens();
 
 
-    const sales =
-        getSalesScreen();
-
-
-    if (sales) {
-
-        sales.style.display =
-            'none';
-
-    }
-
-
-    const products =
-        getProductsScreen();
-
-
-    if (products) {
-
-        products.style.display =
-            'none';
-
-    }
-
-
-    let reports =
+    const screen =
         getReportsScreen();
 
 
-    if (!reports) {
+    if (!screen) {
 
-        reports =
-            document.createElement(
-                'section'
-            );
-
-
-        reports.id =
-            'reports-screen';
-
-
-        reports.className =
-            'reports-screen';
-
-
-        main.appendChild(
-            reports
+        showAppMessage(
+            'خطا در ایجاد بخش گزارش‌ها.',
+            'danger'
         );
+
+        return;
 
     }
 
 
-    reports.style.display =
+    screen.style.display =
         'block';
+
+
+    APP_STATE.currentScreen =
+        'reports';
 
 
     try {
 
         await initializeReportsScreen(
-            reports,
+            screen,
             {
 
                 databaseReady:
@@ -670,6 +742,11 @@ async function openReportsScreen() {
 
             }
         );
+
+
+        APP_STATE.reportsInitialized =
+            true;
+
 
     } catch (error) {
 
@@ -701,12 +778,40 @@ function setupNavigation() {
         );
 
 
+    if (!cards.length) {
+
+        console.warn(
+            'SupermarketPOS: No menu cards found.'
+        );
+
+        return;
+
+    }
+
+
     cards.forEach(
         card => {
 
+            if (
+                card.dataset.appNavigationBound ===
+                'true'
+            ) {
+
+                return;
+
+            }
+
+
+            card.dataset.appNavigationBound =
+                'true';
+
+
             card.addEventListener(
                 'click',
-                async () => {
+                async event => {
+
+                    event.preventDefault();
+
 
                     const action =
                         card.getAttribute(
@@ -719,7 +824,7 @@ function setupNavigation() {
                         'sales'
                     ) {
 
-                        openSalesScreen();
+                        await openSalesScreen();
 
                         return;
 
@@ -760,7 +865,15 @@ function setupNavigation() {
                             'info'
                         );
 
+                        return;
+
                     }
+
+
+                    console.warn(
+                        'SupermarketPOS: Unknown menu action:',
+                        action
+                    );
 
                 }
             );
@@ -805,7 +918,7 @@ async function setupDatabase() {
 
 
         console.error(
-            'SupermarketPOS: Database error',
+            'SupermarketPOS: Database initialization error',
             error
         );
 
@@ -888,6 +1001,41 @@ function showAppMessage(
 
 
 /* ============================================================
+   Global Error Protection
+============================================================ */
+
+function setupGlobalErrorProtection() {
+
+    window.addEventListener(
+        'error',
+        event => {
+
+            console.error(
+                'SupermarketPOS: Global error',
+                event.error ||
+                event.message
+            );
+
+        }
+    );
+
+
+    window.addEventListener(
+        'unhandledrejection',
+        event => {
+
+            console.error(
+                'SupermarketPOS: Unhandled promise rejection',
+                event.reason
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
    Initialize Application
 ============================================================ */
 
@@ -902,10 +1050,7 @@ async function initializeApp() {
     }
 
 
-    DOM.app =
-        document.querySelector(
-            '#app'
-        );
+    cacheDOM();
 
 
     if (!DOM.app) {
@@ -919,7 +1064,24 @@ async function initializeApp() {
     }
 
 
+    if (!DOM.main) {
+
+        console.error(
+            'SupermarketPOS: <main> not found.'
+        );
+
+        return;
+
+    }
+
+
+    setupGlobalErrorProtection();
+
+
     setupHeaderStatus();
+
+
+    ensureScreens();
 
 
     setupNavigation();
