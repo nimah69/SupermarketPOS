@@ -2,6 +2,7 @@
 // SupermarketPOS
 // Main Application
 // Application / Navigation Layer
+// Stage 9.1 - Reports Integration
 // Complete Replacement
 
 'use strict';
@@ -32,6 +33,15 @@ import {
 import {
     initializeProductsScreen
 } from './products.js';
+
+
+/* ============================================================
+   Reports Module
+============================================================ */
+
+import {
+    initializeReportsScreen
+} from './reports.js';
 
 
 /* ============================================================
@@ -269,6 +279,19 @@ function getProductsScreen() {
 }
 
 
+function getReportsScreen() {
+
+    return document.getElementById(
+        'reports-screen'
+    );
+
+}
+
+
+/* ============================================================
+   Hide Secondary Screens
+============================================================ */
+
 function hideAllSecondaryScreens() {
 
     const sales =
@@ -277,6 +300,10 @@ function hideAllSecondaryScreens() {
 
     const products =
         getProductsScreen();
+
+
+    const reports =
+        getReportsScreen();
 
 
     if (sales) {
@@ -294,8 +321,20 @@ function hideAllSecondaryScreens() {
 
     }
 
+
+    if (reports) {
+
+        reports.style.display =
+            'none';
+
+    }
+
 }
 
+
+/* ============================================================
+   Home Screen
+============================================================ */
 
 function showHomeScreen() {
 
@@ -352,6 +391,18 @@ function openSalesScreen() {
     if (products) {
 
         products.style.display =
+            'none';
+
+    }
+
+
+    const reports =
+        getReportsScreen();
+
+
+    if (reports) {
+
+        reports.style.display =
             'none';
 
     }
@@ -445,6 +496,18 @@ async function openProductsScreen() {
     }
 
 
+    const reports =
+        getReportsScreen();
+
+
+    if (reports) {
+
+        reports.style.display =
+            'none';
+
+    }
+
+
     let products =
         getProductsScreen();
 
@@ -510,6 +573,123 @@ async function openProductsScreen() {
 
 
 /* ============================================================
+   Reports Screen
+============================================================ */
+
+async function openReportsScreen() {
+
+    const main =
+        document.querySelector(
+            'main'
+        );
+
+
+    if (!main) {
+        return;
+    }
+
+
+    const home =
+        getHomeScreen();
+
+
+    if (home) {
+
+        home.style.display =
+            'none';
+
+    }
+
+
+    const sales =
+        getSalesScreen();
+
+
+    if (sales) {
+
+        sales.style.display =
+            'none';
+
+    }
+
+
+    const products =
+        getProductsScreen();
+
+
+    if (products) {
+
+        products.style.display =
+            'none';
+
+    }
+
+
+    let reports =
+        getReportsScreen();
+
+
+    if (!reports) {
+
+        reports =
+            document.createElement(
+                'section'
+            );
+
+
+        reports.id =
+            'reports-screen';
+
+
+        reports.className =
+            'reports-screen';
+
+
+        main.appendChild(
+            reports
+        );
+
+    }
+
+
+    reports.style.display =
+        'block';
+
+
+    try {
+
+        await initializeReportsScreen(
+            reports,
+            {
+
+                databaseReady:
+                    APP_STATE.databaseReady,
+
+                onBack:
+                    showHomeScreen
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            'SupermarketPOS: Reports initialization error',
+            error
+        );
+
+
+        showAppMessage(
+            'خطا در باز کردن بخش گزارش‌ها.',
+            'danger'
+        );
+
+    }
+
+}
+
+
+/* ============================================================
    Navigation
 ============================================================ */
 
@@ -563,10 +743,7 @@ function setupNavigation() {
                         'reports'
                     ) {
 
-                        showAppMessage(
-                            'بخش گزارش‌ها در مرحله بعد فعال می‌شود.',
-                            'info'
-                        );
+                        await openReportsScreen();
 
                         return;
 
