@@ -1,32 +1,20 @@
 // js/products.js
 // SupermarketPOS
-// Products / Inventory Module
+// Products Management Module
 // Complete Replacement
 
 'use strict';
 
 import {
     addProduct,
-    getAllProducts,
-    updateProduct,
-    deleteProduct
+    getAllProducts
 } from './database.js';
 
 
-/* ============================================================
-   State
-============================================================ */
-
 const PRODUCTS_STATE = {
-
     initialized: false,
-
-    editingId: null,
-
     databaseReady: false,
-
-    products: []
-
+    editingId: null
 };
 
 
@@ -35,44 +23,22 @@ const PRODUCTS_STATE = {
 ============================================================ */
 
 function $(selector, root = document) {
-
     return root.querySelector(selector);
-
 }
 
 
 function formatNumber(value) {
-
-    return (
-        Number(value) || 0
-    ).toLocaleString('fa-IR');
-
-}
-
-
-function formatPrice(value) {
-
-    return (
-        Number(value) || 0
-    ).toLocaleString('fa-IR');
-
+    return (Number(value) || 0).toLocaleString('fa-IR');
 }
 
 
 function escapeHTML(value) {
-
     return String(value)
-
         .replaceAll('&', '&amp;')
-
         .replaceAll('<', '&lt;')
-
         .replaceAll('>', '&gt;')
-
         .replaceAll('"', '&quot;')
-
         .replaceAll("'", '&#039;');
-
 }
 
 
@@ -84,29 +50,21 @@ export async function initializeProductsScreen(
     screen,
     options = {}
 ) {
-
     if (!screen) {
         return;
     }
 
-
     PRODUCTS_STATE.databaseReady =
         options.databaseReady !== false;
 
-
     if (!PRODUCTS_STATE.initialized) {
-
         buildProductsScreen(screen);
-
         bindProductsEvents(screen);
 
         PRODUCTS_STATE.initialized = true;
-
     }
 
-
     await loadProducts(screen);
-
 }
 
 
@@ -127,27 +85,14 @@ function buildProductsScreen(screen) {
                 </div>
 
                 <div>
-
-                    <h2>
-                        مدیریت کالاها
-                    </h2>
+                    <h2>مدیریت کالاها</h2>
 
                     <p>
                         مدیریت محصولات و موجودی فروشگاه
                     </p>
-
                 </div>
 
             </div>
-
-
-            <button
-                type="button"
-                class="products-back-button"
-                id="products-back-button"
-            >
-                بازگشت
-            </button>
 
         </div>
 
@@ -156,14 +101,12 @@ function buildProductsScreen(screen) {
 
             <div class="products-search-box">
 
-                <span>
-                    🔎
-                </span>
+                <span>🔎</span>
 
                 <input
                     type="search"
                     id="products-search-input"
-                    placeholder="جستجوی نام یا بارکد..."
+                    placeholder="جستجوی نام یا بارکد کالا..."
                     autocomplete="off"
                 >
 
@@ -172,8 +115,8 @@ function buildProductsScreen(screen) {
 
             <button
                 type="button"
-                class="add-product-button"
                 id="add-product-button"
+                class="add-product-button"
             >
                 ＋ افزودن کالا
             </button>
@@ -182,15 +125,15 @@ function buildProductsScreen(screen) {
 
 
         <div
-            id="products-stats"
-            class="products-stats"
+            id="products-summary"
+            class="products-summary"
         ></div>
 
 
         <div
             id="product-form-container"
             class="product-form-container"
-            style="display:none;"
+            hidden
         >
 
             <div class="product-form">
@@ -198,22 +141,17 @@ function buildProductsScreen(screen) {
                 <div class="product-form-header">
 
                     <div>
-
-                        <h3 id="product-form-title">
-                            افزودن کالای جدید
-                        </h3>
+                        <h3>افزودن کالای جدید</h3>
 
                         <p>
                             اطلاعات کالا را وارد کنید.
                         </p>
-
                     </div>
-
 
                     <button
                         type="button"
-                        class="close-product-form"
                         id="close-product-form"
+                        class="close-product-form"
                         aria-label="بستن"
                     >
                         ×
@@ -282,10 +220,10 @@ function buildProductsScreen(screen) {
                         <input
                             type="number"
                             id="product-price"
-                            inputmode="numeric"
                             min="0"
                             step="1"
-                            placeholder="قیمت به تومان"
+                            inputmode="numeric"
+                            placeholder="تومان"
                         >
 
                     </div>
@@ -300,35 +238,13 @@ function buildProductsScreen(screen) {
                         <input
                             type="number"
                             id="product-stock"
-                            inputmode="numeric"
                             min="0"
                             step="1"
-                            placeholder="تعداد موجودی"
+                            inputmode="numeric"
+                            placeholder="تعداد"
                         >
 
                     </div>
-
-                </div>
-
-
-                <div class="product-form-actions">
-
-                    <button
-                        type="button"
-                        class="cancel-product-button"
-                        id="cancel-product-button"
-                    >
-                        انصراف
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="save-product-button"
-                        id="save-product-button"
-                    >
-                        ذخیره کالا
-                    </button>
 
                 </div>
 
@@ -338,6 +254,27 @@ function buildProductsScreen(screen) {
                     class="product-form-message"
                     aria-live="polite"
                 ></div>
+
+
+                <div class="product-form-actions">
+
+                    <button
+                        type="button"
+                        id="cancel-product-button"
+                        class="cancel-product-button"
+                    >
+                        انصراف
+                    </button>
+
+                    <button
+                        type="button"
+                        id="save-product-button"
+                        class="save-product-button"
+                    >
+                        ذخیره کالا
+                    </button>
+
+                </div>
 
             </div>
 
@@ -349,8 +286,16 @@ function buildProductsScreen(screen) {
             class="products-list"
         ></div>
 
-    `;
 
+        <button
+            type="button"
+            id="products-back-button"
+            class="products-back-button"
+        >
+            ← بازگشت
+        </button>
+
+    `;
 }
 
 
@@ -363,421 +308,158 @@ function bindProductsEvents(screen) {
     const addButton =
         $('#add-product-button', screen);
 
-
     const closeButton =
         $('#close-product-form', screen);
-
 
     const cancelButton =
         $('#cancel-product-button', screen);
 
-
     const saveButton =
         $('#save-product-button', screen);
 
-
     const searchInput =
         $('#products-search-input', screen);
-
 
     const backButton =
         $('#products-back-button', screen);
 
 
     if (addButton) {
-
         addButton.addEventListener(
             'click',
-            () => {
-
-                openProductForm(
-                    screen
-                );
-
-            }
+            () => openProductForm(screen)
         );
-
     }
 
 
     if (closeButton) {
-
         closeButton.addEventListener(
             'click',
-            () => {
-
-                closeProductForm(
-                    screen
-                );
-
-            }
+            () => closeProductForm(screen)
         );
-
     }
 
 
     if (cancelButton) {
-
         cancelButton.addEventListener(
             'click',
-            () => {
-
-                closeProductForm(
-                    screen
-                );
-
-            }
+            () => closeProductForm(screen)
         );
-
     }
 
 
     if (saveButton) {
-
         saveButton.addEventListener(
             'click',
-            () => {
-
-                saveProduct(
-                    screen
-                );
-
-            }
+            () => saveProduct(screen)
         );
-
     }
 
 
     if (searchInput) {
-
         searchInput.addEventListener(
             'input',
-            () => {
-
-                renderProducts(
-                    screen,
-                    PRODUCTS_STATE.products
-                );
-
-            }
+            () => filterProducts(screen)
         );
-
     }
 
 
     if (backButton) {
-
         backButton.addEventListener(
             'click',
             () => {
 
-                closeProductsScreen();
-
-            }
-        );
-
-    }
-
-
-    const list =
-        $('#products-list', screen);
-
-
-    if (list) {
-
-        list.addEventListener(
-            'click',
-            event => {
-
-                const button =
-                    event.target.closest(
-                        'button[data-action]'
+                const products =
+                    document.getElementById(
+                        'products-screen'
                     );
 
+                const home =
+                    document.querySelector(
+                        '.home-screen'
+                    );
 
-                if (!button) {
-                    return;
+                if (products) {
+                    products.style.display = 'none';
                 }
 
-
-                const action =
-                    button.dataset.action;
-
-
-                const id =
-                    Number(
-                        button.dataset.id
-                    );
-
-
-                const product =
-                    PRODUCTS_STATE.products.find(
-                        item =>
-                            Number(item.id) === id
-                    );
-
-
-                if (!product) {
-                    return;
-                }
-
-
-                if (action === 'edit') {
-
-                    openEditForm(
-                        screen,
-                        product
-                    );
-
-                }
-
-
-                if (action === 'delete') {
-
-                    removeProduct(
-                        screen,
-                        product
-                    );
-
+                if (home) {
+                    home.style.display = '';
                 }
 
             }
         );
-
     }
-
 }
 
 
 /* ============================================================
-   Open Add Form
+   Product Form
 ============================================================ */
 
 function openProductForm(screen) {
 
-    PRODUCTS_STATE.editingId = null;
-
-
     const form =
         $('#product-form-container', screen);
-
 
     if (!form) {
         return;
     }
 
-
-    form.style.display = 'block';
-
-
-    const title =
-        $('#product-form-title', screen);
-
-
-    if (title) {
-
-        title.textContent =
-            'افزودن کالای جدید';
-
-    }
-
+    PRODUCTS_STATE.editingId = null;
 
     clearProductForm(screen);
 
+    form.hidden = false;
 
     const barcode =
         $('#product-barcode', screen);
 
-
     if (barcode) {
-
         barcode.focus();
-
     }
-
 }
 
-
-/* ============================================================
-   Open Edit Form
-============================================================ */
-
-function openEditForm(
-    screen,
-    product
-) {
-
-    PRODUCTS_STATE.editingId =
-        product.id;
-
-
-    const form =
-        $('#product-form-container', screen);
-
-
-    if (!form) {
-        return;
-    }
-
-
-    form.style.display =
-        'block';
-
-
-    const title =
-        $('#product-form-title', screen);
-
-
-    if (title) {
-
-        title.textContent =
-            'ویرایش کالا';
-
-    }
-
-
-    const barcode =
-        $('#product-barcode', screen);
-
-
-    const name =
-        $('#product-name', screen);
-
-
-    const category =
-        $('#product-category', screen);
-
-
-    const price =
-        $('#product-price', screen);
-
-
-    const stock =
-        $('#product-stock', screen);
-
-
-    if (barcode) {
-
-        barcode.value =
-            product.barcode || '';
-
-    }
-
-
-    if (name) {
-
-        name.value =
-            product.name || '';
-
-    }
-
-
-    if (category) {
-
-        category.value =
-            product.category || '';
-
-    }
-
-
-    if (price) {
-
-        price.value =
-            Number(product.salePrice) || 0;
-
-    }
-
-
-    if (stock) {
-
-        stock.value =
-            Number(product.stock) || 0;
-
-    }
-
-
-    clearProductMessage(
-        screen
-    );
-
-
-    if (barcode) {
-
-        barcode.focus();
-
-    }
-
-}
-
-
-/* ============================================================
-   Close Form
-============================================================ */
 
 function closeProductForm(screen) {
 
     const form =
         $('#product-form-container', screen);
 
-
-    if (form) {
-
-        form.style.display =
-            'none';
-
+    if (!form) {
+        return;
     }
 
+    form.hidden = true;
 
-    PRODUCTS_STATE.editingId =
-        null;
+    PRODUCTS_STATE.editingId = null;
 
-
-    clearProductForm(
-        screen
-    );
-
+    clearProductMessage(screen);
 }
 
 
-/* ============================================================
-   Clear Form
-============================================================ */
-
 function clearProductForm(screen) {
 
-    const fields = [
-
+    [
         '#product-barcode',
         '#product-name',
         '#product-category',
         '#product-price',
         '#product-stock'
-
-    ];
-
-
-    fields.forEach(
+    ].forEach(
         selector => {
 
-            const field =
+            const input =
                 $(selector, screen);
 
-
-            if (field) {
-
-                field.value =
-                    '';
-
+            if (input) {
+                input.value = '';
             }
 
         }
     );
 
-
-    clearProductMessage(
-        screen
-    );
-
+    clearProductMessage(screen);
 }
 
 
@@ -787,9 +469,9 @@ function clearProductForm(screen) {
 
 async function saveProduct(screen) {
 
-    if (
-        !PRODUCTS_STATE.databaseReady
-    ) {
+    clearProductMessage(screen);
+
+    if (!PRODUCTS_STATE.databaseReady) {
 
         showProductMessage(
             screen,
@@ -798,29 +480,23 @@ async function saveProduct(screen) {
         );
 
         return;
-
     }
 
 
     const barcodeInput =
         $('#product-barcode', screen);
 
-
     const nameInput =
         $('#product-name', screen);
-
 
     const categoryInput =
         $('#product-category', screen);
 
-
     const priceInput =
         $('#product-price', screen);
 
-
     const stockInput =
         $('#product-stock', screen);
-
 
     const saveButton =
         $('#save-product-button', screen);
@@ -829,18 +505,14 @@ async function saveProduct(screen) {
     const barcode =
         barcodeInput.value.trim();
 
-
     const name =
         nameInput.value.trim();
-
 
     const category =
         categoryInput.value.trim();
 
-
     const priceText =
         priceInput.value.trim();
-
 
     const stockText =
         stockInput.value.trim();
@@ -848,7 +520,6 @@ async function saveProduct(screen) {
 
     const price =
         Number(priceText);
-
 
     const stock =
         stockText === ''
@@ -867,7 +538,6 @@ async function saveProduct(screen) {
         barcodeInput.focus();
 
         return;
-
     }
 
 
@@ -882,7 +552,6 @@ async function saveProduct(screen) {
         nameInput.focus();
 
         return;
-
     }
 
 
@@ -901,7 +570,6 @@ async function saveProduct(screen) {
         priceInput.focus();
 
         return;
-
     }
 
 
@@ -919,151 +587,90 @@ async function saveProduct(screen) {
         stockInput.focus();
 
         return;
-
     }
+
+
+    const now =
+        new Date().toISOString();
+
+
+    const product = {
+
+        barcode,
+
+        name,
+
+        category,
+
+        salePrice:
+            price,
+
+        stock,
+
+        createdAt:
+            now,
+
+        updatedAt:
+            now
+
+    };
 
 
     if (saveButton) {
 
-        saveButton.disabled =
-            true;
+        saveButton.disabled = true;
 
         saveButton.textContent =
-            PRODUCTS_STATE.editingId
-                ? 'در حال ذخیره...'
-                : 'در حال افزودن...';
+            'در حال ذخیره...';
 
     }
 
 
     try {
 
-        const now =
-            new Date().toISOString();
+        await addProduct(product);
 
 
-        if (
-            PRODUCTS_STATE.editingId
-        ) {
-
-            const oldProduct =
-                PRODUCTS_STATE.products.find(
-                    item =>
-                        Number(item.id) ===
-                        Number(
-                            PRODUCTS_STATE.editingId
-                        )
-                );
+        showProductMessage(
+            screen,
+            '✅ کالا با موفقیت ذخیره شد.',
+            true
+        );
 
 
-            if (!oldProduct) {
-
-                throw new Error(
-                    'Product not found'
-                );
-
-            }
+        clearProductForm(screen);
 
 
-            const updatedProduct = {
+        const form =
+            $('#product-form-container', screen);
 
-                ...oldProduct,
-
-                barcode,
-
-                name,
-
-                category,
-
-                salePrice:
-                    price,
-
-                stock,
-
-                updatedAt:
-                    now
-
-            };
-
-
-            await updateProduct(
-                updatedProduct
-            );
-
-
-            showProductMessage(
-                screen,
-                '✅ اطلاعات کالا با موفقیت ویرایش شد.',
-                true
-            );
-
-        } else {
-
-            const product = {
-
-                barcode,
-
-                name,
-
-                category,
-
-                salePrice:
-                    price,
-
-                stock,
-
-                createdAt:
-                    now,
-
-                updatedAt:
-                    now
-
-            };
-
-
-            await addProduct(
-                product
-            );
-
-
-            showProductMessage(
-                screen,
-                '✅ کالا با موفقیت اضافه شد.',
-                true
-            );
-
+        if (form) {
+            form.hidden = false;
         }
 
 
-        await loadProducts(
-            screen
-        );
+        await loadProducts(screen);
 
 
-        setTimeout(
-            () => {
+        const barcode =
+            $('#product-barcode', screen);
 
-                closeProductForm(
-                    screen
-                );
-
-            },
-            500
-        );
+        if (barcode) {
+            barcode.focus();
+        }
 
 
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: save product error',
+            'SupermarketPOS: add product error',
             error
         );
 
 
         if (
             error &&
-            error.name ===
-                'ConstraintError'
+            error.name === 'ConstraintError'
         ) {
 
             showProductMessage(
@@ -1076,7 +683,7 @@ async function saveProduct(screen) {
 
             showProductMessage(
                 screen,
-                '❌ ذخیره اطلاعات کالا انجام نشد.',
+                '❌ ذخیره کالا انجام نشد.',
                 false
             );
 
@@ -1086,8 +693,7 @@ async function saveProduct(screen) {
 
         if (saveButton) {
 
-            saveButton.disabled =
-                false;
+            saveButton.disabled = false;
 
             saveButton.textContent =
                 'ذخیره کالا';
@@ -1095,19 +701,17 @@ async function saveProduct(screen) {
         }
 
     }
-
 }
 
 
 /* ============================================================
-   Load Products
+   Load
 ============================================================ */
 
 async function loadProducts(screen) {
 
     const list =
         $('#products-list', screen);
-
 
     if (!list) {
         return;
@@ -1137,7 +741,7 @@ async function loadProducts(screen) {
             await getAllProducts();
 
 
-        PRODUCTS_STATE.products =
+        screen._products =
             Array.isArray(products)
                 ? products
                 : [];
@@ -1145,14 +749,14 @@ async function loadProducts(screen) {
 
         renderProducts(
             screen,
-            PRODUCTS_STATE.products
+            screen._products
         );
 
 
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: load products error',
+            'SupermarketPOS: products load error',
             error
         );
 
@@ -1176,14 +780,64 @@ async function loadProducts(screen) {
             </div>
 
         `;
-
     }
-
 }
 
 
 /* ============================================================
-   Render Products
+   Filter
+============================================================ */
+
+function filterProducts(screen) {
+
+    const input =
+        $('#products-search-input', screen);
+
+    const products =
+        screen._products || [];
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const query =
+        input.value.trim().toLowerCase();
+
+
+    const filtered =
+        products.filter(
+            product => {
+
+                const name =
+                    String(
+                        product.name || ''
+                    ).toLowerCase();
+
+                const barcode =
+                    String(
+                        product.barcode || ''
+                    ).toLowerCase();
+
+                return (
+                    name.includes(query) ||
+                    barcode.includes(query)
+                );
+
+            }
+        );
+
+
+    renderProducts(
+        screen,
+        filtered
+    );
+}
+
+
+/* ============================================================
+   Render
 ============================================================ */
 
 function renderProducts(
@@ -1194,94 +848,77 @@ function renderProducts(
     const list =
         $('#products-list', screen);
 
+    const summary =
+        $('#products-summary', screen);
+
 
     if (!list) {
         return;
     }
 
 
-    const searchInput =
-        $('#products-search-input', screen);
+    if (summary) {
 
+        const allProducts =
+            screen._products || [];
 
-    const search =
-        searchInput
-            ? searchInput.value
-                .trim()
-                .toLowerCase()
-            : '';
-
-
-    let filtered =
-        Array.isArray(products)
-            ? products
-            : [];
-
-
-    if (search) {
-
-        filtered =
-            filtered.filter(
-                product => {
-
-                    const name =
-                        String(
-                            product.name || ''
-                        ).toLowerCase();
-
-
-                    const barcode =
-                        String(
-                            product.barcode || ''
-                        ).toLowerCase();
-
-
-                    return (
-                        name.includes(search) ||
-                        barcode.includes(search)
-                    );
-
-                }
+        const totalStock =
+            allProducts.reduce(
+                (sum, product) =>
+                    sum +
+                    (Number(product.stock) || 0),
+                0
             );
 
+        summary.innerHTML = `
+
+            <div class="products-summary-item">
+
+                <span>کالاها</span>
+
+                <strong>
+                    ${formatNumber(allProducts.length)}
+                </strong>
+
+            </div>
+
+
+            <div class="products-summary-item">
+
+                <span>مجموع موجودی</span>
+
+                <strong>
+                    ${formatNumber(totalStock)}
+                </strong>
+
+            </div>
+
+        `;
     }
 
 
-    renderStats(
-        screen,
-        products,
-        filtered
-    );
+    list.innerHTML = '';
 
 
-    if (filtered.length === 0) {
+    if (
+        !Array.isArray(products) ||
+        products.length === 0
+    ) {
 
         list.innerHTML = `
 
             <div class="products-empty">
 
                 <div class="placeholder-icon">
-                    ${
-                        search
-                            ? '🔎'
-                            : '📦'
-                    }
+                    📦
                 </div>
 
                 <h3>
-                    ${
-                        search
-                            ? 'کالایی پیدا نشد'
-                            : 'هنوز کالایی ثبت نشده است'
-                    }
+                    کالایی پیدا نشد
                 </h3>
 
                 <p>
-                    ${
-                        search
-                            ? 'عبارت جستجو را تغییر دهید.'
-                            : 'برای شروع، اولین کالای فروشگاه را اضافه کنید.'
-                    }
+                    برای شروع یک کالا اضافه کنید.
                 </p>
 
             </div>
@@ -1289,43 +926,14 @@ function renderProducts(
         `;
 
         return;
-
     }
 
 
-    list.innerHTML = '';
+    const fragment =
+        document.createDocumentFragment();
 
 
-    const header =
-        document.createElement(
-            'div'
-        );
-
-
-    header.className =
-        'products-list-title';
-
-
-    header.innerHTML = `
-
-        <strong>
-            فهرست کالاها
-        </strong>
-
-        <span>
-            ${formatNumber(filtered.length)}
-            کالا
-        </span>
-
-    `;
-
-
-    list.appendChild(
-        header
-    );
-
-
-    filtered.forEach(
+    products.forEach(
         product => {
 
             const card =
@@ -1338,44 +946,22 @@ function renderProducts(
                 'product-card';
 
 
-            const price =
-                Number(
-                    product.salePrice
-                ) || 0;
-
-
             const stock =
-                Number(
-                    product.stock
-                ) || 0;
+                Number(product.stock) || 0;
+
+
+            const price =
+                Number(product.salePrice) || 0;
 
 
             let stockClass =
-                '';
-
-
-            let stockText =
-                formatNumber(stock);
+                'stock-normal';
 
 
             if (stock === 0) {
-
-                stockClass =
-                    'stock-empty';
-
-                stockText =
-                    'ناموجود';
-
+                stockClass = 'stock-empty';
             } else if (stock <= 5) {
-
-                stockClass =
-                    'stock-low';
-
-            } else {
-
-                stockClass =
-                    'stock-normal';
-
+                stockClass = 'stock-low';
             }
 
 
@@ -1386,7 +972,6 @@ function renderProducts(
                     <div class="product-card-icon">
                         📦
                     </div>
-
 
                     <div class="product-card-info">
 
@@ -1403,30 +988,6 @@ function renderProducts(
                                 'بدون دسته‌بندی'
                             )}
                         </span>
-
-                    </div>
-
-
-                    <div class="product-card-actions">
-
-                        <button
-                            type="button"
-                            class="product-edit-button"
-                            data-action="edit"
-                            data-id="${product.id}"
-                        >
-                            ✏️
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="product-delete-button"
-                            data-action="delete"
-                            data-id="${product.id}"
-                        >
-                            🗑️
-                        </button>
 
                     </div>
 
@@ -1457,7 +1018,7 @@ function renderProducts(
                         </span>
 
                         <strong>
-                            ${formatPrice(price)}
+                            ${formatNumber(price)}
                             تومان
                         </strong>
 
@@ -1471,7 +1032,7 @@ function renderProducts(
                         </span>
 
                         <strong class="${stockClass}">
-                            ${stockText}
+                            ${formatNumber(stock)}
                         </strong>
 
                     </div>
@@ -1481,224 +1042,13 @@ function renderProducts(
             `;
 
 
-            list.appendChild(
-                card
-            );
+            fragment.appendChild(card);
 
         }
     );
 
-}
 
-
-/* ============================================================
-   Statistics
-============================================================ */
-
-function renderStats(
-    screen,
-    products,
-    filtered
-) {
-
-    const stats =
-        $('#products-stats', screen);
-
-
-    if (!stats) {
-        return;
-    }
-
-
-    const all =
-        Array.isArray(products)
-            ? products
-            : [];
-
-
-    const totalStock =
-        all.reduce(
-            (
-                sum,
-                product
-            ) =>
-                sum +
-                (
-                    Number(
-                        product.stock
-                    ) || 0
-                ),
-            0
-        );
-
-
-    const emptyStock =
-        all.filter(
-            product =>
-                (
-                    Number(
-                        product.stock
-                    ) || 0
-                ) <= 0
-        ).length;
-
-
-    const lowStock =
-        all.filter(
-            product => {
-
-                const stock =
-                    Number(
-                        product.stock
-                    ) || 0;
-
-                return (
-                    stock > 0 &&
-                    stock <= 5
-                );
-
-            }
-        ).length;
-
-
-    stats.innerHTML = `
-
-        <div class="products-stat">
-
-            <span>
-                📦
-            </span>
-
-            <div>
-
-                <small>
-                    کل کالاها
-                </small>
-
-                <strong>
-                    ${formatNumber(all.length)}
-                </strong>
-
-            </div>
-
-        </div>
-
-
-        <div class="products-stat">
-
-            <span>
-                🔢
-            </span>
-
-            <div>
-
-                <small>
-                    مجموع موجودی
-                </small>
-
-                <strong>
-                    ${formatNumber(totalStock)}
-                </strong>
-
-            </div>
-
-        </div>
-
-
-        <div class="products-stat">
-
-            <span>
-                ⚠️
-            </span>
-
-            <div>
-
-                <small>
-                    موجودی کم
-                </small>
-
-                <strong>
-                    ${formatNumber(lowStock)}
-                </strong>
-
-            </div>
-
-        </div>
-
-
-        <div class="products-stat">
-
-            <span>
-                ⛔
-            </span>
-
-            <div>
-
-                <small>
-                    ناموجود
-                </small>
-
-                <strong>
-                    ${formatNumber(emptyStock)}
-                </strong>
-
-            </div>
-
-        </div>
-
-    `;
-
-}
-
-
-/* ============================================================
-   Delete Product
-============================================================ */
-
-async function removeProduct(
-    screen,
-    product
-) {
-
-    const confirmed =
-        window.confirm(
-            `آیا از حذف کالای «${product.name}» مطمئن هستید؟`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        await deleteProduct(
-            product.id
-        );
-
-
-        await loadProducts(
-            screen
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            'SupermarketPOS: delete product error',
-            error
-        );
-
-
-        showProductMessage(
-            screen,
-            '❌ حذف کالا انجام نشد.',
-            false
-        );
-
-    }
-
+    list.appendChild(fragment);
 }
 
 
@@ -1709,12 +1059,11 @@ async function removeProduct(
 function showProductMessage(
     screen,
     message,
-    success = true
+    success
 ) {
 
     const box =
         $('#product-form-message', screen);
-
 
     if (!box) {
         return;
@@ -1731,7 +1080,6 @@ function showProductMessage(
 
     box.textContent =
         message;
-
 }
 
 
@@ -1740,53 +1088,13 @@ function clearProductMessage(screen) {
     const box =
         $('#product-form-message', screen);
 
-
     if (!box) {
         return;
     }
 
 
-    box.textContent =
-        '';
-
+    box.textContent = '';
 
     box.className =
         'product-form-message';
-
-}
-
-
-/* ============================================================
-   Close Screen
-============================================================ */
-
-function closeProductsScreen() {
-
-    const products =
-        document.getElementById(
-            'products-screen'
-        );
-
-
-    const home =
-        document.querySelector(
-            '.home-screen'
-        );
-
-
-    if (products) {
-
-        products.style.display =
-            'none';
-
-    }
-
-
-    if (home) {
-
-        home.style.display =
-            '';
-
-    }
-
 }
