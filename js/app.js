@@ -1,8 +1,7 @@
 // js/app.js
 // SupermarketPOS
 // Main Application
-// Complete Replacement
-// Stage 5
+// Unified Modal System
 
 'use strict';
 
@@ -19,28 +18,112 @@ import {
 } from './sales.js';
 
 
-// ============================================================================
+// ============================================================
 // Application State
-// ============================================================================
+// ============================================================
 
 const APP_STATE = {
+
     initialized: false,
-    databaseReady: false
+
+    databaseReady: false,
+
+    modalOpen: false,
+
+    modalResolver: null
+
 };
 
 
-// ============================================================================
+// ============================================================
 // DOM
-// ============================================================================
+// ============================================================
 
 const DOM = {
     app: null
 };
 
 
-// ============================================================================
+// ============================================================
+// Escape HTML
+// ============================================================
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+
+}
+
+
+// ============================================================
+// Header
+// ============================================================
+
+function setupHeaderStatus() {
+
+    const ready =
+        document.querySelector('.status-ready');
+
+    const online =
+        document.querySelector('.status-online');
+
+
+    if (ready) {
+
+        ready.innerHTML = `
+
+            <span class="status-icon">
+                ✓
+            </span>
+
+            <div class="status-info">
+
+                <span class="status-label">
+                    وضعیت
+                </span>
+
+                <strong>
+                    آماده به کار
+                </strong>
+
+            </div>
+        `;
+    }
+
+
+    if (online) {
+
+        online.innerHTML = `
+
+            <span class="status-icon">
+                ●
+            </span>
+
+            <div class="status-info">
+
+                <span class="status-label">
+                    اتصال
+                </span>
+
+                <strong>
+                    محلی
+                </strong>
+
+            </div>
+        `;
+    }
+
+}
+
+
+// ============================================================
 // Database Status
-// ============================================================================
+// ============================================================
 
 function showDatabaseStatus(message, success = true) {
 
@@ -48,6 +131,7 @@ function showDatabaseStatus(message, success = true) {
         document.getElementById(
             'database-test-status'
         );
+
 
     if (!status) {
 
@@ -58,95 +142,39 @@ function showDatabaseStatus(message, success = true) {
             'database-test-status';
 
         const home =
-            document.querySelector(
-                '.home-screen'
-            );
+            document.querySelector('.home-screen');
 
         if (home) {
             home.appendChild(status);
         }
+
     }
 
-    status.style.cssText = `
-        margin-top: 14px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        font-size: 11px;
-        text-align: center;
-        border: 1px solid;
-        background: ${success ? '#ecfdf5' : '#fef2f2'};
-        color: ${success ? '#047857' : '#b91c1c'};
-        border-color: ${success ? '#a7f3d0' : '#fecaca'};
-    `;
 
-    status.textContent = message;
+    status.className =
+        success
+            ? 'database-status database-status-success'
+            : 'database-status database-status-danger';
+
+
+    status.textContent =
+        message;
+
 }
 
 
-// ============================================================================
-// Header
-// ============================================================================
-
-function setupHeaderStatus() {
-
-    const headerStatus =
-        document.querySelector(
-            '.header-status'
-        );
-
-    if (!headerStatus) {
-        return;
-    }
-
-    const ready =
-        headerStatus.querySelector(
-            '.status-ready'
-        );
-
-    const online =
-        headerStatus.querySelector(
-            '.status-online'
-        );
-
-    if (ready) {
-
-        ready.innerHTML = `
-            <span class="status-icon">✓</span>
-            <div class="status-info">
-                <span class="status-label">وضعیت</span>
-                <strong>آماده به کار</strong>
-            </div>
-        `;
-    }
-
-    if (online) {
-
-        online.innerHTML = `
-            <span class="status-icon">●</span>
-            <div class="status-info">
-                <span class="status-label">اتصال</span>
-                <strong>محلی</strong>
-            </div>
-        `;
-    }
-}
-
-
-// ============================================================================
-// Hide Secondary Screens
-// ============================================================================
+// ============================================================
+// Navigation
+// ============================================================
 
 function hideSecondaryScreens() {
 
     const sales =
-        document.getElementById(
-            'sales-screen'
-        );
+        document.getElementById('sales-screen');
 
     const products =
-        document.getElementById(
-            'products-screen'
-        );
+        document.getElementById('products-screen');
+
 
     if (sales) {
         sales.style.display = 'none';
@@ -155,31 +183,27 @@ function hideSecondaryScreens() {
     if (products) {
         products.style.display = 'none';
     }
+
 }
 
-
-// ============================================================================
-// Home
-// ============================================================================
 
 function showHomeScreen() {
 
     hideSecondaryScreens();
 
     const home =
-        document.querySelector(
-            '.home-screen'
-        );
+        document.querySelector('.home-screen');
 
     if (home) {
         home.style.display = '';
     }
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Sales
-// ============================================================================
+// ============================================================
 
 function openSalesScreen() {
 
@@ -190,28 +214,26 @@ function openSalesScreen() {
         return;
     }
 
+
     const home =
-        document.querySelector(
-            '.home-screen'
-        );
+        document.querySelector('.home-screen');
 
     if (home) {
         home.style.display = 'none';
     }
 
+
     const products =
-        document.getElementById(
-            'products-screen'
-        );
+        document.getElementById('products-screen');
 
     if (products) {
         products.style.display = 'none';
     }
 
+
     let sales =
-        document.getElementById(
-            'sales-screen'
-        );
+        document.getElementById('sales-screen');
+
 
     if (!sales) {
 
@@ -224,13 +246,14 @@ function openSalesScreen() {
         sales.className =
             'sales-screen';
 
-        main.appendChild(
-            sales
-        );
+        main.appendChild(sales);
+
     }
+
 
     sales.style.display =
         'block';
+
 
     initializeSalesScreen(
         sales,
@@ -242,12 +265,13 @@ function openSalesScreen() {
                 showHomeScreen
         }
     );
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Products
-// ============================================================================
+// ============================================================
 
 async function openProductsScreen() {
 
@@ -258,51 +282,49 @@ async function openProductsScreen() {
         return;
     }
 
+
     const home =
-        document.querySelector(
-            '.home-screen'
-        );
+        document.querySelector('.home-screen');
 
     if (home) {
         home.style.display = 'none';
     }
 
+
     const sales =
-        document.getElementById(
-            'sales-screen'
-        );
+        document.getElementById('sales-screen');
 
     if (sales) {
         sales.style.display = 'none';
     }
 
+
     let products =
-        document.getElementById(
-            'products-screen'
-        );
+        document.getElementById('products-screen');
+
 
     if (!products) {
 
         products =
             createProductsScreen();
 
-        main.appendChild(
-            products
-        );
+        main.appendChild(products);
+
     }
+
 
     products.style.display =
         'block';
 
-    await loadProducts(
-        products
-    );
+
+    await loadProducts(products);
+
 }
 
 
-// ============================================================================
-// Products Screen
-// ============================================================================
+// ============================================================
+// Create Products Screen
+// ============================================================
 
 function createProductsScreen() {
 
@@ -314,6 +336,7 @@ function createProductsScreen() {
 
     screen.className =
         'products-screen';
+
 
     screen.innerHTML = `
 
@@ -545,7 +568,6 @@ function createProductsScreen() {
                 <div
                     id="product-form-message"
                     class="product-form-message"
-                    aria-live="polite"
                 ></div>
 
             </div>
@@ -569,9 +591,13 @@ function createProductsScreen() {
 
     `;
 
+
     setupProductForm(screen);
+
     setupBackup(screen);
+
     setupRestore(screen);
+
 
     const back =
         screen.querySelector(
@@ -584,15 +610,18 @@ function createProductsScreen() {
             'click',
             showHomeScreen
         );
+
     }
 
+
     return screen;
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Product Form
-// ============================================================================
+// ============================================================
 
 function setupProductForm(screen) {
 
@@ -621,9 +650,11 @@ function setupProductForm(screen) {
             '#save-product-button'
         );
 
+
     if (!addButton || !form) {
         return;
     }
+
 
     addButton.addEventListener(
         'click',
@@ -642,8 +673,10 @@ function setupProductForm(screen) {
             if (barcode) {
                 barcode.focus();
             }
+
         }
     );
+
 
     function closeForm() {
 
@@ -651,7 +684,9 @@ function setupProductForm(screen) {
 
         form.style.display =
             'none';
+
     }
+
 
     if (closeButton) {
         closeButton.addEventListener(
@@ -660,6 +695,7 @@ function setupProductForm(screen) {
         );
     }
 
+
     if (cancelButton) {
         cancelButton.addEventListener(
             'click',
@@ -667,15 +703,18 @@ function setupProductForm(screen) {
         );
     }
 
+
     if (!saveButton) {
         return;
     }
+
 
     saveButton.addEventListener(
         'click',
         async () => {
 
             clearProductMessage(screen);
+
 
             if (!APP_STATE.databaseReady) {
 
@@ -687,6 +726,7 @@ function setupProductForm(screen) {
 
                 return;
             }
+
 
             const barcodeInput =
                 screen.querySelector(
@@ -713,6 +753,7 @@ function setupProductForm(screen) {
                     '#product-stock'
                 );
 
+
             const barcode =
                 barcodeInput.value.trim();
 
@@ -728,6 +769,7 @@ function setupProductForm(screen) {
             const stockText =
                 stockInput.value.trim();
 
+
             const price =
                 Number(priceText);
 
@@ -735,6 +777,7 @@ function setupProductForm(screen) {
                 stockText === ''
                     ? 0
                     : Number(stockText);
+
 
             if (!barcode) {
 
@@ -745,8 +788,10 @@ function setupProductForm(screen) {
                 );
 
                 barcodeInput.focus();
+
                 return;
             }
+
 
             if (!name) {
 
@@ -757,8 +802,10 @@ function setupProductForm(screen) {
                 );
 
                 nameInput.focus();
+
                 return;
             }
+
 
             if (
                 priceText === '' ||
@@ -773,8 +820,10 @@ function setupProductForm(screen) {
                 );
 
                 priceInput.focus();
+
                 return;
             }
+
 
             if (
                 !Number.isFinite(stock) ||
@@ -788,16 +837,21 @@ function setupProductForm(screen) {
                 );
 
                 stockInput.focus();
+
                 return;
             }
+
 
             const now =
                 new Date().toISOString();
 
+
             const product = {
 
                 barcode,
+
                 name,
+
                 category,
 
                 salePrice:
@@ -812,17 +866,18 @@ function setupProductForm(screen) {
                     now
             };
 
+
             saveButton.disabled =
                 true;
 
             saveButton.textContent =
                 'در حال ذخیره...';
 
+
             try {
 
-                await addProduct(
-                    product
-                );
+                await addProduct(product);
+
 
                 showProductMessage(
                     screen,
@@ -830,17 +885,19 @@ function setupProductForm(screen) {
                     true
                 );
 
+
                 barcodeInput.value = '';
                 nameInput.value = '';
                 categoryInput.value = '';
                 priceInput.value = '';
                 stockInput.value = '';
 
+
                 barcodeInput.focus();
 
-                await loadProducts(
-                    screen
-                );
+
+                await loadProducts(screen);
+
 
             } catch (error) {
 
@@ -849,10 +906,10 @@ function setupProductForm(screen) {
                     error
                 );
 
+
                 if (
                     error &&
-                    error.name ===
-                        'ConstraintError'
+                    error.name === 'ConstraintError'
                 ) {
 
                     showProductMessage(
@@ -868,6 +925,7 @@ function setupProductForm(screen) {
                         '❌ ذخیره کالا انجام نشد.',
                         false
                     );
+
                 }
 
             } finally {
@@ -877,15 +935,18 @@ function setupProductForm(screen) {
 
                 saveButton.textContent =
                     'ذخیره کالا';
+
             }
+
         }
     );
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Products Loading
-// ============================================================================
+// ============================================================
 
 async function loadProducts(screen) {
 
@@ -894,9 +955,11 @@ async function loadProducts(screen) {
             '#products-list'
         );
 
+
     if (!list) {
         return;
     }
+
 
     list.innerHTML = `
 
@@ -913,15 +976,18 @@ async function loadProducts(screen) {
         </div>
     `;
 
+
     try {
 
         const products =
             await getAllProducts();
 
+
         renderProducts(
             screen,
             products
         );
+
 
     } catch (error) {
 
@@ -929,6 +995,7 @@ async function loadProducts(screen) {
             'SupermarketPOS: خطا در خواندن کالاها.',
             error
         );
+
 
         list.innerHTML = `
 
@@ -948,13 +1015,15 @@ async function loadProducts(screen) {
 
             </div>
         `;
+
     }
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Render Products
-// ============================================================================
+// ============================================================
 
 function renderProducts(screen, products) {
 
@@ -963,11 +1032,14 @@ function renderProducts(screen, products) {
             '#products-list'
         );
 
+
     if (!list) {
         return;
     }
 
+
     list.innerHTML = '';
+
 
     if (
         !Array.isArray(products) ||
@@ -996,11 +1068,13 @@ function renderProducts(screen, products) {
         return;
     }
 
+
     const title =
         document.createElement('div');
 
     title.className =
         'products-list-title';
+
 
     title.innerHTML = `
 
@@ -1011,26 +1085,29 @@ function renderProducts(screen, products) {
         <span>
             ${products.length.toLocaleString('fa-IR')} کالا
         </span>
+
     `;
 
+
     list.appendChild(title);
+
 
     products.forEach(
         product => {
 
             const card =
-                document.createElement(
-                    'article'
-                );
+                document.createElement('article');
 
             card.className =
                 'product-card';
+
 
             const price =
                 Number(product.salePrice) || 0;
 
             const stock =
                 Number(product.stock) || 0;
+
 
             card.innerHTML = `
 
@@ -1054,6 +1131,7 @@ function renderProducts(screen, products) {
 
                 </div>
 
+
                 <div class="product-card-details">
 
                     <div class="product-detail">
@@ -1068,6 +1146,7 @@ function renderProducts(screen, products) {
 
                     </div>
 
+
                     <div class="product-detail">
 
                         <span>
@@ -1079,6 +1158,7 @@ function renderProducts(screen, products) {
                         </strong>
 
                     </div>
+
 
                     <div class="product-detail">
 
@@ -1093,17 +1173,21 @@ function renderProducts(screen, products) {
                     </div>
 
                 </div>
+
             `;
 
+
             list.appendChild(card);
+
         }
     );
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Backup
-// ============================================================================
+// ============================================================
 
 function setupBackup(screen) {
 
@@ -1112,9 +1196,11 @@ function setupBackup(screen) {
             '#backup-button'
         );
 
+
     if (!button) {
         return;
     }
+
 
     button.addEventListener(
         'click',
@@ -1122,13 +1208,16 @@ function setupBackup(screen) {
 
             try {
 
-                button.disabled = true;
+                button.disabled =
+                    true;
 
                 button.textContent =
                     'در حال آماده‌سازی...';
 
+
                 const backup =
                     await getProductsForBackup();
+
 
                 const blob =
                     new Blob(
@@ -1145,16 +1234,20 @@ function setupBackup(screen) {
                         }
                     );
 
+
                 const url =
                     URL.createObjectURL(blob);
+
 
                 const link =
                     document.createElement('a');
 
-                link.href = url;
+                link.href =
+                    url;
 
                 link.download =
                     `SupermarketPOS-Backup-${Date.now()}.json`;
+
 
                 document.body.appendChild(link);
 
@@ -1164,12 +1257,26 @@ function setupBackup(screen) {
 
                 URL.revokeObjectURL(url);
 
+
+                showAppMessage(
+                    'پشتیبان با موفقیت آماده شد.',
+                    'success'
+                );
+
+
             } catch (error) {
 
                 console.error(
                     'Backup error:',
                     error
                 );
+
+
+                showAppMessage(
+                    'پشتیبان‌گیری انجام نشد.',
+                    'danger'
+                );
+
 
             } finally {
 
@@ -1178,15 +1285,18 @@ function setupBackup(screen) {
 
                 button.textContent =
                     '💾 پشتیبان‌گیری';
+
             }
+
         }
     );
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Restore
-// ============================================================================
+// ============================================================
 
 function setupRestore(screen) {
 
@@ -1200,9 +1310,11 @@ function setupRestore(screen) {
             '#restore-file-input'
         );
 
+
     if (!button || !input) {
         return;
     }
+
 
     button.addEventListener(
         'click',
@@ -1211,8 +1323,10 @@ function setupRestore(screen) {
             input.value = '';
 
             input.click();
+
         }
     );
+
 
     input.addEventListener(
         'change',
@@ -1222,9 +1336,11 @@ function setupRestore(screen) {
                 event.target.files &&
                 event.target.files[0];
 
+
             if (!file) {
                 return;
             }
+
 
             try {
 
@@ -1234,27 +1350,28 @@ function setupRestore(screen) {
                 const backup =
                     JSON.parse(text);
 
+
                 if (
                     !backup ||
-                    backup.type !==
-                        'SupermarketPOS' ||
-                    !Array.isArray(
-                        backup.products
-                    )
+                    backup.type !== 'SupermarketPOS' ||
+                    !Array.isArray(backup.products)
                 ) {
 
                     throw new Error(
                         'Invalid backup'
                     );
+
                 }
+
 
                 const confirmed =
                     await showAppConfirm({
+
                         title:
                             'بازیابی اطلاعات',
 
                         message:
-                            `فایل شامل ${backup.products.length.toLocaleString('fa-IR')} کالا است.\n\nکالاهای موجود با اطلاعات فایل ادغام می‌شوند.`,
+                            `این فایل شامل ${backup.products.length.toLocaleString('fa-IR')} کالا است.\n\nکالاهای موجود با اطلاعات فایل ادغام می‌شوند.`,
 
                         icon:
                             '📂',
@@ -1264,24 +1381,30 @@ function setupRestore(screen) {
 
                         confirmText:
                             'بازیابی'
+
                     });
+
 
                 if (!confirmed) {
                     return;
                 }
 
+
                 await restoreProductsMerge(
                     backup.products
                 );
+
 
                 await loadProducts(
                     screen
                 );
 
+
                 showAppMessage(
                     'بازیابی با موفقیت انجام شد.',
                     'success'
                 );
+
 
             } catch (error) {
 
@@ -1290,19 +1413,23 @@ function setupRestore(screen) {
                     error
                 );
 
+
                 showAppMessage(
                     'فایل پشتیبان معتبر نیست.',
                     'danger'
                 );
+
             }
+
         }
     );
+
 }
 
 
-// ============================================================================
-// Messages
-// ============================================================================
+// ============================================================
+// Product Messages
+// ============================================================
 
 function showProductMessage(
     screen,
@@ -1315,15 +1442,21 @@ function showProductMessage(
             '#product-form-message'
         );
 
+
     if (!box) {
         return;
     }
 
+
     box.className =
-        `product-form-message ${success ? 'message-success' : 'message-danger'}`;
+        success
+            ? 'product-form-message message-success'
+            : 'product-form-message message-danger';
+
 
     box.textContent =
         message;
+
 }
 
 
@@ -1334,205 +1467,384 @@ function clearProductMessage(screen) {
             '#product-form-message'
         );
 
+
     if (!box) {
         return;
     }
 
-    box.textContent = '';
+
+    box.textContent =
+        '';
+
     box.className =
         'product-form-message';
+
 }
 
 
-// ============================================================================
-// Application Modal
-// ============================================================================
+// ============================================================
+// CENTRAL MODAL
+// ============================================================
 
-function showAppConfirm(options = {}) {
+export function showAppConfirm(options = {}) {
 
     return new Promise(resolve => {
 
-        const existing =
+        const modal =
             document.getElementById(
                 'app-modal'
             );
 
-        if (existing) {
-            existing.remove();
-        }
+        const icon =
+            document.getElementById(
+                'app-modal-icon'
+            );
 
-        const type =
-            options.type || 'info';
+        const title =
+            document.getElementById(
+                'app-modal-title'
+            );
 
-        const modal =
-            document.createElement('div');
-
-        modal.id =
-            'app-modal';
-
-        modal.className =
-            `app-modal-overlay`;
-
-        modal.innerHTML = `
-
-            <div
-                class="app-modal ${type}"
-                role="dialog"
-                aria-modal="true"
-            >
-
-                <div class="app-modal-icon">
-                    ${options.icon || '❔'}
-                </div>
-
-                <h3 class="app-modal-title">
-                    ${escapeHTML(options.title || 'تأیید')}
-                </h3>
-
-                <div class="app-modal-message">
-                    ${escapeHTML(options.message || '')}
-                </div>
-
-                <div class="app-modal-actions">
-
-                    <button
-                        type="button"
-                        class="app-modal-button app-modal-button-cancel"
-                        id="app-modal-cancel"
-                    >
-                        انصراف
-                    </button>
-
-                    <button
-                        type="button"
-                        class="app-modal-button app-modal-button-${type === 'danger' ? 'danger' : 'confirm'}"
-                        id="app-modal-confirm"
-                    >
-                        ${escapeHTML(options.confirmText || 'تأیید')}
-                    </button>
-
-                </div>
-
-            </div>
-        `;
-
-        document.body.appendChild(modal);
+        const message =
+            document.getElementById(
+                'app-modal-message'
+            );
 
         const cancel =
-            modal.querySelector(
-                '#app-modal-cancel'
+            document.getElementById(
+                'app-modal-cancel'
             );
 
         const confirm =
-            modal.querySelector(
-                '#app-modal-confirm'
+            document.getElementById(
+                'app-modal-confirm'
             );
 
-        function close(result) {
 
-            modal.remove();
+        if (
+            !modal ||
+            !icon ||
+            !title ||
+            !message ||
+            !cancel ||
+            !confirm
+        ) {
 
-            resolve(result);
+            resolve(false);
+
+            return;
         }
 
-        cancel.addEventListener(
-            'click',
-            () => close(false)
+
+        if (APP_STATE.modalOpen) {
+
+            closeAppModal(false);
+
+        }
+
+
+        APP_STATE.modalOpen =
+            true;
+
+        APP_STATE.modalResolver =
+            resolve;
+
+
+        modal.className =
+            `app-modal-overlay app-modal-${options.type || 'info'}`;
+
+
+        modal.setAttribute(
+            'aria-hidden',
+            'false'
         );
 
-        confirm.addEventListener(
-            'click',
-            () => close(true)
+
+        icon.textContent =
+            options.icon || '❔';
+
+
+        title.textContent =
+            options.title || 'تأیید عملیات';
+
+
+        message.textContent =
+            options.message || '';
+
+
+        confirm.textContent =
+            options.confirmText || 'تأیید';
+
+
+        cancel.textContent =
+            options.cancelText || 'انصراف';
+
+
+        modal.classList.add(
+            'is-visible'
         );
 
-        modal.addEventListener(
-            'click',
-            event => {
 
-                if (
-                    event.target ===
-                    modal
-                ) {
-
-                    close(false);
-                }
-            }
+        document.body.classList.add(
+            'modal-open'
         );
 
-        setTimeout(
-            () => confirm.focus(),
-            30
-        );
+
+        const focusTimer =
+            setTimeout(
+                () => {
+
+                    if (APP_STATE.modalOpen) {
+                        confirm.focus();
+                    }
+
+                },
+                50
+            );
+
+
+        modal._focusTimer =
+            focusTimer;
+
     });
+
 }
 
 
-function showAppMessage(
+// ============================================================
+// Close Modal
+// ============================================================
+
+function closeAppModal(result = false) {
+
+    const modal =
+        document.getElementById(
+            'app-modal'
+        );
+
+
+    const resolver =
+        APP_STATE.modalResolver;
+
+
+    if (!APP_STATE.modalOpen) {
+        return;
+    }
+
+
+    APP_STATE.modalOpen =
+        false;
+
+    APP_STATE.modalResolver =
+        null;
+
+
+    if (modal) {
+
+        modal.classList.remove(
+            'is-visible'
+        );
+
+        modal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+        if (modal._focusTimer) {
+
+            clearTimeout(
+                modal._focusTimer
+            );
+
+            modal._focusTimer =
+                null;
+        }
+
+    }
+
+
+    document.body.classList.remove(
+        'modal-open'
+    );
+
+
+    if (typeof resolver === 'function') {
+        resolver(result);
+    }
+
+}
+
+
+// ============================================================
+// Modal Events
+// ============================================================
+
+function setupModalEvents() {
+
+    const modal =
+        document.getElementById(
+            'app-modal'
+        );
+
+    const cancel =
+        document.getElementById(
+            'app-modal-cancel'
+        );
+
+    const confirm =
+        document.getElementById(
+            'app-modal-confirm'
+        );
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    if (cancel) {
+
+        cancel.addEventListener(
+            'click',
+            () => {
+
+                closeAppModal(false);
+
+            }
+        );
+
+    }
+
+
+    if (confirm) {
+
+        confirm.addEventListener(
+            'click',
+            () => {
+
+                closeAppModal(true);
+
+            }
+        );
+
+    }
+
+
+    modal.addEventListener(
+        'click',
+        event => {
+
+            if (
+                event.target === modal
+            ) {
+
+                closeAppModal(false);
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        'keydown',
+        event => {
+
+            if (
+                event.key === 'Escape' &&
+                APP_STATE.modalOpen
+            ) {
+
+                event.preventDefault();
+
+                closeAppModal(false);
+
+            }
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// Toast
+// ============================================================
+
+export function showAppMessage(
     message,
     type = 'success'
 ) {
 
-    const old =
+    const toast =
         document.getElementById(
             'app-toast'
         );
 
-    if (old) {
-        old.remove();
+    const toastMessage =
+        document.getElementById(
+            'app-toast-message'
+        );
+
+    const toastIcon =
+        document.getElementById(
+            'app-toast-icon'
+        );
+
+
+    if (
+        !toast ||
+        !toastMessage ||
+        !toastIcon
+    ) {
+        return;
     }
 
-    const toast =
-        document.createElement('div');
-
-    toast.id =
-        'app-toast';
 
     toast.className =
         `app-toast app-toast-${type}`;
 
-    toast.textContent =
+
+    toastMessage.textContent =
         message;
 
-    document.body.appendChild(
-        toast
+
+    toastIcon.textContent =
+        type === 'danger'
+            ? '!'
+            : type === 'info'
+                ? 'i'
+                : '✓';
+
+
+    toast.classList.add(
+        'is-visible'
     );
 
-    setTimeout(
-        () => {
 
-            toast.classList.add(
-                'app-toast-hide'
-            );
-
-            setTimeout(
-                () => toast.remove(),
-                250
-            );
-
-        },
-        2800
+    clearTimeout(
+        toast._timer
     );
+
+
+    toast._timer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    'is-visible'
+                );
+
+            },
+            2800
+        );
+
 }
 
 
-// ============================================================================
-// Escape HTML
-// ============================================================================
-
-function escapeHTML(value) {
-
-    return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-}
-
-
-// ============================================================================
-// Navigation
-// ============================================================================
+// ============================================================
+// Navigation Events
+// ============================================================
 
 function setupNavigation() {
 
@@ -1540,6 +1852,7 @@ function setupNavigation() {
         document.querySelectorAll(
             '.menu-card'
         );
+
 
     cards.forEach(
         card => {
@@ -1553,21 +1866,22 @@ function setupNavigation() {
                             'data-action'
                         );
 
-                    if (
-                        action === 'sales'
-                    ) {
+
+                    if (action === 'sales') {
 
                         openSalesScreen();
+
                         return;
                     }
 
-                    if (
-                        action === 'products'
-                    ) {
+
+                    if (action === 'products') {
 
                         openProductsScreen();
+
                         return;
                     }
+
 
                     if (
                         action === 'reports' ||
@@ -1578,17 +1892,21 @@ function setupNavigation() {
                             'این بخش در مرحله بعد فعال می‌شود.',
                             'info'
                         );
+
                     }
+
                 }
             );
+
         }
     );
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Database
-// ============================================================================
+// ============================================================
 
 async function setupDatabase() {
 
@@ -1599,32 +1917,38 @@ async function setupDatabase() {
         APP_STATE.databaseReady =
             true;
 
+
         showDatabaseStatus(
             '✅ پایگاه داده با موفقیت آماده شد',
             true
         );
+
 
     } catch (error) {
 
         APP_STATE.databaseReady =
             false;
 
+
         showDatabaseStatus(
             '❌ خطا در راه‌اندازی پایگاه داده',
             false
         );
 
+
         console.error(
             'SupermarketPOS: Database error',
             error
         );
+
     }
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Initialize
-// ============================================================================
+// ============================================================
 
 async function initializeApp() {
 
@@ -1632,32 +1956,40 @@ async function initializeApp() {
         return;
     }
 
+
     DOM.app =
         document.querySelector(
             '#app'
         );
 
+
     if (!DOM.app) {
         return;
     }
 
+
     setupHeaderStatus();
+
+    setupModalEvents();
+
     setupNavigation();
+
 
     APP_STATE.initialized =
         true;
 
+
     await setupDatabase();
+
 }
 
 
-// ============================================================================
+// ============================================================
 // Bootstrap
-// ============================================================================
+// ============================================================
 
 if (
-    document.readyState ===
-    'loading'
+    document.readyState === 'loading'
 ) {
 
     document.addEventListener(
@@ -1671,4 +2003,5 @@ if (
 } else {
 
     initializeApp();
+
 }
