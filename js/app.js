@@ -1,18 +1,33 @@
 // js/app.js
 // SupermarketPOS
 // Main Application
+// Application / Navigation Layer
 // Complete Replacement
-// Architecture: App + Sales + Products + Database
 
 'use strict';
+
+
+/* ============================================================
+   Database
+============================================================ */
 
 import {
     initializeDatabase
 } from './database.js';
 
+
+/* ============================================================
+   Sales Module
+============================================================ */
+
 import {
     initializeSalesScreen
 } from './sales.js';
+
+
+/* ============================================================
+   Products Module
+============================================================ */
 
 import {
     initializeProductsScreen
@@ -27,9 +42,7 @@ const APP_STATE = {
 
     initialized: false,
 
-    databaseReady: false,
-
-    activeScreen: 'home'
+    databaseReady: false
 
 };
 
@@ -40,9 +53,7 @@ const APP_STATE = {
 
 const DOM = {
 
-    app: null,
-
-    main: null
+    app: null
 
 };
 
@@ -55,304 +66,30 @@ function escapeHTML(value) {
 
     return String(value)
 
-        .replaceAll('&', '&amp;')
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
 
-        .replaceAll('<', '&lt;')
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
 
-        .replaceAll('>', '&gt;')
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
 
-        .replaceAll('"', '&quot;')
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
 
-        .replaceAll("'", '&#039;');
-
-}
-
-
-/* ============================================================
-   Toast
-============================================================ */
-
-export function showAppMessage(
-    message,
-    type = 'success'
-) {
-
-    let toast =
-        document.getElementById('app-toast');
-
-
-    if (!toast) {
-
-        toast =
-            document.createElement('div');
-
-        toast.id =
-            'app-toast';
-
-        document.body.appendChild(toast);
-
-    }
-
-
-    toast.className =
-        `app-toast app-toast-${type}`;
-
-
-    toast.textContent =
-        message;
-
-
-    requestAnimationFrame(() => {
-
-        toast.classList.add(
-            'app-toast-visible'
+        .replaceAll(
+            "'",
+            '&#039;'
         );
-
-    });
-
-
-    clearTimeout(
-        toast._hideTimer
-    );
-
-
-    toast._hideTimer =
-        setTimeout(() => {
-
-            toast.classList.remove(
-                'app-toast-visible'
-            );
-
-        }, 2800);
-
-}
-
-
-/* ============================================================
-   Confirmation Modal
-============================================================ */
-
-export function showAppConfirm(
-    options = {}
-) {
-
-    return new Promise(resolve => {
-
-        const oldModal =
-            document.getElementById(
-                'app-confirm-modal'
-            );
-
-
-        if (oldModal) {
-
-            oldModal.remove();
-
-        }
-
-
-        const modal =
-            document.createElement('div');
-
-
-        modal.id =
-            'app-confirm-modal';
-
-
-        modal.className =
-            'app-confirm-overlay';
-
-
-        const type =
-            options.type === 'danger'
-                ? 'danger'
-                : 'info';
-
-
-        modal.innerHTML = `
-
-            <div
-                class="app-confirm-dialog"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="app-confirm-title"
-            >
-
-                <div class="app-confirm-icon ${type}">
-                    ${options.icon || '❔'}
-                </div>
-
-
-                <div class="app-confirm-content">
-
-                    <h2 id="app-confirm-title">
-                        ${escapeHTML(
-                            options.title ||
-                            'تأیید عملیات'
-                        )}
-                    </h2>
-
-                    <p>
-                        ${escapeHTML(
-                            options.message ||
-                            ''
-                        ).replaceAll(
-                            '\n',
-                            '<br>'
-                        )}
-                    </p>
-
-                </div>
-
-
-                <div class="app-confirm-actions">
-
-                    <button
-                        type="button"
-                        class="app-confirm-cancel"
-                        id="app-confirm-cancel"
-                    >
-                        ${escapeHTML(
-                            options.cancelText ||
-                            'انصراف'
-                        )}
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="app-confirm-submit ${type}"
-                        id="app-confirm-submit"
-                    >
-                        ${escapeHTML(
-                            options.confirmText ||
-                            'تأیید'
-                        )}
-                    </button>
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        document.body.appendChild(
-            modal
-        );
-
-
-        const cancel =
-            modal.querySelector(
-                '#app-confirm-cancel'
-            );
-
-
-        const confirm =
-            modal.querySelector(
-                '#app-confirm-submit'
-            );
-
-
-        let closed = false;
-
-
-        function close(result) {
-
-            if (closed) {
-                return;
-            }
-
-
-            closed = true;
-
-
-            modal.classList.add(
-                'app-confirm-closing'
-            );
-
-
-            setTimeout(() => {
-
-                modal.remove();
-
-                resolve(result);
-
-            }, 160);
-
-        }
-
-
-        cancel.addEventListener(
-            'click',
-            () => close(false)
-        );
-
-
-        confirm.addEventListener(
-            'click',
-            () => close(true)
-        );
-
-
-        modal.addEventListener(
-            'click',
-            event => {
-
-                if (
-                    event.target === modal
-                ) {
-
-                    close(false);
-
-                }
-
-            }
-        );
-
-
-        function escapeHandler(event) {
-
-            if (
-                event.key === 'Escape'
-            ) {
-
-                document.removeEventListener(
-                    'keydown',
-                    escapeHandler
-                );
-
-                close(false);
-
-            }
-
-        }
-
-
-        document.addEventListener(
-            'keydown',
-            escapeHandler
-        );
-
-
-        requestAnimationFrame(() => {
-
-            modal.classList.add(
-                'app-confirm-visible'
-            );
-
-
-            setTimeout(() => {
-
-                if (confirm) {
-                    confirm.focus();
-                }
-
-            }, 80);
-
-        });
-
-    });
 
 }
 
@@ -375,7 +112,9 @@ function showDatabaseStatus(
     if (!status) {
 
         status =
-            document.createElement('div');
+            document.createElement(
+                'div'
+            );
 
 
         status.id =
@@ -530,7 +269,7 @@ function getProductsScreen() {
 }
 
 
-function hideSecondaryScreens() {
+function hideAllSecondaryScreens() {
 
     const sales =
         getSalesScreen();
@@ -560,7 +299,7 @@ function hideSecondaryScreens() {
 
 function showHomeScreen() {
 
-    hideSecondaryScreens();
+    hideAllSecondaryScreens();
 
 
     const home =
@@ -574,10 +313,6 @@ function showHomeScreen() {
 
     }
 
-
-    APP_STATE.activeScreen =
-        'home';
-
 }
 
 
@@ -587,7 +322,13 @@ function showHomeScreen() {
 
 function openSalesScreen() {
 
-    if (!DOM.main) {
+    const main =
+        document.querySelector(
+            'main'
+        );
+
+
+    if (!main) {
         return;
     }
 
@@ -636,7 +377,7 @@ function openSalesScreen() {
             'sales-screen';
 
 
-        DOM.main.appendChild(
+        main.appendChild(
             sales
         );
 
@@ -647,18 +388,16 @@ function openSalesScreen() {
         'block';
 
 
-    APP_STATE.activeScreen =
-        'sales';
-
-
     initializeSalesScreen(
         sales,
         {
+
             databaseReady:
                 APP_STATE.databaseReady,
 
             onBack:
                 showHomeScreen
+
         }
     );
 
@@ -671,7 +410,13 @@ function openSalesScreen() {
 
 async function openProductsScreen() {
 
-    if (!DOM.main) {
+    const main =
+        document.querySelector(
+            'main'
+        );
+
+
+    if (!main) {
         return;
     }
 
@@ -720,7 +465,7 @@ async function openProductsScreen() {
             'products-screen';
 
 
-        DOM.main.appendChild(
+        main.appendChild(
             products
         );
 
@@ -731,26 +476,18 @@ async function openProductsScreen() {
         'block';
 
 
-    APP_STATE.activeScreen =
-        'products';
-
-
     try {
 
         await initializeProductsScreen(
             products,
             {
+
                 databaseReady:
                     APP_STATE.databaseReady,
 
                 onBack:
-                    showHomeScreen,
+                    showHomeScreen
 
-                showMessage:
-                    showAppMessage,
-
-                showConfirm:
-                    showAppConfirm
             }
         );
 
@@ -784,106 +521,70 @@ function setupNavigation() {
         );
 
 
-    cards.forEach(card => {
+    cards.forEach(
+        card => {
 
-        card.addEventListener(
-            'click',
-            () => {
+            card.addEventListener(
+                'click',
+                async () => {
 
-                const action =
-                    card.getAttribute(
-                        'data-action'
-                    );
+                    const action =
+                        card.getAttribute(
+                            'data-action'
+                        );
 
 
-                switch (action) {
-
-                    case 'sales':
+                    if (
+                        action ===
+                        'sales'
+                    ) {
 
                         openSalesScreen();
 
-                        break;
+                        return;
+
+                    }
 
 
-                    case 'products':
+                    if (
+                        action ===
+                        'products'
+                    ) {
 
-                        openProductsScreen();
+                        await openProductsScreen();
 
-                        break;
+                        return;
+
+                    }
 
 
-                    case 'reports':
+                    if (
+                        action === 'reports'
+                    ) {
 
                         showAppMessage(
                             'بخش گزارش‌ها در مرحله بعد فعال می‌شود.',
                             'info'
                         );
 
-                        break;
+                        return;
+
+                    }
 
 
-                    case 'settings':
+                    if (
+                        action === 'settings'
+                    ) {
 
                         showAppMessage(
                             'بخش تنظیمات در مرحله بعد فعال می‌شود.',
                             'info'
                         );
 
-                        break;
-
-
-                    default:
-
-                        break;
+                    }
 
                 }
-
-            }
-        );
-
-    });
-
-}
-
-
-/* ============================================================
-   Keyboard Navigation
-============================================================ */
-
-function setupKeyboardNavigation() {
-
-    document.addEventListener(
-        'keydown',
-        event => {
-
-            if (
-                event.key !== 'Escape'
-            ) {
-                return;
-            }
-
-
-            const modal =
-                document.getElementById(
-                    'app-confirm-modal'
-                );
-
-
-            if (modal) {
-                return;
-            }
-
-
-            if (
-                APP_STATE.activeScreen ===
-                'sales' ||
-                APP_STATE.activeScreen ===
-                'products'
-            ) {
-
-                showHomeScreen();
-
-            }
+            );
 
         }
     );
@@ -925,14 +626,8 @@ async function setupDatabase() {
 
 
         console.error(
-            'SupermarketPOS: Database initialization error',
+            'SupermarketPOS: Database error',
             error
-        );
-
-
-        showAppMessage(
-            'پایگاه داده راه‌اندازی نشد.',
-            'danger'
         );
 
     }
@@ -941,7 +636,80 @@ async function setupDatabase() {
 
 
 /* ============================================================
-   Application Initialization
+   Toast
+============================================================ */
+
+function showAppMessage(
+    message,
+    type = 'success'
+) {
+
+    let toast =
+        document.getElementById(
+            'app-toast'
+        );
+
+
+    if (!toast) {
+
+        toast =
+            document.createElement(
+                'div'
+            );
+
+
+        toast.id =
+            'app-toast';
+
+
+        document.body.appendChild(
+            toast
+        );
+
+    }
+
+
+    toast.className =
+        `app-toast app-toast-${type}`;
+
+
+    toast.textContent =
+        message;
+
+
+    requestAnimationFrame(
+        () => {
+
+            toast.classList.add(
+                'app-toast-visible'
+            );
+
+        }
+    );
+
+
+    clearTimeout(
+        toast._hideTimer
+    );
+
+
+    toast._hideTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    'app-toast-visible'
+                );
+
+            },
+            2800
+        );
+
+ }
+
+
+/* ============================================================
+   Initialize Application
 ============================================================ */
 
 async function initializeApp() {
@@ -961,12 +729,6 @@ async function initializeApp() {
         );
 
 
-    DOM.main =
-        document.querySelector(
-            'main'
-        );
-
-
     if (!DOM.app) {
 
         console.error(
@@ -978,22 +740,10 @@ async function initializeApp() {
     }
 
 
-    if (!DOM.main) {
-
-        console.error(
-            'SupermarketPOS: main element not found.'
-        );
-
-        return;
-
-    }
-
-
     setupHeaderStatus();
 
-    setupNavigation();
 
-    setupKeyboardNavigation();
+    setupNavigation();
 
 
     APP_STATE.initialized =
