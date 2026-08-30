@@ -1,834 +1,738 @@
 // js/sales.js
 // SupermarketPOS
-// Sales Screen
-// Stage 6
-// Real Cart + Barcode + Stock + Checkout
-// Version: 0.6
+// Sales / POS Module
+// Complete Replacement
+// Stage 5
 
 'use strict';
 
 import {
     getProductByBarcode,
-    registerSale
+    updateProduct
 } from './database.js';
-
 
 // ============================================================================
 // Sales State
 // ============================================================================
 
-let salesCart = [];
-
+const SALES_STATE = {
+    initialized: false,
+    cart: [],
+    databaseReady: false
+};
 
 // ============================================================================
-// Helpers
+// DOM Helpers
+// ============================================================================
+
+function $(selector, root = document) {
+    return root.querySelector(selector);
+}
+
+function createElement(tag, className = '') {
+    const element = document.createElement(tag);
+
+    if (className) {
+        element.className = className;
+    }
+
+    return element;
+}
+
+// ============================================================================
+// Formatting
 // ============================================================================
 
 function formatPrice(value) {
+    const number = Number(value) || 0;
 
-    return (
-        Number(value) || 0
-    ).toLocaleString(
-        'fa-IR'
-    );
+    return number.toLocaleString('fa-IR');
 }
 
+function formatNumber(value) {
+    const number = Number(value) || 0;
 
-function normalizeBarcode(value) {
-
-    return String(
-        value || ''
-    ).trim();
+    return number.toLocaleString('fa-IR');
 }
 
-
-function findCartItem(barcode) {
-
-    return salesCart.find(
-        item =>
-            item.barcode === barcode
-    );
+function escapeHTML(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
-
-
-function calculateCartTotal() {
-
-    return salesCart.reduce(
-        (
-            total,
-            item
-        ) => {
-
-            return total +
-                (
-                    item.salePrice *
-                    item.quantity
-                );
-
-        },
-        0
-    );
-}
-
-
-function calculateCartCount() {
-
-    return salesCart.reduce(
-        (
-            total,
-            item
-        ) => {
-
-            return total +
-                item.quantity;
-
-        },
-        0
-    );
-}
-
 
 // ============================================================================
-// Message
+// Initialize
 // ============================================================================
 
-function showSalesMessage(
-    message,
-    type = 'info'
-) {
+export function initializeSalesScreen(screen, options = {}) {
 
-    const element =
-        document.getElementById(
-            'sales-barcode-message'
-        );
-
-
-    if (!element) {
+    if (!screen) {
         return;
     }
 
-
-    element.textContent =
-        message;
-
-
-    element.className =
-        'sales-barcode-message ' +
-        `sales-message-${type}`;
-}
-
-
-// ============================================================================
-// Focus
-// ============================================================================
-
-function focusBarcodeInput() {
-
-    const input =
-        document.getElementById(
-            'sales-barcode-input'
-        );
-
-
-    if (input) {
-
-        setTimeout(
-            () => {
-
-                input.focus();
-
-                input.select();
-
-            },
-            50
-        );
-    }
-}
-
-
-// ============================================================================
-// Create Sales Screen
-// ============================================================================
-
-export function createSalesScreen() {
-
-    const existing =
-        document.getElementById(
-            'sales-screen'
-        );
-
-
-    if (existing) {
-
-        return existing;
+    if (SALES_STATE.initialized) {
+        refreshSalesScreen(screen);
+        return;
     }
 
+    SALES_STATE.databaseReady =
+        options.databaseReady !== false;
 
-    const screen =
-        document.createElement(
-            'section'
-        );
+    SALES_STATE.cart = [];
 
+    buildSalesScreen(screen);
 
-    screen.id =
-        'sales-screen';
+    bindSalesEvents(screen);
 
+    SALES_STATE.initialized = true;
 
-    screen.className =
-        'sales-screen';
+    refreshSalesScreen(screen);
+}
 
+// ============================================================================
+// Build Screen
+// ============================================================================
 
-    // ------------------------------------------------------------------------
-    // Header
-    // ------------------------------------------------------------------------
+function buildSalesScreen(screen) {
 
-    const header =
-        document.createElement(
-            'div'
-        );
+    screen.innerHTML = `
 
+        <div class="sales-header">
 
-    header.className =
-        'sales-header';
+            <div class="sales-header-main">
 
+                <div class="sales-title-icon">
+                    🛒
+                </div>
 
-    const title =
-        document.createElement(
-            'h2'
-        );
+                <div>
 
+                    <h2>
+                        فروش و صندوق
+                    </h2>
 
-    title.textContent =
-        '🛒 فروش و صندوق';
+                    <p>
+                        ثبت فروش و مدیریت سبد خرید
+                    </p>
 
+                </div>
 
-    const description =
-        document.createElement(
-            'p'
-        );
+            </div>
 
+            <button
+                type="button"
+                class="sales-close-button"
+                id="sales-close-button"
+            >
+                ×
+            </button>
 
-    description.textContent =
-        'بارکد کالا را وارد کنید یا با بارکدخوان اسکن کنید.';
-
-
-    header.appendChild(title);
-
-    header.appendChild(description);
-
-
-    // ------------------------------------------------------------------------
-    // Barcode Card
-    // ------------------------------------------------------------------------
-
-    const barcodeCard =
-        document.createElement(
-            'div'
-        );
+        </div>
 
 
-    barcodeCard.className =
-        'sales-barcode-card';
+        <div class="sales-layout">
 
 
-    const barcodeTitle =
-        document.createElement(
-            'h3'
-        );
+            <!-- =========================================================
+                 Product Search
+            ========================================================== -->
+
+            <section class="sales-card sales-search-card">
+
+                <div class="sales-card-header">
+
+                    <div>
+
+                        <h3>
+                            افزودن کالا
+                        </h3>
+
+                        <p>
+                            بارکد کالا را وارد یا اسکن کنید
+                        </p>
+
+                    </div>
+
+                    <span class="sales-card-icon">
+                        🔎
+                    </span>
+
+                </div>
 
 
-    barcodeTitle.textContent =
-        '▣ افزودن کالا';
+                <div class="sales-barcode-row">
+
+                    <input
+                        type="text"
+                        id="sales-barcode-input"
+                        class="sales-barcode-input"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="بارکد کالا را وارد کنید..."
+                        aria-label="بارکد کالا"
+                    >
+
+                    <button
+                        type="button"
+                        id="sales-add-button"
+                        class="sales-add-button"
+                    >
+                        افزودن
+                    </button>
+
+                </div>
 
 
-    const barcodeDescription =
-        document.createElement(
-            'p'
-        );
+                <div
+                    id="sales-search-message"
+                    class="sales-message"
+                    aria-live="polite"
+                ></div>
+
+            </section>
 
 
-    barcodeDescription.textContent =
-        'بارکد را وارد کنید و «افزودن کالا» را بزنید.';
+            <!-- =========================================================
+                 Cart
+            ========================================================== -->
+
+            <section class="sales-card sales-cart-card">
+
+                <div class="sales-card-header">
+
+                    <div>
+
+                        <h3>
+                            سبد خرید
+                        </h3>
+
+                        <p id="sales-cart-count">
+                            ۰ کالا
+                        </p>
+
+                    </div>
+
+                    <span class="sales-card-icon">
+                        🛍️
+                    </span>
+
+                </div>
 
 
-    const barcodeRow =
-        document.createElement(
-            'div'
-        );
+                <div
+                    id="sales-cart-list"
+                    class="sales-cart-list"
+                ></div>
+
+            </section>
 
 
-    barcodeRow.className =
-        'sales-barcode-row';
+            <!-- =========================================================
+                 Checkout
+            ========================================================== -->
 
+            <section class="sales-card sales-checkout-card">
+
+                <div class="sales-summary">
+
+                    <div class="sales-summary-row">
+
+                        <span>
+                            تعداد کالا
+                        </span>
+
+                        <strong id="sales-total-quantity">
+                            ۰
+                        </strong>
+
+                    </div>
+
+
+                    <div class="sales-summary-row">
+
+                        <span>
+                            مبلغ کل
+                        </span>
+
+                        <strong
+                            id="sales-total-price"
+                            class="sales-total-price"
+                        >
+                            ۰ تومان
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="sales-submit-button"
+                    class="sales-submit-button"
+                >
+                    ✓ ثبت فروش
+                </button>
+
+
+                <button
+                    type="button"
+                    id="sales-clear-button"
+                    class="sales-clear-button"
+                >
+                    🗑️ خالی کردن سبد
+                </button>
+
+
+                <div
+                    id="sales-checkout-message"
+                    class="sales-message"
+                    aria-live="polite"
+                ></div>
+
+            </section>
+
+        </div>
+
+
+        <!-- =============================================================
+             Custom Confirm Modal
+        ============================================================== -->
+
+        <div
+            id="sales-confirm-modal"
+            class="sales-modal"
+            aria-hidden="true"
+        >
+
+            <div
+                class="sales-modal-overlay"
+                data-modal-close="true"
+            ></div>
+
+            <div
+                class="sales-modal-box"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="sales-confirm-title"
+            >
+
+                <div class="sales-modal-icon">
+                    🧾
+                </div>
+
+                <div class="sales-modal-content">
+
+                    <h3 id="sales-confirm-title">
+                        تأیید ثبت فروش
+                    </h3>
+
+                    <p id="sales-confirm-message">
+                        آیا از ثبت این فروش مطمئن هستید؟
+                    </p>
+
+                </div>
+
+                <div class="sales-modal-actions">
+
+                    <button
+                        type="button"
+                        id="sales-confirm-cancel"
+                        class="sales-modal-button sales-modal-cancel"
+                    >
+                        انصراف
+                    </button>
+
+                    <button
+                        type="button"
+                        id="sales-confirm-ok"
+                        class="sales-modal-button sales-modal-confirm"
+                    >
+                        تأیید و ثبت فروش
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+// ============================================================================
+// Events
+// ============================================================================
+
+function bindSalesEvents(screen) {
 
     const barcodeInput =
-        document.createElement(
-            'input'
-        );
-
-
-    barcodeInput.type =
-        'text';
-
-
-    barcodeInput.inputMode =
-        'numeric';
-
-
-    barcodeInput.autocomplete =
-        'off';
-
-
-    barcodeInput.id =
-        'sales-barcode-input';
-
-
-    barcodeInput.className =
-        'sales-barcode-input';
-
-
-    barcodeInput.placeholder =
-        'بارکد کالا را وارد کنید';
-
+        $('#sales-barcode-input', screen);
 
     const addButton =
-        document.createElement(
-            'button'
-        );
+        $('#sales-add-button', screen);
 
-
-    addButton.type =
-        'button';
-
-
-    addButton.className =
-        'sales-add-button';
-
-
-    addButton.textContent =
-        '＋ افزودن کالا';
-
-
-    barcodeRow.appendChild(
-        barcodeInput
-    );
-
-
-    barcodeRow.appendChild(
-        addButton
-    );
-
-
-    const message =
-        document.createElement(
-            'div'
-        );
-
-
-    message.id =
-        'sales-barcode-message';
-
-
-    message.className =
-        'sales-barcode-message';
-
-
-    message.setAttribute(
-        'role',
-        'status'
-    );
-
-
-    message.setAttribute(
-        'aria-live',
-        'polite'
-    );
-
-
-    barcodeCard.appendChild(
-        barcodeTitle
-    );
-
-
-    barcodeCard.appendChild(
-        barcodeDescription
-    );
-
-
-    barcodeCard.appendChild(
-        barcodeRow
-    );
-
-
-    barcodeCard.appendChild(
-        message
-    );
-
-
-    // ------------------------------------------------------------------------
-    // Cart Card
-    // ------------------------------------------------------------------------
-
-    const cartCard =
-        document.createElement(
-            'div'
-        );
-
-
-    cartCard.className =
-        'sales-cart-card';
-
-
-    const cartHeader =
-        document.createElement(
-            'div'
-        );
-
-
-    cartHeader.className =
-        'sales-cart-header';
-
-
-    const cartTitle =
-        document.createElement(
-            'h3'
-        );
-
-
-    cartTitle.textContent =
-        '🛍️ سبد خرید';
-
-
-    const cartCount =
-        document.createElement(
-            'span'
-        );
-
-
-    cartCount.id =
-        'sales-cart-count';
-
-
-    cartCount.className =
-        'sales-cart-count';
-
-
-    cartCount.textContent =
-        '۰ کالا';
-
-
-    cartHeader.appendChild(
-        cartTitle
-    );
-
-
-    cartHeader.appendChild(
-        cartCount
-    );
-
-
-    const cartItems =
-        document.createElement(
-            'div'
-        );
-
-
-    cartItems.id =
-        'sales-cart-items';
-
-
-    cartItems.className =
-        'sales-cart-items';
-
-
-    cartCard.appendChild(
-        cartHeader
-    );
-
-
-    cartCard.appendChild(
-        cartItems
-    );
-
-
-    // ------------------------------------------------------------------------
-    // Total
-    // ------------------------------------------------------------------------
-
-    const totalCard =
-        document.createElement(
-            'div'
-        );
-
-
-    totalCard.className =
-        'sales-total-card';
-
-
-    const totalLabel =
-        document.createElement(
-            'span'
-        );
-
-
-    totalLabel.textContent =
-        'مبلغ قابل پرداخت';
-
-
-    const totalValue =
-        document.createElement(
-            'strong'
-        );
-
-
-    totalValue.id =
-        'sales-total-value';
-
-
-    totalValue.textContent =
-        '۰ تومان';
-
-
-    totalCard.appendChild(
-        totalLabel
-    );
-
-
-    totalCard.appendChild(
-        totalValue
-    );
-
-
-    // ------------------------------------------------------------------------
-    // Checkout
-    // ------------------------------------------------------------------------
-
-    const checkoutButton =
-        document.createElement(
-            'button'
-        );
-
-
-    checkoutButton.type =
-        'button';
-
-
-    checkoutButton.id =
-        'sales-checkout-button';
-
-
-    checkoutButton.className =
-        'sales-checkout-button';
-
-
-    checkoutButton.textContent =
-        '✅ ثبت نهایی فروش';
-
-
-    checkoutButton.disabled =
-        true;
-
-
-    checkoutButton.addEventListener(
-        'click',
-        handleCheckout
-    );
-
-
-    // ------------------------------------------------------------------------
-    // Clear
-    // ------------------------------------------------------------------------
+    const submitButton =
+        $('#sales-submit-button', screen);
 
     const clearButton =
-        document.createElement(
-            'button'
-        );
+        $('#sales-clear-button', screen);
 
+    const closeButton =
+        $('#sales-close-button', screen);
 
-    clearButton.type =
-        'button';
+    const confirmCancel =
+        $('#sales-confirm-cancel', screen);
 
+    const confirmOK =
+        $('#sales-confirm-ok', screen);
 
-    clearButton.className =
-        'sales-clear-button';
-
-
-    clearButton.textContent =
-        '🗑️ پاک کردن سبد';
-
-
-    clearButton.addEventListener(
-        'click',
-        clearCart
-    );
+    const modal =
+        $('#sales-confirm-modal', screen);
 
 
     // ------------------------------------------------------------------------
-    // Back
+    // Barcode Enter
     // ------------------------------------------------------------------------
 
-    const backButton =
-        document.createElement(
-            'button'
-        );
+    if (barcodeInput) {
 
+        barcodeInput.addEventListener(
+            'keydown',
+            event => {
 
-    backButton.type =
-        'button';
+                if (event.key === 'Enter') {
 
+                    event.preventDefault();
 
-    backButton.id =
-        'sales-back-button';
-
-
-    backButton.className =
-        'sales-back-button';
-
-
-    backButton.textContent =
-        '← بازگشت به صفحه اصلی';
-
-
-    backButton.addEventListener(
-        'click',
-        () => {
-
-            screen.style.display =
-                'none';
-
-
-            screen.setAttribute(
-                'aria-hidden',
-                'true'
-            );
-
-
-            const home =
-                document.querySelector(
-                    '.home-screen'
-                );
-
-
-            if (home) {
-
-                home.style.display =
-                    '';
+                    addProductByBarcode(
+                        screen
+                    );
+                }
             }
-        }
-    );
+        );
+    }
 
 
     // ------------------------------------------------------------------------
-    // Assemble
+    // Add Button
     // ------------------------------------------------------------------------
 
-    screen.appendChild(
-        header
-    );
+    if (addButton) {
 
-
-    screen.appendChild(
-        barcodeCard
-    );
-
-
-    screen.appendChild(
-        cartCard
-    );
-
-
-    screen.appendChild(
-        totalCard
-    );
-
-
-    screen.appendChild(
-        checkoutButton
-    );
-
-
-    screen.appendChild(
-        clearButton
-    );
-
-
-    screen.appendChild(
-        backButton
-    );
-
-
-    // ------------------------------------------------------------------------
-    // Events
-    // ------------------------------------------------------------------------
-
-    addButton.addEventListener(
-        'click',
-        () => {
-
-            addProductByBarcode(
-                barcodeInput.value
-            );
-        }
-    );
-
-
-    barcodeInput.addEventListener(
-        'keydown',
-        event => {
-
-            if (
-                event.key === 'Enter'
-            ) {
-
-                event.preventDefault();
-
+        addButton.addEventListener(
+            'click',
+            () => {
 
                 addProductByBarcode(
-                    barcodeInput.value
+                    screen
                 );
             }
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Submit Sale
+    // ------------------------------------------------------------------------
+
+    if (submitButton) {
+
+        submitButton.addEventListener(
+            'click',
+            () => {
+
+                requestSaleConfirmation(
+                    screen
+                );
+            }
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Clear Cart
+    // ------------------------------------------------------------------------
+
+    if (clearButton) {
+
+        clearButton.addEventListener(
+            'click',
+            () => {
+
+                if (
+                    SALES_STATE.cart.length === 0
+                ) {
+                    showSalesMessage(
+                        screen,
+                        'سبد خرید خالی است.',
+                        false
+                    );
+
+                    return;
+                }
+
+                showSalesConfirmModal(
+                    screen,
+                    'خالی کردن سبد خرید',
+                    'تمام کالاهای موجود در سبد خرید حذف می‌شوند. آیا ادامه می‌دهید؟',
+                    () => {
+
+                        SALES_STATE.cart = [];
+
+                        refreshSalesScreen(
+                            screen
+                        );
+
+                        showSalesMessage(
+                            screen,
+                            'سبد خرید خالی شد.',
+                            true
+                        );
+                    },
+                    'خالی کردن سبد'
+                );
+            }
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Close Sales Screen
+    // ------------------------------------------------------------------------
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            'click',
+            () => {
+
+                closeSalesScreen();
+            }
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Modal Cancel
+    // ------------------------------------------------------------------------
+
+    if (confirmCancel) {
+
+        confirmCancel.addEventListener(
+            'click',
+            () => {
+
+                closeSalesModal(
+                    screen
+                );
+            }
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Modal Confirm
+    // ------------------------------------------------------------------------
+
+    if (confirmOK) {
+
+        confirmOK.addEventListener(
+            'click',
+            async () => {
+
+                const callback =
+                    modal &&
+                    modal._confirmCallback;
+
+                closeSalesModal(
+                    screen
+                );
+
+                if (
+                    typeof callback ===
+                    'function'
+                ) {
+
+                    await callback();
+                }
+            }
+        );
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Modal Overlay
+    // ------------------------------------------------------------------------
+
+    if (modal) {
+
+        const overlay =
+            $('.sales-modal-overlay', modal);
+
+        if (overlay) {
+
+            overlay.addEventListener(
+                'click',
+                () => {
+
+                    closeSalesModal(
+                        screen
+                    );
+                }
+            );
         }
-    );
-
-
-    renderCart();
-
-
-    return screen;
+    }
 }
 
-
 // ============================================================================
-// Add Product
+// Add Product By Barcode
 // ============================================================================
 
-async function addProductByBarcode(
-    barcodeValue
-) {
+async function addProductByBarcode(screen) {
+
+    const input =
+        $('#sales-barcode-input', screen);
+
+    const button =
+        $('#sales-add-button', screen);
+
+    if (!input) {
+        return;
+    }
 
     const barcode =
-        normalizeBarcode(
-            barcodeValue
-        );
+        input.value.trim();
 
+    clearSalesMessage(
+        screen
+    );
 
     if (!barcode) {
 
         showSalesMessage(
-            '⚠️ لطفاً بارکد کالا را وارد کنید.',
-            'error'
+            screen,
+            '⚠️ ابتدا بارکد کالا را وارد کنید.',
+            false
         );
 
-
-        focusBarcodeInput();
+        input.focus();
 
         return;
     }
 
-
-    try {
+    if (!SALES_STATE.databaseReady) {
 
         showSalesMessage(
-            '🔎 در حال جستجوی کالا...',
-            'info'
+            screen,
+            '❌ پایگاه داده آماده نیست.',
+            false
         );
 
+        return;
+    }
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            'در حال بررسی...';
+    }
+
+    try {
 
         const product =
             await getProductByBarcode(
                 barcode
             );
 
-
         if (!product) {
 
             showSalesMessage(
+                screen,
                 '❌ کالایی با این بارکد پیدا نشد.',
-                'error'
+                false
             );
 
-
-            focusBarcodeInput();
+            input.select();
 
             return;
         }
 
 
         const stock =
-            Number(
-                product.stock
-            ) || 0;
-
+            Number(product.stock) || 0;
 
         if (stock <= 0) {
 
             showSalesMessage(
-                `❌ موجودی «${product.name || 'بدون نام'}» تمام شده است.`,
-                'error'
+                screen,
+                `⚠️ موجودی «${product.name || 'این کالا'}» تمام شده است.`,
+                false
             );
 
-
-            focusBarcodeInput();
+            input.select();
 
             return;
         }
 
 
-        const salePrice =
-            Number(
-                product.salePrice
-            ) || 0;
-
-
-        const existing =
-            findCartItem(
-                barcode
+        const existingIndex =
+            SALES_STATE.cart.findIndex(
+                item =>
+                    String(item.productId) ===
+                    String(product.id)
             );
 
 
-        if (existing) {
+        if (existingIndex !== -1) {
+
+            const item =
+                SALES_STATE.cart[
+                    existingIndex
+                ];
 
             if (
-                existing.quantity >=
-                stock
+                item.quantity >= stock
             ) {
 
                 showSalesMessage(
-                    `⚠️ موجودی «${existing.name}» فقط ${formatPrice(stock)} عدد است.`,
-                    'error'
+                    screen,
+                    `⚠️ موجودی «${product.name}» فقط ${formatNumber(stock)} عدد است.`,
+                    false
                 );
 
-
-                focusBarcodeInput();
+                input.select();
 
                 return;
             }
 
-
-            existing.quantity += 1;
+            item.quantity += 1;
 
         } else {
 
-            salesCart.push({
+            SALES_STATE.cart.push({
 
                 productId:
                     product.id,
 
                 barcode:
-                    barcode,
+                    product.barcode,
 
                 name:
-                    product.name ||
-                    'بدون نام',
-
-                category:
-                    product.category ||
-                    '',
+                    product.name,
 
                 salePrice:
-                    salePrice,
+                    Number(
+                        product.salePrice
+                    ) || 0,
 
-                stock:
+                availableStock:
                     stock,
 
                 quantity:
@@ -837,311 +741,31 @@ async function addProductByBarcode(
         }
 
 
-        renderCart();
+        input.value = '';
 
-
-        showSalesMessage(
-            `✅ «${product.name || 'بدون نام'}» به سبد اضافه شد.`,
-            'success'
+        refreshSalesScreen(
+            screen
         );
 
+        showSalesMessage(
+            screen,
+            `✅ «${product.name}» به سبد اضافه شد.`,
+            true
+        );
 
-        const input =
-            document.getElementById(
-                'sales-barcode-input'
-            );
-
-
-        if (input) {
-
-            input.value =
-                '';
-
-            input.focus();
-        }
+        input.focus();
 
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: خطا در افزودن کالا.',
+            'SupermarketPOS: خطا در افزودن کالا به فروش.',
             error
         );
 
-
         showSalesMessage(
-            '❌ خطا در دسترسی به اطلاعات کالا.',
-            'error'
-        );
-
-
-        focusBarcodeInput();
-    }
-}
-
-
-// ============================================================================
-// Increase
-// ============================================================================
-
-function increaseQuantity(
-    barcode
-) {
-
-    const item =
-        findCartItem(
-            barcode
-        );
-
-
-    if (!item) {
-        return;
-    }
-
-
-    if (
-        item.quantity >=
-        item.stock
-    ) {
-
-        showSalesMessage(
-            `⚠️ موجودی «${item.name}» فقط ${formatPrice(item.stock)} عدد است.`,
-            'error'
-        );
-
-
-        return;
-    }
-
-
-    item.quantity += 1;
-
-
-    renderCart();
-}
-
-
-// ============================================================================
-// Decrease
-// ============================================================================
-
-function decreaseQuantity(
-    barcode
-) {
-
-    const item =
-        findCartItem(
-            barcode
-        );
-
-
-    if (!item) {
-        return;
-    }
-
-
-    if (
-        item.quantity <= 1
-    ) {
-
-        removeFromCart(
-            barcode
-        );
-
-        return;
-    }
-
-
-    item.quantity -= 1;
-
-
-    renderCart();
-}
-
-
-// ============================================================================
-// Remove
-// ============================================================================
-
-function removeFromCart(
-    barcode
-) {
-
-    const index =
-        salesCart.findIndex(
-            item =>
-                item.barcode ===
-                barcode
-        );
-
-
-    if (
-        index === -1
-    ) {
-
-        return;
-    }
-
-
-    const item =
-        salesCart[index];
-
-
-    salesCart.splice(
-        index,
-        1
-    );
-
-
-    renderCart();
-
-
-    showSalesMessage(
-        `🗑️ «${item.name}» از سبد حذف شد.`,
-        'info'
-    );
-}
-
-
-// ============================================================================
-// Clear Cart
-// ============================================================================
-
-function clearCart() {
-
-    if (
-        salesCart.length === 0
-    ) {
-
-        showSalesMessage(
-            'سبد خرید خالی است.',
-            'info'
-        );
-
-        return;
-    }
-
-
-    const confirmed =
-        window.confirm(
-            'آیا می‌خواهید تمام کالاهای سبد خرید پاک شوند؟'
-        );
-
-
-    if (!confirmed) {
-
-        return;
-    }
-
-
-    salesCart =
-        [];
-
-
-    renderCart();
-
-
-    showSalesMessage(
-        '✅ سبد خرید پاک شد.',
-        'success'
-    );
-
-
-    focusBarcodeInput();
-}
-
-
-// ============================================================================
-// Checkout
-// ============================================================================
-
-async function handleCheckout() {
-
-    if (
-        salesCart.length === 0
-    ) {
-
-        showSalesMessage(
-            '⚠️ سبد خرید خالی است.',
-            'error'
-        );
-
-        return;
-    }
-
-
-    const total =
-        calculateCartTotal();
-
-
-    const count =
-        calculateCartCount();
-
-
-    const confirmed =
-        window.confirm(
-            `ثبت نهایی فروش\n\n` +
-            `تعداد کالا: ${formatPrice(count)}\n` +
-            `مبلغ کل: ${formatPrice(total)} تومان\n\n` +
-            `آیا فروش را ثبت می‌کنید؟`
-        );
-
-
-    if (!confirmed) {
-
-        return;
-    }
-
-
-    const button =
-        document.getElementById(
-            'sales-checkout-button'
-        );
-
-
-    if (button) {
-
-        button.disabled =
-            true;
-
-        button.textContent =
-            '⏳ در حال ثبت فروش...';
-    }
-
-
-    try {
-
-        const result =
-            await registerSale(
-                salesCart
-            );
-
-
-        salesCart =
-            [];
-
-
-        renderCart();
-
-
-        showSalesMessage(
-            `✅ فروش با موفقیت ثبت شد. شماره فروش: ${formatPrice(result.saleId)}`,
-            'success'
-        );
-
-
-        focusBarcodeInput();
-
-    } catch (error) {
-
-        console.error(
-            'SupermarketPOS: خطا در ثبت فروش.',
-            error
-        );
-
-
-        showSalesMessage(
-            '❌ ثبت فروش انجام نشد. موجودی کالاها را بررسی کنید.',
-            'error'
+            screen,
+            '❌ هنگام جستجوی کالا خطایی رخ داد.',
+            false
         );
 
     } finally {
@@ -1149,451 +773,268 @@ async function handleCheckout() {
         if (button) {
 
             button.disabled =
-                salesCart.length === 0;
+                false;
 
             button.textContent =
-                '✅ ثبت نهایی فروش';
+                'افزودن';
         }
     }
 }
 
+// ============================================================================
+// Cart Quantity
+// ============================================================================
+
+function changeCartQuantity(
+    screen,
+    index,
+    delta
+) {
+
+    const item =
+        SALES_STATE.cart[index];
+
+    if (!item) {
+        return;
+    }
+
+    const nextQuantity =
+        item.quantity + delta;
+
+
+    if (nextQuantity <= 0) {
+
+        SALES_STATE.cart.splice(
+            index,
+            1
+        );
+
+        refreshSalesScreen(
+            screen
+        );
+
+        return;
+    }
+
+
+    if (
+        nextQuantity >
+        item.availableStock
+    ) {
+
+        showSalesMessage(
+            screen,
+            `⚠️ موجودی «${item.name}» فقط ${formatNumber(item.availableStock)} عدد است.`,
+            false
+        );
+
+        return;
+    }
+
+
+    item.quantity =
+        nextQuantity;
+
+    refreshSalesScreen(
+        screen
+    );
+}
+
+// ============================================================================
+// Remove Cart Item
+// ============================================================================
+
+function removeCartItem(
+    screen,
+    index
+) {
+
+    const item =
+        SALES_STATE.cart[index];
+
+    if (!item) {
+        return;
+    }
+
+    showSalesConfirmModal(
+        screen,
+        'حذف کالا',
+        `آیا می‌خواهید «${item.name}» از سبد خرید حذف شود؟`,
+        () => {
+
+            SALES_STATE.cart.splice(
+                index,
+                1
+            );
+
+            refreshSalesScreen(
+                screen
+            );
+
+            showSalesMessage(
+                screen,
+                'کالا از سبد حذف شد.',
+                true
+            );
+        },
+        'حذف کالا'
+    );
+}
 
 // ============================================================================
 // Render Cart
 // ============================================================================
 
-function renderCart() {
+function renderCart(screen) {
 
-    const cartItems =
-        document.getElementById(
-            'sales-cart-items'
-        );
+    const list =
+        $('#sales-cart-list', screen);
 
+    const count =
+        $('#sales-cart-count', screen);
 
-    const cartCount =
-        document.getElementById(
-            'sales-cart-count'
-        );
+    if (!list) {
+        return;
+    }
 
-
-    const totalValue =
-        document.getElementById(
-            'sales-total-value'
-        );
-
-
-    const checkoutButton =
-        document.getElementById(
-            'sales-checkout-button'
-        );
+    list.innerHTML = '';
 
 
     if (
-        !cartItems ||
-        !cartCount ||
-        !totalValue
+        SALES_STATE.cart.length === 0
     ) {
+
+        list.innerHTML = `
+
+            <div class="sales-empty-cart">
+
+                <div class="sales-empty-icon">
+                    🛍️
+                </div>
+
+                <h3>
+                    سبد خرید خالی است
+                </h3>
+
+                <p>
+                    بارکد یک کالا را وارد کنید تا به سبد اضافه شود.
+                </p>
+
+            </div>
+
+        `;
+
+        if (count) {
+
+            count.textContent =
+                '۰ کالا';
+        }
 
         return;
     }
 
 
-    cartItems.innerHTML =
-        '';
+    const fragment =
+        document.createDocumentFragment();
 
 
-    const totalCount =
-        calculateCartCount();
-
-
-    const total =
-        calculateCartTotal();
-
-
-    cartCount.textContent =
-        `${formatPrice(totalCount)} کالا`;
-
-
-    totalValue.textContent =
-        `${formatPrice(total)} تومان`;
-
-
-    if (checkoutButton) {
-
-        checkoutButton.disabled =
-            salesCart.length === 0;
-    }
-
-
-    if (
-        salesCart.length === 0
-    ) {
-
-        const empty =
-            document.createElement(
-                'div'
-            );
-
-
-        empty.className =
-            'sales-cart-empty';
-
-
-        const icon =
-            document.createElement(
-                'div'
-            );
-
-
-        icon.className =
-            'placeholder-icon';
-
-
-        icon.textContent =
-            '🛍️';
-
-
-        const title =
-            document.createElement(
-                'h3'
-            );
-
-
-        title.textContent =
-            'سبد خرید خالی است';
-
-
-        const text =
-            document.createElement(
-                'p'
-            );
-
-
-        text.textContent =
-            'بارکد یک کالا را وارد کنید تا به سبد اضافه شود.';
-
-
-        empty.appendChild(
-            icon
-        );
-
-
-        empty.appendChild(
-            title
-        );
-
-
-        empty.appendChild(
-            text
-        );
-
-
-        cartItems.appendChild(
-            empty
-        );
-
-
-        return;
-    }
-
-
-    salesCart.forEach(
-        item => {
+    SALES_STATE.cart.forEach(
+        (item, index) => {
 
             const card =
-                document.createElement(
-                    'article'
+                createCartItem(
+                    screen,
+                    item,
+                    index
                 );
 
-
-            card.className =
-                'sales-cart-item';
-
-
-            const top =
-                document.createElement(
-                    'div'
-                );
-
-
-            top.className =
-                'sales-cart-item-top';
-
-
-            const info =
-                document.createElement(
-                    'div'
-                );
-
-
-            info.className =
-                'sales-cart-item-info';
-
-
-            const name =
-                document.createElement(
-                    'h4'
-                );
-
-
-            name.textContent =
-                item.name;
-
-
-            const barcode =
-                document.createElement(
-                    'span'
-                );
-
-
-            barcode.textContent =
-                `بارکد: ${item.barcode}`;
-
-
-            info.appendChild(
-                name
-            );
-
-
-            info.appendChild(
-                barcode
-            );
-
-
-            const removeButton =
-                document.createElement(
-                    'button'
-                );
-
-
-            removeButton.type =
-                'button';
-
-
-            removeButton.className =
-                'sales-remove-item';
-
-
-            removeButton.textContent =
-                '×';
-
-
-            removeButton.setAttribute(
-                'aria-label',
-                `حذف ${item.name}`
-            );
-
-
-            removeButton.addEventListener(
-                'click',
-                () => {
-
-                    removeFromCart(
-                        item.barcode
-                    );
-                }
-            );
-
-
-            top.appendChild(
-                info
-            );
-
-
-            top.appendChild(
-                removeButton
-            );
-
-
-            const priceRow =
-                document.createElement(
-                    'div'
-                );
-
-
-            priceRow.className =
-                'sales-cart-price-row';
-
-
-            const unitPrice =
-                document.createElement(
-                    'span'
-                );
-
-
-            unitPrice.textContent =
-                `قیمت واحد: ${formatPrice(item.salePrice)} تومان`;
-
-
-            const rowTotal =
-                document.createElement(
-                    'strong'
-                );
-
-
-            rowTotal.textContent =
-                `${formatPrice(
-                    item.salePrice *
-                    item.quantity
-                )} تومان`;
-
-
-            priceRow.appendChild(
-                unitPrice
-            );
-
-
-            priceRow.appendChild(
-                rowTotal
-            );
-
-
-            const controls =
-                document.createElement(
-                    'div'
-                );
-
-
-            controls.className =
-                'sales-quantity-controls';
-
-
-            const decreaseButton =
-                document.createElement(
-                    'button'
-                );
-
-
-            decreaseButton.type =
-                'button';
-
-
-            decreaseButton.className =
-                'sales-quantity-button';
-
-
-            decreaseButton.textContent =
-                '−';
-
-
-            decreaseButton.addEventListener(
-                'click',
-                () => {
-
-                    decreaseQuantity(
-                        item.barcode
-                    );
-                }
-            );
-
-
-            const quantity =
-                document.createElement(
-                    'span'
-                );
-
-
-            quantity.className =
-                'sales-quantity';
-
-
-            quantity.textContent =
-                formatPrice(
-                    item.quantity
-                );
-
-
-            const increaseButton =
-                document.createElement(
-                    'button'
-                );
-
-
-            increaseButton.type =
-                'button';
-
-
-            increaseButton.className =
-                'sales-quantity-button';
-
-
-            increaseButton.textContent =
-                '+';
-
-
-            increaseButton.addEventListener(
-                'click',
-                () => {
-
-                    increaseQuantity(
-                        item.barcode
-                    );
-                }
-            );
-
-
-            if (
-                item.quantity >=
-                item.stock
-            ) {
-
-                increaseButton.disabled =
-                    true;
-            }
-
-
-            controls.appendChild(
-                decreaseButton
-            );
-
-
-            controls.appendChild(
-                quantity
-            );
-
-
-            controls.appendChild(
-                increaseButton
-            );
-
-
-            const stockInfo =
-                document.createElement(
-                    'span'
-                );
-
-
-            stockInfo.className =
-                'sales-stock-info';
-
-
-            stockInfo.textContent =
-                `موجودی فعلی: ${formatPrice(item.stock)}`;
-
-
-            card.appendChild(
-                top
-            );
-
-
-            card.appendChild(
-                priceRow
-            );
-
-
-            card.appendChild(
-                controls
-            );
-
-
-            card.appendChild(
-                stockInfo
-            );
-
-
-            cartItems.appendChild(
+            fragment.appendChild(
                 card
             );
         }
     );
+
+
+    list.appendChild(
+        fragment
+    );
+
+
+    const totalQuantity =
+        SALES_STATE.cart.reduce(
+            (sum, item) =>
+                sum + item.quantity,
+            0
+        );
+
+
+    if (count) {
+
+        count.textContent =
+            `${formatNumber(totalQuantity)} عدد کالا`;
+    }
 }
+
+// ============================================================================
+// Cart Item
+// ============================================================================
+
+function createCartItem(
+    screen,
+    item,
+    index
+) {
+
+    const card =
+        createElement(
+            'article',
+            'sales-cart-item'
+        );
+
+
+    const lineTotal =
+        item.quantity *
+        item.salePrice;
+
+
+    card.innerHTML = `
+
+        <div class="sales-cart-item-main">
+
+            <div class="sales-cart-product-icon">
+                📦
+            </div>
+
+            <div class="sales-cart-product-info">
+
+                <h4>
+                    ${escapeHTML(item.name)}
+                </h4>
+
+                <span>
+                    بارکد: ${escapeHTML(item.barcode)}
+                </span>
+
+                <strong>
+                    ${formatPrice(item.salePrice)} تومان
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="sales-cart-item-bottom">
+
+            <div class="sales-quantity-control">
+
+                <button
+                    type="button"
+                    class="sales-quantity-button"
+                    data-cart-action="increase"
+                >
+                    +
+                </button>
+
+                <strong>
+                    ${
