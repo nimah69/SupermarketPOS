@@ -1,7 +1,7 @@
 // js/app.js
 // SupermarketPOS
 // Main Application
-// Unified Modal System
+// Complete Replacement
 
 'use strict';
 
@@ -18,82 +18,375 @@ import {
 } from './sales.js';
 
 
-// ============================================================
-// Application State
-// ============================================================
+/* ============================================================
+   State
+   ============================================================ */
 
 const APP_STATE = {
 
     initialized: false,
 
-    databaseReady: false,
-
-    modalOpen: false,
-
-    modalResolver: null
+    databaseReady: false
 
 };
 
-
-// ============================================================
-// DOM
-// ============================================================
 
 const DOM = {
+
     app: null
+
 };
 
 
-// ============================================================
-// Escape HTML
-// ============================================================
+/* ============================================================
+   Escape HTML
+   ============================================================ */
 
 function escapeHTML(value) {
 
     return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
 
 }
 
 
-// ============================================================
-// Header
-// ============================================================
+/* ============================================================
+   Toast
+   ============================================================ */
+
+let toastTimer = null;
+
+
+export function showAppMessage(
+    message,
+    type = 'success'
+) {
+
+    const toast =
+        document.getElementById(
+            'app-toast'
+        );
+
+    const messageElement =
+        document.getElementById(
+            'app-toast-message'
+        );
+
+    const iconElement =
+        document.getElementById(
+            'app-toast-icon'
+        );
+
+
+    if (!toast || !messageElement) {
+        return;
+    }
+
+
+    if (toastTimer) {
+
+        clearTimeout(
+            toastTimer
+        );
+
+    }
+
+
+    toast.className =
+        `app-toast app-toast-${type}`;
+
+
+    messageElement.textContent =
+        message;
+
+
+    if (iconElement) {
+
+        iconElement.textContent =
+            type === 'danger'
+                ? '!'
+                : type === 'info'
+                    ? 'i'
+                    : '✓';
+
+    }
+
+
+    toast.classList.remove(
+        'app-toast-hide'
+    );
+
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.add(
+                    'app-toast-hide'
+                );
+
+            },
+            2800
+        );
+
+}
+
+
+/* ============================================================
+   Global Modal
+   ============================================================ */
+
+export function showAppConfirm(
+    options = {}
+) {
+
+    return new Promise(
+        resolve => {
+
+            const modal =
+                document.getElementById(
+                    'app-modal'
+                );
+
+
+            if (!modal) {
+
+                resolve(false);
+
+                return;
+            }
+
+
+            const dialog =
+                modal.querySelector(
+                    '.app-modal-dialog'
+                );
+
+
+            const icon =
+                document.getElementById(
+                    'app-modal-icon'
+                );
+
+
+            const title =
+                document.getElementById(
+                    'app-modal-title'
+                );
+
+
+            const message =
+                document.getElementById(
+                    'app-modal-message'
+                );
+
+
+            const cancel =
+                document.getElementById(
+                    'app-modal-cancel'
+                );
+
+
+            const confirm =
+                document.getElementById(
+                    'app-modal-confirm'
+                );
+
+
+            if (
+                !dialog ||
+                !icon ||
+                !title ||
+                !message ||
+                !cancel ||
+                !confirm
+            ) {
+
+                resolve(false);
+
+                return;
+            }
+
+
+            const type =
+                options.type ||
+                'info';
+
+
+            dialog.className =
+                `app-modal-dialog ${type}`;
+
+
+            icon.textContent =
+                options.icon ||
+                '❔';
+
+
+            title.textContent =
+                options.title ||
+                'تأیید عملیات';
+
+
+            message.textContent =
+                options.message ||
+                'آیا از انجام این عملیات مطمئن هستید؟';
+
+
+            cancel.textContent =
+                options.cancelText ||
+                'انصراف';
+
+
+            confirm.textContent =
+                options.confirmText ||
+                'تأیید';
+
+
+            modal.classList.add(
+                'is-open'
+            );
+
+
+            modal.setAttribute(
+                'aria-hidden',
+                'false'
+            );
+
+
+            let finished = false;
+
+
+            function finish(result) {
+
+                if (finished) {
+                    return;
+                }
+
+
+                finished = true;
+
+
+                modal.classList.remove(
+                    'is-open'
+                );
+
+
+                modal.setAttribute(
+                    'aria-hidden',
+                    'true'
+                );
+
+
+                cancel.onclick =
+                    null;
+
+                confirm.onclick =
+                    null;
+
+
+                resolve(result);
+
+            }
+
+
+            cancel.onclick =
+                () => {
+
+                    finish(false);
+
+                };
+
+
+            confirm.onclick =
+                () => {
+
+                    finish(true);
+
+                };
+
+
+            const backdrop =
+                modal.querySelector(
+                    '.app-modal-backdrop'
+                );
+
+
+            if (backdrop) {
+
+                backdrop.onclick =
+                    () => {
+
+                        finish(false);
+
+                    };
+
+            }
+
+
+            modal.onkeydown =
+                event => {
+
+                    if (
+                        event.key ===
+                        'Escape'
+                    ) {
+
+                        finish(false);
+
+                    }
+
+                };
+
+
+            setTimeout(
+                () => {
+
+                    confirm.focus();
+
+                },
+                30
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   Header
+   ============================================================ */
 
 function setupHeaderStatus() {
 
-    const ready =
-        document.querySelector('.status-ready');
-
     const online =
-        document.querySelector('.status-online');
-
-
-    if (ready) {
-
-        ready.innerHTML = `
-
-            <span class="status-icon">
-                ✓
-            </span>
-
-            <div class="status-info">
-
-                <span class="status-label">
-                    وضعیت
-                </span>
-
-                <strong>
-                    آماده به کار
-                </strong>
-
-            </div>
-        `;
-    }
+        document.querySelector(
+            '.status-online'
+        );
 
 
     if (online) {
@@ -107,7 +400,7 @@ function setupHeaderStatus() {
             <div class="status-info">
 
                 <span class="status-label">
-                    اتصال
+                    پایگاه داده
                 </span>
 
                 <strong>
@@ -115,100 +408,165 @@ function setupHeaderStatus() {
                 </strong>
 
             </div>
+
         `;
+
     }
 
 }
 
 
-// ============================================================
-// Database Status
-// ============================================================
+/* ============================================================
+   Database Status
+   ============================================================ */
 
-function showDatabaseStatus(message, success = true) {
+function showDatabaseStatus(
+    message,
+    success = true
+) {
 
-    let status =
+    const existing =
         document.getElementById(
             'database-test-status'
         );
 
 
-    if (!status) {
+    if (existing) {
 
-        status =
-            document.createElement('div');
-
-        status.id =
-            'database-test-status';
-
-        const home =
-            document.querySelector('.home-screen');
-
-        if (home) {
-            home.appendChild(status);
-        }
+        existing.remove();
 
     }
 
 
-    status.className =
-        success
-            ? 'database-status database-status-success'
-            : 'database-status database-status-danger';
+    const status =
+        document.createElement(
+            'div'
+        );
+
+
+    status.id =
+        'database-test-status';
+
+
+    status.style.cssText = `
+
+        margin-top:14px;
+
+        padding:12px 14px;
+
+        border-radius:12px;
+
+        font-size:11px;
+
+        text-align:center;
+
+        border:1px solid;
+
+        background:
+            ${success ? '#ecfdf5' : '#fef2f2'};
+
+        color:
+            ${success ? '#047857' : '#b91c1c'};
+
+        border-color:
+            ${success ? '#a7f3d0' : '#fecaca'};
+
+    `;
 
 
     status.textContent =
         message;
 
+
+    const home =
+        document.querySelector(
+            '.home-screen'
+        );
+
+
+    if (home) {
+
+        home.appendChild(
+            status
+        );
+
+    }
+
 }
 
 
-// ============================================================
-// Navigation
-// ============================================================
+/* ============================================================
+   Hide Screens
+   ============================================================ */
 
 function hideSecondaryScreens() {
 
     const sales =
-        document.getElementById('sales-screen');
+        document.getElementById(
+            'sales-screen'
+        );
+
 
     const products =
-        document.getElementById('products-screen');
+        document.getElementById(
+            'products-screen'
+        );
 
 
     if (sales) {
-        sales.style.display = 'none';
+
+        sales.style.display =
+            'none';
+
     }
 
+
     if (products) {
-        products.style.display = 'none';
+
+        products.style.display =
+            'none';
+
     }
 
 }
 
+
+/* ============================================================
+   Home
+   ============================================================ */
 
 function showHomeScreen() {
 
     hideSecondaryScreens();
 
+
     const home =
-        document.querySelector('.home-screen');
+        document.querySelector(
+            '.home-screen'
+        );
+
 
     if (home) {
-        home.style.display = '';
+
+        home.style.display =
+            '';
+
     }
 
 }
 
 
-// ============================================================
-// Sales
-// ============================================================
+/* ============================================================
+   Sales
+   ============================================================ */
 
 function openSalesScreen() {
 
     const main =
-        document.querySelector('main');
+        document.querySelector(
+            'main'
+        );
+
 
     if (!main) {
         return;
@@ -216,37 +574,58 @@ function openSalesScreen() {
 
 
     const home =
-        document.querySelector('.home-screen');
+        document.querySelector(
+            '.home-screen'
+        );
+
 
     if (home) {
-        home.style.display = 'none';
+
+        home.style.display =
+            'none';
+
     }
 
 
     const products =
-        document.getElementById('products-screen');
+        document.getElementById(
+            'products-screen'
+        );
+
 
     if (products) {
-        products.style.display = 'none';
+
+        products.style.display =
+            'none';
+
     }
 
 
     let sales =
-        document.getElementById('sales-screen');
+        document.getElementById(
+            'sales-screen'
+        );
 
 
     if (!sales) {
 
         sales =
-            document.createElement('section');
+            document.createElement(
+                'section'
+            );
+
 
         sales.id =
             'sales-screen';
 
+
         sales.className =
             'sales-screen';
 
-        main.appendChild(sales);
+
+        main.appendChild(
+            sales
+        );
 
     }
 
@@ -259,24 +638,24 @@ function openSalesScreen() {
         sales,
         {
             databaseReady:
-                APP_STATE.databaseReady,
-
-            onBack:
-                showHomeScreen
+                APP_STATE.databaseReady
         }
     );
 
 }
 
 
-// ============================================================
-// Products
-// ============================================================
+/* ============================================================
+   Products
+   ============================================================ */
 
 async function openProductsScreen() {
 
     const main =
-        document.querySelector('main');
+        document.querySelector(
+            'main'
+        );
+
 
     if (!main) {
         return;
@@ -284,23 +663,37 @@ async function openProductsScreen() {
 
 
     const home =
-        document.querySelector('.home-screen');
+        document.querySelector(
+            '.home-screen'
+        );
+
 
     if (home) {
-        home.style.display = 'none';
+
+        home.style.display =
+            'none';
+
     }
 
 
     const sales =
-        document.getElementById('sales-screen');
+        document.getElementById(
+            'sales-screen'
+        );
+
 
     if (sales) {
-        sales.style.display = 'none';
+
+        sales.style.display =
+            'none';
+
     }
 
 
     let products =
-        document.getElementById('products-screen');
+        document.getElementById(
+            'products-screen'
+        );
 
 
     if (!products) {
@@ -308,7 +701,10 @@ async function openProductsScreen() {
         products =
             createProductsScreen();
 
-        main.appendChild(products);
+
+        main.appendChild(
+            products
+        );
 
     }
 
@@ -317,22 +713,28 @@ async function openProductsScreen() {
         'block';
 
 
-    await loadProducts(products);
+    await loadProducts(
+        products
+    );
 
 }
 
 
-// ============================================================
-// Create Products Screen
-// ============================================================
+/* ============================================================
+   Create Products Screen
+   ============================================================ */
 
 function createProductsScreen() {
 
     const screen =
-        document.createElement('section');
+        document.createElement(
+            'section'
+        );
+
 
     screen.id =
         'products-screen';
+
 
     screen.className =
         'products-screen';
@@ -461,7 +863,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label for="product-barcode">
+                    <label>
                         بارکد
                     </label>
 
@@ -478,7 +880,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label for="product-name">
+                    <label>
                         نام کالا
                     </label>
 
@@ -494,7 +896,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label for="product-category">
+                    <label>
                         دسته‌بندی
                     </label>
 
@@ -510,7 +912,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label for="product-price">
+                    <label>
                         قیمت فروش
                     </label>
 
@@ -528,7 +930,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label for="product-stock">
+                    <label>
                         موجودی
                     </label>
 
@@ -592,17 +994,26 @@ function createProductsScreen() {
     `;
 
 
-    setupProductForm(screen);
+    setupProductForm(
+        screen
+    );
 
-    setupBackup(screen);
 
-    setupRestore(screen);
+    setupBackup(
+        screen
+    );
+
+
+    setupRestore(
+        screen
+    );
 
 
     const back =
         screen.querySelector(
             '#products-back-button'
         );
+
 
     if (back) {
 
@@ -619,9 +1030,9 @@ function createProductsScreen() {
 }
 
 
-// ============================================================
-// Product Form
-// ============================================================
+/* ============================================================
+   Product Form
+   ============================================================ */
 
 function setupProductForm(screen) {
 
@@ -630,20 +1041,24 @@ function setupProductForm(screen) {
             '#add-product-button'
         );
 
+
     const form =
         screen.querySelector(
             '#product-form-container'
         );
+
 
     const closeButton =
         screen.querySelector(
             '#close-product-form'
         );
 
+
     const cancelButton =
         screen.querySelector(
             '#cancel-product-button'
         );
+
 
     const saveButton =
         screen.querySelector(
@@ -660,18 +1075,25 @@ function setupProductForm(screen) {
         'click',
         () => {
 
-            clearProductMessage(screen);
+            clearProductMessage(
+                screen
+            );
+
 
             form.style.display =
                 'block';
+
 
             const barcode =
                 screen.querySelector(
                     '#product-barcode'
                 );
 
+
             if (barcode) {
+
                 barcode.focus();
+
             }
 
         }
@@ -680,7 +1102,10 @@ function setupProductForm(screen) {
 
     function closeForm() {
 
-        clearProductMessage(screen);
+        clearProductMessage(
+            screen
+        );
+
 
         form.style.display =
             'none';
@@ -689,18 +1114,22 @@ function setupProductForm(screen) {
 
 
     if (closeButton) {
+
         closeButton.addEventListener(
             'click',
             closeForm
         );
+
     }
 
 
     if (cancelButton) {
+
         cancelButton.addEventListener(
             'click',
             closeForm
         );
+
     }
 
 
@@ -713,10 +1142,14 @@ function setupProductForm(screen) {
         'click',
         async () => {
 
-            clearProductMessage(screen);
+            clearProductMessage(
+                screen
+            );
 
 
-            if (!APP_STATE.databaseReady) {
+            if (
+                !APP_STATE.databaseReady
+            ) {
 
                 showProductMessage(
                     screen,
@@ -733,20 +1166,24 @@ function setupProductForm(screen) {
                     '#product-barcode'
                 );
 
+
             const nameInput =
                 screen.querySelector(
                     '#product-name'
                 );
+
 
             const categoryInput =
                 screen.querySelector(
                     '#product-category'
                 );
 
+
             const priceInput =
                 screen.querySelector(
                     '#product-price'
                 );
+
 
             const stockInput =
                 screen.querySelector(
@@ -757,26 +1194,35 @@ function setupProductForm(screen) {
             const barcode =
                 barcodeInput.value.trim();
 
+
             const name =
                 nameInput.value.trim();
+
 
             const category =
                 categoryInput.value.trim();
 
+
             const priceText =
                 priceInput.value.trim();
+
 
             const stockText =
                 stockInput.value.trim();
 
 
             const price =
-                Number(priceText);
+                Number(
+                    priceText
+                );
+
 
             const stock =
                 stockText === ''
                     ? 0
-                    : Number(stockText);
+                    : Number(
+                        stockText
+                    );
 
 
             if (!barcode) {
@@ -864,11 +1310,13 @@ function setupProductForm(screen) {
 
                 updatedAt:
                     now
+
             };
 
 
             saveButton.disabled =
                 true;
+
 
             saveButton.textContent =
                 'در حال ذخیره...';
@@ -876,40 +1324,54 @@ function setupProductForm(screen) {
 
             try {
 
-                await addProduct(product);
+                await addProduct(
+                    product
+                );
 
 
                 showProductMessage(
                     screen,
-                    '✅ کالا با موفقیت ذخیره شد.',
+                    '✓ کالا با موفقیت ذخیره شد.',
                     true
                 );
 
 
-                barcodeInput.value = '';
-                nameInput.value = '';
-                categoryInput.value = '';
-                priceInput.value = '';
-                stockInput.value = '';
+                barcodeInput.value =
+                    '';
+
+                nameInput.value =
+                    '';
+
+                categoryInput.value =
+                    '';
+
+                priceInput.value =
+                    '';
+
+                stockInput.value =
+                    '';
 
 
                 barcodeInput.focus();
 
 
-                await loadProducts(screen);
+                await loadProducts(
+                    screen
+                );
 
 
             } catch (error) {
 
                 console.error(
-                    'SupermarketPOS: خطا در ذخیره کالا.',
+                    'Product save error:',
                     error
                 );
 
 
                 if (
                     error &&
-                    error.name === 'ConstraintError'
+                    error.name ===
+                    'ConstraintError'
                 ) {
 
                     showProductMessage(
@@ -928,10 +1390,12 @@ function setupProductForm(screen) {
 
                 }
 
+
             } finally {
 
                 saveButton.disabled =
                     false;
+
 
                 saveButton.textContent =
                     'ذخیره کالا';
@@ -944,9 +1408,9 @@ function setupProductForm(screen) {
 }
 
 
-// ============================================================
-// Products Loading
-// ============================================================
+/* ============================================================
+   Load Products
+   ============================================================ */
 
 async function loadProducts(screen) {
 
@@ -974,6 +1438,7 @@ async function loadProducts(screen) {
             </p>
 
         </div>
+
     `;
 
 
@@ -992,7 +1457,7 @@ async function loadProducts(screen) {
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: خطا در خواندن کالاها.',
+            'Products load error:',
             error
         );
 
@@ -1014,6 +1479,7 @@ async function loadProducts(screen) {
                 </p>
 
             </div>
+
         `;
 
     }
@@ -1021,11 +1487,14 @@ async function loadProducts(screen) {
 }
 
 
-// ============================================================
-// Render Products
-// ============================================================
+/* ============================================================
+   Render Products
+   ============================================================ */
 
-function renderProducts(screen, products) {
+function renderProducts(
+    screen,
+    products
+) {
 
     const list =
         screen.querySelector(
@@ -1038,7 +1507,8 @@ function renderProducts(screen, products) {
     }
 
 
-    list.innerHTML = '';
+    list.innerHTML =
+        '';
 
 
     if (
@@ -1063,6 +1533,7 @@ function renderProducts(screen, products) {
                 </p>
 
             </div>
+
         `;
 
         return;
@@ -1070,7 +1541,10 @@ function renderProducts(screen, products) {
 
 
     const title =
-        document.createElement('div');
+        document.createElement(
+            'div'
+        );
+
 
     title.className =
         'products-list-title';
@@ -1083,30 +1557,41 @@ function renderProducts(screen, products) {
         </strong>
 
         <span>
-            ${products.length.toLocaleString('fa-IR')} کالا
+            ${products.length.toLocaleString('fa-IR')}
+            کالا
         </span>
 
     `;
 
 
-    list.appendChild(title);
+    list.appendChild(
+        title
+    );
 
 
     products.forEach(
         product => {
 
             const card =
-                document.createElement('article');
+                document.createElement(
+                    'article'
+                );
+
 
             card.className =
                 'product-card';
 
 
             const price =
-                Number(product.salePrice) || 0;
+                Number(
+                    product.salePrice
+                ) || 0;
+
 
             const stock =
-                Number(product.stock) || 0;
+                Number(
+                    product.stock
+                ) || 0;
 
 
             card.innerHTML = `
@@ -1120,11 +1605,17 @@ function renderProducts(screen, products) {
                     <div class="product-card-info">
 
                         <h3>
-                            ${escapeHTML(product.name || 'بدون نام')}
+                            ${escapeHTML(
+                                product.name ||
+                                'بدون نام'
+                            )}
                         </h3>
 
                         <span>
-                            ${escapeHTML(product.category || 'بدون دسته‌بندی')}
+                            ${escapeHTML(
+                                product.category ||
+                                'بدون دسته‌بندی'
+                            )}
                         </span>
 
                     </div>
@@ -1141,7 +1632,10 @@ function renderProducts(screen, products) {
                         </span>
 
                         <strong>
-                            ${escapeHTML(product.barcode || '-')}
+                            ${escapeHTML(
+                                product.barcode ||
+                                '-'
+                            )}
                         </strong>
 
                     </div>
@@ -1154,7 +1648,8 @@ function renderProducts(screen, products) {
                         </span>
 
                         <strong>
-                            ${price.toLocaleString('fa-IR')} تومان
+                            ${price.toLocaleString('fa-IR')}
+                            تومان
                         </strong>
 
                     </div>
@@ -1177,7 +1672,9 @@ function renderProducts(screen, products) {
             `;
 
 
-            list.appendChild(card);
+            list.appendChild(
+                card
+            );
 
         }
     );
@@ -1185,9 +1682,9 @@ function renderProducts(screen, products) {
 }
 
 
-// ============================================================
-// Backup
-// ============================================================
+/* ============================================================
+   Backup
+   ============================================================ */
 
 function setupBackup(screen) {
 
@@ -1210,6 +1707,7 @@ function setupBackup(screen) {
 
                 button.disabled =
                     true;
+
 
                 button.textContent =
                     'در حال آماده‌سازی...';
@@ -1236,30 +1734,43 @@ function setupBackup(screen) {
 
 
                 const url =
-                    URL.createObjectURL(blob);
+                    URL.createObjectURL(
+                        blob
+                    );
 
 
                 const link =
-                    document.createElement('a');
+                    document.createElement(
+                        'a'
+                    );
+
 
                 link.href =
                     url;
+
 
                 link.download =
                     `SupermarketPOS-Backup-${Date.now()}.json`;
 
 
-                document.body.appendChild(link);
+                document.body.appendChild(
+                    link
+                );
+
 
                 link.click();
 
+
                 link.remove();
 
-                URL.revokeObjectURL(url);
+
+                URL.revokeObjectURL(
+                    url
+                );
 
 
                 showAppMessage(
-                    'پشتیبان با موفقیت آماده شد.',
+                    'پشتیبان با موفقیت ایجاد شد.',
                     'success'
                 );
 
@@ -1283,6 +1794,7 @@ function setupBackup(screen) {
                 button.disabled =
                     false;
 
+
                 button.textContent =
                     '💾 پشتیبان‌گیری';
 
@@ -1294,9 +1806,9 @@ function setupBackup(screen) {
 }
 
 
-// ============================================================
-// Restore
-// ============================================================
+/* ============================================================
+   Restore
+   ============================================================ */
 
 function setupRestore(screen) {
 
@@ -1304,6 +1816,7 @@ function setupRestore(screen) {
         screen.querySelector(
             '#restore-button'
         );
+
 
     const input =
         screen.querySelector(
@@ -1320,7 +1833,8 @@ function setupRestore(screen) {
         'click',
         () => {
 
-            input.value = '';
+            input.value =
+                '';
 
             input.click();
 
@@ -1347,14 +1861,20 @@ function setupRestore(screen) {
                 const text =
                     await file.text();
 
+
                 const backup =
-                    JSON.parse(text);
+                    JSON.parse(
+                        text
+                    );
 
 
                 if (
                     !backup ||
-                    backup.type !== 'SupermarketPOS' ||
-                    !Array.isArray(backup.products)
+                    backup.type !==
+                        'SupermarketPOS' ||
+                    !Array.isArray(
+                        backup.products
+                    )
                 ) {
 
                     throw new Error(
@@ -1371,7 +1891,7 @@ function setupRestore(screen) {
                             'بازیابی اطلاعات',
 
                         message:
-                            `این فایل شامل ${backup.products.length.toLocaleString('fa-IR')} کالا است.\n\nکالاهای موجود با اطلاعات فایل ادغام می‌شوند.`,
+                            `فایل شامل ${backup.products.length.toLocaleString('fa-IR')} کالا است.\n\nکالاهای موجود با اطلاعات فایل ادغام می‌شوند.`,
 
                         icon:
                             '📂',
@@ -1415,9 +1935,14 @@ function setupRestore(screen) {
 
 
                 showAppMessage(
-                    'فایل پشتیبان معتبر نیست.',
+                    'فایل پشتیبان معتبر نیست یا بازیابی انجام نشد.',
                     'danger'
                 );
+
+            } finally {
+
+                input.value =
+                    '';
 
             }
 
@@ -1427,14 +1952,14 @@ function setupRestore(screen) {
 }
 
 
-// ============================================================
-// Product Messages
-// ============================================================
+/* ============================================================
+   Product Messages
+   ============================================================ */
 
 function showProductMessage(
     screen,
     message,
-    success = true
+    success
 ) {
 
     const box =
@@ -1448,19 +1973,23 @@ function showProductMessage(
     }
 
 
-    box.className =
-        success
-            ? 'product-form-message message-success'
-            : 'product-form-message message-danger';
-
-
     box.textContent =
         message;
+
+
+    box.className =
+        `product-form-message ${
+            success
+                ? 'message-success'
+                : 'message-danger'
+        }`;
 
 }
 
 
-function clearProductMessage(screen) {
+function clearProductMessage(
+    screen
+) {
 
     const box =
         screen.querySelector(
@@ -1476,375 +2005,16 @@ function clearProductMessage(screen) {
     box.textContent =
         '';
 
+
     box.className =
         'product-form-message';
 
 }
 
 
-// ============================================================
-// CENTRAL MODAL
-// ============================================================
-
-export function showAppConfirm(options = {}) {
-
-    return new Promise(resolve => {
-
-        const modal =
-            document.getElementById(
-                'app-modal'
-            );
-
-        const icon =
-            document.getElementById(
-                'app-modal-icon'
-            );
-
-        const title =
-            document.getElementById(
-                'app-modal-title'
-            );
-
-        const message =
-            document.getElementById(
-                'app-modal-message'
-            );
-
-        const cancel =
-            document.getElementById(
-                'app-modal-cancel'
-            );
-
-        const confirm =
-            document.getElementById(
-                'app-modal-confirm'
-            );
-
-
-        if (
-            !modal ||
-            !icon ||
-            !title ||
-            !message ||
-            !cancel ||
-            !confirm
-        ) {
-
-            resolve(false);
-
-            return;
-        }
-
-
-        if (APP_STATE.modalOpen) {
-
-            closeAppModal(false);
-
-        }
-
-
-        APP_STATE.modalOpen =
-            true;
-
-        APP_STATE.modalResolver =
-            resolve;
-
-
-        modal.className =
-            `app-modal-overlay app-modal-${options.type || 'info'}`;
-
-
-        modal.setAttribute(
-            'aria-hidden',
-            'false'
-        );
-
-
-        icon.textContent =
-            options.icon || '❔';
-
-
-        title.textContent =
-            options.title || 'تأیید عملیات';
-
-
-        message.textContent =
-            options.message || '';
-
-
-        confirm.textContent =
-            options.confirmText || 'تأیید';
-
-
-        cancel.textContent =
-            options.cancelText || 'انصراف';
-
-
-        modal.classList.add(
-            'is-visible'
-        );
-
-
-        document.body.classList.add(
-            'modal-open'
-        );
-
-
-        const focusTimer =
-            setTimeout(
-                () => {
-
-                    if (APP_STATE.modalOpen) {
-                        confirm.focus();
-                    }
-
-                },
-                50
-            );
-
-
-        modal._focusTimer =
-            focusTimer;
-
-    });
-
-}
-
-
-// ============================================================
-// Close Modal
-// ============================================================
-
-function closeAppModal(result = false) {
-
-    const modal =
-        document.getElementById(
-            'app-modal'
-        );
-
-
-    const resolver =
-        APP_STATE.modalResolver;
-
-
-    if (!APP_STATE.modalOpen) {
-        return;
-    }
-
-
-    APP_STATE.modalOpen =
-        false;
-
-    APP_STATE.modalResolver =
-        null;
-
-
-    if (modal) {
-
-        modal.classList.remove(
-            'is-visible'
-        );
-
-        modal.setAttribute(
-            'aria-hidden',
-            'true'
-        );
-
-        if (modal._focusTimer) {
-
-            clearTimeout(
-                modal._focusTimer
-            );
-
-            modal._focusTimer =
-                null;
-        }
-
-    }
-
-
-    document.body.classList.remove(
-        'modal-open'
-    );
-
-
-    if (typeof resolver === 'function') {
-        resolver(result);
-    }
-
-}
-
-
-// ============================================================
-// Modal Events
-// ============================================================
-
-function setupModalEvents() {
-
-    const modal =
-        document.getElementById(
-            'app-modal'
-        );
-
-    const cancel =
-        document.getElementById(
-            'app-modal-cancel'
-        );
-
-    const confirm =
-        document.getElementById(
-            'app-modal-confirm'
-        );
-
-
-    if (!modal) {
-        return;
-    }
-
-
-    if (cancel) {
-
-        cancel.addEventListener(
-            'click',
-            () => {
-
-                closeAppModal(false);
-
-            }
-        );
-
-    }
-
-
-    if (confirm) {
-
-        confirm.addEventListener(
-            'click',
-            () => {
-
-                closeAppModal(true);
-
-            }
-        );
-
-    }
-
-
-    modal.addEventListener(
-        'click',
-        event => {
-
-            if (
-                event.target === modal
-            ) {
-
-                closeAppModal(false);
-
-            }
-
-        }
-    );
-
-
-    document.addEventListener(
-        'keydown',
-        event => {
-
-            if (
-                event.key === 'Escape' &&
-                APP_STATE.modalOpen
-            ) {
-
-                event.preventDefault();
-
-                closeAppModal(false);
-
-            }
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// Toast
-// ============================================================
-
-export function showAppMessage(
-    message,
-    type = 'success'
-) {
-
-    const toast =
-        document.getElementById(
-            'app-toast'
-        );
-
-    const toastMessage =
-        document.getElementById(
-            'app-toast-message'
-        );
-
-    const toastIcon =
-        document.getElementById(
-            'app-toast-icon'
-        );
-
-
-    if (
-        !toast ||
-        !toastMessage ||
-        !toastIcon
-    ) {
-        return;
-    }
-
-
-    toast.className =
-        `app-toast app-toast-${type}`;
-
-
-    toastMessage.textContent =
-        message;
-
-
-    toastIcon.textContent =
-        type === 'danger'
-            ? '!'
-            : type === 'info'
-                ? 'i'
-                : '✓';
-
-
-    toast.classList.add(
-        'is-visible'
-    );
-
-
-    clearTimeout(
-        toast._timer
-    );
-
-
-    toast._timer =
-        setTimeout(
-            () => {
-
-                toast.classList.remove(
-                    'is-visible'
-                );
-
-            },
-            2800
-        );
-
-}
-
-
-// ============================================================
-// Navigation Events
-// ============================================================
+/* ============================================================
+   Navigation
+   ============================================================ */
 
 function setupNavigation() {
 
@@ -1867,7 +2037,10 @@ function setupNavigation() {
                         );
 
 
-                    if (action === 'sales') {
+                    if (
+                        action ===
+                        'sales'
+                    ) {
 
                         openSalesScreen();
 
@@ -1875,7 +2048,10 @@ function setupNavigation() {
                     }
 
 
-                    if (action === 'products') {
+                    if (
+                        action ===
+                        'products'
+                    ) {
 
                         openProductsScreen();
 
@@ -1884,8 +2060,10 @@ function setupNavigation() {
 
 
                     if (
-                        action === 'reports' ||
-                        action === 'settings'
+                        action ===
+                        'reports' ||
+                        action ===
+                        'settings'
                     ) {
 
                         showAppMessage(
@@ -1904,9 +2082,9 @@ function setupNavigation() {
 }
 
 
-// ============================================================
-// Database
-// ============================================================
+/* ============================================================
+   Database
+   ============================================================ */
 
 async function setupDatabase() {
 
@@ -1914,12 +2092,13 @@ async function setupDatabase() {
 
         await initializeDatabase();
 
+
         APP_STATE.databaseReady =
             true;
 
 
         showDatabaseStatus(
-            '✅ پایگاه داده با موفقیت آماده شد',
+            '✓ پایگاه داده با موفقیت آماده شد',
             true
         );
 
@@ -1937,7 +2116,7 @@ async function setupDatabase() {
 
 
         console.error(
-            'SupermarketPOS: Database error',
+            'Database error:',
             error
         );
 
@@ -1946,13 +2125,15 @@ async function setupDatabase() {
 }
 
 
-// ============================================================
-// Initialize
-// ============================================================
+/* ============================================================
+   Initialize
+   ============================================================ */
 
 async function initializeApp() {
 
-    if (APP_STATE.initialized) {
+    if (
+        APP_STATE.initialized
+    ) {
         return;
     }
 
@@ -1970,8 +2151,6 @@ async function initializeApp() {
 
     setupHeaderStatus();
 
-    setupModalEvents();
-
     setupNavigation();
 
 
@@ -1984,12 +2163,13 @@ async function initializeApp() {
 }
 
 
-// ============================================================
-// Bootstrap
-// ============================================================
+/* ============================================================
+   Bootstrap
+   ============================================================ */
 
 if (
-    document.readyState === 'loading'
+    document.readyState ===
+    'loading'
 ) {
 
     document.addEventListener(
