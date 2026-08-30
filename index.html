@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#0f172a"
+        content="#111827"
     >
 
     <meta
@@ -74,6 +74,7 @@
 
                     <span
                         class="status-icon"
+                        aria-hidden="true"
                     >
                         ✓
                     </span>
@@ -100,6 +101,7 @@
 
                     <span
                         class="status-icon"
+                        aria-hidden="true"
                     >
                         ●
                     </span>
@@ -107,7 +109,7 @@
                     <div class="status-info">
 
                         <span class="status-label">
-                            پایگاه داده
+                            اتصال
                         </span>
 
                         <strong>
@@ -130,8 +132,6 @@
     ====================================================== -->
 
     <main>
-
-        <!-- HOME -->
 
         <section class="home-screen">
 
@@ -161,10 +161,12 @@
 
             <div class="menu-grid">
 
+
                 <button
                     type="button"
                     class="menu-card"
                     data-action="sales"
+                    aria-label="ورود به بخش فروش و صندوق"
                 >
 
                     <div
@@ -200,6 +202,7 @@
                     type="button"
                     class="menu-card"
                     data-action="products"
+                    aria-label="ورود به بخش کالاها"
                 >
 
                     <div
@@ -235,6 +238,7 @@
                     type="button"
                     class="menu-card"
                     data-action="reports"
+                    aria-label="ورود به گزارش‌ها"
                 >
 
                     <div
@@ -270,6 +274,7 @@
                     type="button"
                     class="menu-card"
                     data-action="settings"
+                    aria-label="ورود به تنظیمات"
                 >
 
                     <div
@@ -308,79 +313,10 @@
 
 
     <!-- =====================================================
-         GLOBAL MODAL
+         TOAST
          
-         فقط یک Modal در کل برنامه وجود دارد.
-         هیچ صفحه‌ای Modal اختصاصی خودش ایجاد نمی‌کند.
-    ====================================================== -->
-
-    <div
-        id="app-modal"
-        class="app-modal-root"
-        aria-hidden="true"
-    >
-
-        <div
-            class="app-modal-backdrop"
-            data-modal-close="true"
-        ></div>
-
-        <div
-            class="app-modal-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="app-modal-title"
-        >
-
-            <div
-                id="app-modal-icon"
-                class="app-modal-icon"
-            >
-                ❔
-            </div>
-
-            <div class="app-modal-content">
-
-                <h2 id="app-modal-title">
-                    تأیید عملیات
-                </h2>
-
-                <p id="app-modal-message">
-                    آیا از انجام این عملیات مطمئن هستید؟
-                </p>
-
-            </div>
-
-            <div
-                id="app-modal-actions"
-                class="app-modal-actions"
-            >
-
-                <button
-                    type="button"
-                    id="app-modal-cancel"
-                    class="app-modal-button app-modal-button-secondary"
-                >
-                    انصراف
-                </button>
-
-                <button
-                    type="button"
-                    id="app-modal-confirm"
-                    class="app-modal-button app-modal-button-primary"
-                >
-                    تأیید
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         GLOBAL TOAST
+         هیچ Modal یا کادر تأیید در HTML اولیه وجود ندارد.
+         Modal فقط در صورت نیاز توسط app.js ساخته می‌شود.
     ====================================================== -->
 
     <div
@@ -388,21 +324,7 @@
         class="app-toast"
         aria-live="polite"
         aria-atomic="true"
-    >
-
-        <span
-            id="app-toast-icon"
-            class="app-toast-icon"
-        >
-            ✓
-        </span>
-
-        <span
-            id="app-toast-message"
-            class="app-toast-message"
-        ></span>
-
-    </div>
+    ></div>
 
 </div>
 
