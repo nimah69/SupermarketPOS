@@ -33,19 +33,28 @@
 
 <div id="app">
 
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
     <header class="app-header">
 
         <div class="header-content">
 
             <div class="brand">
 
-                <div class="brand-icon" aria-hidden="true">
+                <div
+                    class="brand-icon"
+                    aria-hidden="true"
+                >
                     🛒
                 </div>
 
                 <div class="brand-text">
 
-                    <h1>SupermarketPOS</h1>
+                    <h1>
+                        SupermarketPOS
+                    </h1>
 
                     <span>
                         سیستم مدیریت فروشگاه
@@ -54,6 +63,7 @@
                 </div>
 
             </div>
+
 
             <div class="header-status">
 
@@ -64,7 +74,6 @@
 
                     <span
                         class="status-icon"
-                        aria-hidden="true"
                     >
                         ✓
                     </span>
@@ -83,6 +92,7 @@
 
                 </div>
 
+
                 <div
                     class="status-badge status-online"
                     aria-label="وضعیت اتصال"
@@ -90,7 +100,6 @@
 
                     <span
                         class="status-icon"
-                        aria-hidden="true"
                     >
                         ●
                     </span>
@@ -98,7 +107,7 @@
                     <div class="status-info">
 
                         <span class="status-label">
-                            اتصال
+                            پایگاه داده
                         </span>
 
                         <strong>
@@ -116,13 +125,22 @@
     </header>
 
 
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
     <main>
+
+        <!-- HOME -->
 
         <section class="home-screen">
 
             <div class="welcome-card">
 
-                <div class="welcome-icon" aria-hidden="true">
+                <div
+                    class="welcome-icon"
+                    aria-hidden="true"
+                >
                     👋
                 </div>
 
@@ -149,7 +167,10 @@
                     data-action="sales"
                 >
 
-                    <div class="menu-icon sales-icon">
+                    <div
+                        class="menu-icon sales-icon"
+                        aria-hidden="true"
+                    >
                         💳
                     </div>
 
@@ -165,7 +186,10 @@
 
                     </div>
 
-                    <div class="menu-arrow">
+                    <div
+                        class="menu-arrow"
+                        aria-hidden="true"
+                    >
                         ←
                     </div>
 
@@ -178,7 +202,10 @@
                     data-action="products"
                 >
 
-                    <div class="menu-icon products-icon">
+                    <div
+                        class="menu-icon products-icon"
+                        aria-hidden="true"
+                    >
                         📦
                     </div>
 
@@ -194,7 +221,10 @@
 
                     </div>
 
-                    <div class="menu-arrow">
+                    <div
+                        class="menu-arrow"
+                        aria-hidden="true"
+                    >
                         ←
                     </div>
 
@@ -207,7 +237,10 @@
                     data-action="reports"
                 >
 
-                    <div class="menu-icon reports-icon">
+                    <div
+                        class="menu-icon reports-icon"
+                        aria-hidden="true"
+                    >
                         📊
                     </div>
 
@@ -223,7 +256,10 @@
 
                     </div>
 
-                    <div class="menu-arrow">
+                    <div
+                        class="menu-arrow"
+                        aria-hidden="true"
+                    >
                         ←
                     </div>
 
@@ -236,7 +272,10 @@
                     data-action="settings"
                 >
 
-                    <div class="menu-icon settings-icon">
+                    <div
+                        class="menu-icon settings-icon"
+                        aria-hidden="true"
+                    >
                         ⚙️
                     </div>
 
@@ -252,7 +291,10 @@
 
                     </div>
 
-                    <div class="menu-arrow">
+                    <div
+                        class="menu-arrow"
+                        aria-hidden="true"
+                    >
                         ←
                     </div>
 
@@ -267,27 +309,32 @@
 
     <!-- =====================================================
          GLOBAL MODAL
-         تنها Modal برنامه
+         
+         فقط یک Modal در کل برنامه وجود دارد.
+         هیچ صفحه‌ای Modal اختصاصی خودش ایجاد نمی‌کند.
     ====================================================== -->
 
     <div
         id="app-modal"
-        class="app-modal-overlay"
+        class="app-modal-root"
         aria-hidden="true"
     >
+
+        <div
+            class="app-modal-backdrop"
+            data-modal-close="true"
+        ></div>
 
         <div
             class="app-modal-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="app-modal-title"
-            aria-describedby="app-modal-message"
         >
 
             <div
                 id="app-modal-icon"
                 class="app-modal-icon"
-                aria-hidden="true"
             >
                 ❔
             </div>
