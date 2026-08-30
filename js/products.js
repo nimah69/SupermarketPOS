@@ -1,7 +1,7 @@
 // js/products.js
 // SupermarketPOS
 // Products Management - Stage 6
-// Complete UI + CRUD + Search
+// Compatible with current app.js
 
 'use strict';
 
@@ -13,11 +13,14 @@ import {
 } from './database.js';
 
 
-const PRODUCTS_STATE = {
+/* ============================================================
+   State
+============================================================ */
+
+const STATE = {
     products: [],
-    editingId: null,
     searchText: '',
-    bound: false
+    editingId: null
 };
 
 
@@ -31,46 +34,65 @@ function $(selector, root = document) {
 
 
 function escapeHTML(value) {
+
     return String(value ?? '')
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
+
 }
 
 
-function formatNumber(value) {
-    return (Number(value) || 0).toLocaleString('fa-IR');
+function number(value) {
+
+    return (Number(value) || 0)
+        .toLocaleString('fa-IR');
+
 }
 
 
-function formatPrice(value) {
-    return (Number(value) || 0).toLocaleString('fa-IR');
+function price(value) {
+
+    return (Number(value) || 0)
+        .toLocaleString('fa-IR');
+
 }
 
 
 /* ============================================================
-   Main Initialization
+   MAIN ENTRY
 ============================================================ */
 
-export async function initializeProductsScreen(screen) {
+export async function initializeProductsScreen(
+    screen,
+    options = {}
+) {
 
     if (!screen) {
+        console.error(
+            'SupermarketPOS: products screen not found.'
+        );
         return;
     }
 
 
+    console.log(
+        'SupermarketPOS: initializing products screen...'
+    );
+
+
+    /*
+       IMPORTANT:
+       app.js creates an empty section.
+       We build the entire UI here.
+    */
+
     buildProductsUI(screen);
 
 
-    if (!PRODUCTS_STATE.bound) {
-
-        bindProductsEvents(screen);
-
-        PRODUCTS_STATE.bound = true;
-
-    }
+    bindEvents(screen);
 
 
     await loadProducts(screen);
@@ -79,279 +101,315 @@ export async function initializeProductsScreen(screen) {
 
 
 /* ============================================================
-   Build Complete Products UI
+   BUILD UI
 ============================================================ */
 
 function buildProductsUI(screen) {
 
     screen.innerHTML = `
 
-        <div class="products-header">
+        <div class="products-page">
 
-            <div class="products-header-main">
 
-                <div class="products-title-icon">
-                    📦
+            <!-- HEADER -->
+
+            <div class="products-header">
+
+                <div class="products-header-main">
+
+                    <div class="products-title-icon">
+                        📦
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            مدیریت کالاها
+                        </h2>
+
+                        <p>
+                            مدیریت محصولات و موجودی فروشگاه
+                        </p>
+
+                    </div>
+
                 </div>
 
-                <div>
 
-                    <h2>
-                        مدیریت کالاها
-                    </h2>
+                <div class="products-header-search">
+
+                    <div class="products-search-wrapper">
+
+                        <span class="products-search-icon">
+                            🔎
+                        </span>
+
+                        <input
+                            type="search"
+                            id="products-search"
+                            class="products-search-input"
+                            placeholder="جست‌وجوی نام، بارکد یا دسته‌بندی..."
+                            autocomplete="off"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="products-actions">
+
+                <button
+                    type="button"
+                    class="add-product-button"
+                    id="add-product-button"
+                >
+                    ＋ افزودن کالا
+                </button>
+
+            </div>
+
+
+            <!-- BACKUP -->
+
+            <div class="backup-card">
+
+                <div class="backup-card-icon">
+                    💾
+                </div>
+
+                <div class="backup-card-content">
+
+                    <h3>
+                        پشتیبان اطلاعات
+                    </h3>
 
                     <p>
-                        مدیریت محصولات و موجودی فروشگاه
+                        ذخیره یا بازیابی کالاهای این دستگاه
+                    </p>
+
+                </div>
+
+                <div class="backup-actions">
+
+                    <button
+                        type="button"
+                        class="backup-button"
+                        id="backup-button"
+                    >
+                        💾 پشتیبان‌گیری
+                    </button>
+
+                    <button
+                        type="button"
+                        class="restore-button"
+                        id="restore-button"
+                    >
+                        📂 بازیابی
+                    </button>
+
+                    <input
+                        type="file"
+                        id="restore-file-input"
+                        accept=".json,application/json"
+                        hidden
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- FORM -->
+
+            <div
+                id="product-form-container"
+                class="product-form-container"
+                style="display:none;"
+            >
+
+                <div class="product-form">
+
+                    <div class="product-form-header">
+
+                        <div>
+
+                            <h3>
+                                افزودن کالای جدید
+                            </h3>
+
+                            <p>
+                                اطلاعات کالا را وارد کنید.
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="close-product-form"
+                            id="close-product-form"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="product-barcode">
+                            بارکد
+                        </label>
+
+                        <input
+                            type="text"
+                            id="product-barcode"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            placeholder="بارکد کالا"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="product-name">
+                            نام کالا
+                        </label>
+
+                        <input
+                            type="text"
+                            id="product-name"
+                            autocomplete="off"
+                            placeholder="مثلاً نوشابه"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="product-category">
+                            دسته‌بندی
+                        </label>
+
+                        <input
+                            type="text"
+                            id="product-category"
+                            autocomplete="off"
+                            placeholder="مثلاً نوشیدنی"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="product-price">
+                            قیمت فروش
+                        </label>
+
+                        <input
+                            type="number"
+                            id="product-price"
+                            inputmode="numeric"
+                            min="0"
+                            step="1"
+                            placeholder="قیمت به تومان"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="product-stock">
+                            موجودی
+                        </label>
+
+                        <input
+                            type="number"
+                            id="product-stock"
+                            inputmode="numeric"
+                            min="0"
+                            step="1"
+                            placeholder="موجودی"
+                        >
+
+                    </div>
+
+
+                    <div class="product-form-actions">
+
+                        <button
+                            type="button"
+                            class="cancel-product-button"
+                            id="cancel-product-button"
+                        >
+                            انصراف
+                        </button>
+
+                        <button
+                            type="button"
+                            class="save-product-button"
+                            id="save-product-button"
+                        >
+                            ذخیره کالا
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="product-form-message"
+                        class="product-form-message"
+                        aria-live="polite"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PRODUCTS -->
+
+            <div
+                id="products-list"
+                class="products-list"
+            >
+
+                <div class="products-loading">
+
+                    <div class="placeholder-icon">
+                        ⏳
+                    </div>
+
+                    <p>
+                        در حال خواندن کالاها...
                     </p>
 
                 </div>
 
             </div>
 
-        </div>
 
-
-        <div class="products-actions">
+            <!-- BACK -->
 
             <button
                 type="button"
-                class="add-product-button"
-                id="add-product-button"
+                class="products-back-button"
+                id="products-back-button"
             >
-                ＋ افزودن کالا
+                ← بازگشت به صفحه اصلی
             </button>
 
-        </div>
-
-
-        <div class="backup-card">
-
-            <div class="backup-card-icon">
-                💾
-            </div>
-
-            <div class="backup-card-content">
-
-                <h3>
-                    پشتیبان اطلاعات
-                </h3>
-
-                <p>
-                    ذخیره یا بازیابی اطلاعات کالاها
-                </p>
-
-            </div>
-
-            <div class="backup-actions">
-
-                <button
-                    type="button"
-                    class="backup-button"
-                    id="backup-button"
-                >
-                    💾 پشتیبان‌گیری
-                </button>
-
-                <button
-                    type="button"
-                    class="restore-button"
-                    id="restore-button"
-                >
-                    📂 بازیابی
-                </button>
-
-                <input
-                    type="file"
-                    id="restore-file-input"
-                    accept=".json,application/json"
-                    hidden
-                >
-
-            </div>
 
         </div>
-
-
-        <div
-            id="product-form-container"
-            class="product-form-container"
-            style="display:none;"
-        >
-
-            <div class="product-form">
-
-                <div class="product-form-header">
-
-                    <div>
-
-                        <h3>
-                            افزودن کالای جدید
-                        </h3>
-
-                        <p>
-                            اطلاعات کالا را وارد کنید.
-                        </p>
-
-                    </div>
-
-                    <button
-                        type="button"
-                        class="close-product-form"
-                        id="close-product-form"
-                    >
-                        ×
-                    </button>
-
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="product-barcode">
-                        بارکد
-                    </label>
-
-                    <input
-                        type="text"
-                        id="product-barcode"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="بارکد کالا"
-                    >
-
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="product-name">
-                        نام کالا
-                    </label>
-
-                    <input
-                        type="text"
-                        id="product-name"
-                        autocomplete="off"
-                        placeholder="مثلاً نوشابه"
-                    >
-
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="product-category">
-                        دسته‌بندی
-                    </label>
-
-                    <input
-                        type="text"
-                        id="product-category"
-                        autocomplete="off"
-                        placeholder="مثلاً نوشیدنی"
-                    >
-
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="product-price">
-                        قیمت فروش
-                    </label>
-
-                    <input
-                        type="number"
-                        id="product-price"
-                        inputmode="numeric"
-                        min="0"
-                        step="1"
-                        placeholder="قیمت به تومان"
-                    >
-
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="product-stock">
-                        موجودی
-                    </label>
-
-                    <input
-                        type="number"
-                        id="product-stock"
-                        inputmode="numeric"
-                        min="0"
-                        step="1"
-                        placeholder="موجودی"
-                    >
-
-                </div>
-
-
-                <div class="product-form-actions">
-
-                    <button
-                        type="button"
-                        class="cancel-product-button"
-                        id="cancel-product-button"
-                    >
-                        انصراف
-                    </button>
-
-                    <button
-                        type="button"
-                        class="save-product-button"
-                        id="save-product-button"
-                    >
-                        ذخیره کالا
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="product-form-message"
-                    class="product-form-message"
-                    aria-live="polite"
-                ></div>
-
-            </div>
-
-        </div>
-
-
-        <div class="products-search-wrapper">
-
-            <span class="products-search-icon">
-                🔎
-            </span>
-
-            <input
-                type="search"
-                id="products-search"
-                class="products-search-input"
-                placeholder="جست‌وجوی نام، بارکد یا دسته‌بندی..."
-                autocomplete="off"
-            >
-
-        </div>
-
-
-        <div
-            id="products-list"
-            class="products-list"
-        ></div>
-
-
-        <button
-            type="button"
-            class="products-back-button"
-            id="products-back-button"
-        >
-            ← بازگشت به صفحه اصلی
-        </button>
 
     `;
 
@@ -359,29 +417,36 @@ function buildProductsUI(screen) {
 
 
 /* ============================================================
-   Events
+   EVENTS
 ============================================================ */
 
-function bindProductsEvents(screen) {
+function bindEvents(screen) {
 
     const addButton =
         $('#add-product-button', screen);
 
+
     const closeButton =
         $('#close-product-form', screen);
+
 
     const cancelButton =
         $('#cancel-product-button', screen);
 
+
     const saveButton =
         $('#save-product-button', screen);
+
 
     const search =
         $('#products-search', screen);
 
+
     const backButton =
         $('#products-back-button', screen);
 
+
+    /* ADD */
 
     if (addButton) {
 
@@ -389,7 +454,7 @@ function bindProductsEvents(screen) {
             'click',
             () => {
 
-                resetProductForm(screen);
+                resetForm(screen);
 
                 const form =
                     $('#product-form-container', screen);
@@ -397,6 +462,7 @@ function bindProductsEvents(screen) {
                 if (form) {
                     form.style.display = 'block';
                 }
+
 
                 const barcode =
                     $('#product-barcode', screen);
@@ -411,35 +477,55 @@ function bindProductsEvents(screen) {
     }
 
 
+    /* CLOSE */
+
     if (closeButton) {
 
         closeButton.addEventListener(
             'click',
-            () => closeProductForm(screen)
+            () => {
+
+                closeForm(screen);
+
+            }
         );
 
     }
 
+
+    /* CANCEL */
 
     if (cancelButton) {
 
         cancelButton.addEventListener(
             'click',
-            () => closeProductForm(screen)
+            () => {
+
+                closeForm(screen);
+
+            }
         );
 
     }
 
+
+    /* SAVE */
 
     if (saveButton) {
 
         saveButton.addEventListener(
             'click',
-            () => saveProductFromForm(screen)
+            () => {
+
+                saveProductFromForm(screen);
+
+            }
         );
 
     }
 
+
+    /* SEARCH */
 
     if (search) {
 
@@ -447,7 +533,7 @@ function bindProductsEvents(screen) {
             'input',
             () => {
 
-                PRODUCTS_STATE.searchText =
+                STATE.searchText =
                     search.value.trim();
 
                 renderProducts(screen);
@@ -458,24 +544,29 @@ function bindProductsEvents(screen) {
     }
 
 
+    /* BACK */
+
     if (backButton) {
 
         backButton.addEventListener(
             'click',
             () => {
 
-                const products =
-                    $('#products-screen');
+                screen.style.display =
+                    'none';
 
-                if (products) {
-                    products.style.display = 'none';
-                }
 
                 const home =
-                    document.querySelector('.home-screen');
+                    document.querySelector(
+                        '.home-screen'
+                    );
+
 
                 if (home) {
-                    home.style.display = '';
+
+                    home.style.display =
+                        '';
+
                 }
 
             }
@@ -483,6 +574,8 @@ function bindProductsEvents(screen) {
 
     }
 
+
+    /* CARD ACTIONS */
 
     screen.addEventListener(
         'click',
@@ -492,6 +585,7 @@ function bindProductsEvents(screen) {
                 event.target.closest(
                     '[data-product-action]'
                 );
+
 
             if (!button) {
                 return;
@@ -503,7 +597,9 @@ function bindProductsEvents(screen) {
 
 
             const id =
-                Number(button.dataset.productId);
+                Number(
+                    button.dataset.productId
+                );
 
 
             if (!Number.isFinite(id)) {
@@ -513,7 +609,7 @@ function bindProductsEvents(screen) {
 
             if (action === 'edit') {
 
-                openEditProduct(
+                editProduct(
                     screen,
                     id
                 );
@@ -523,7 +619,7 @@ function bindProductsEvents(screen) {
 
             if (action === 'delete') {
 
-                handleDeleteProduct(
+                removeProduct(
                     screen,
                     id
                 );
@@ -542,7 +638,7 @@ function bindProductsEvents(screen) {
 
 
 /* ============================================================
-   Load Products
+   LOAD PRODUCTS
 ============================================================ */
 
 async function loadProducts(screen) {
@@ -552,7 +648,13 @@ async function loadProducts(screen) {
 
 
     if (!list) {
+
+        console.error(
+            'SupermarketPOS: #products-list not found.'
+        );
+
         return;
+
     }
 
 
@@ -575,22 +677,29 @@ async function loadProducts(screen) {
 
     try {
 
-        const products =
+        const result =
             await getAllProducts();
 
 
-        PRODUCTS_STATE.products =
-            Array.isArray(products)
-                ? products
+        STATE.products =
+            Array.isArray(result)
+                ? result
                 : [];
+
+
+        console.log(
+            'SupermarketPOS: products loaded:',
+            STATE.products.length
+        );
 
 
         renderProducts(screen);
 
+
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: load products error',
+            'SupermarketPOS: getAllProducts failed:',
             error
         );
 
@@ -621,7 +730,7 @@ async function loadProducts(screen) {
 
 
 /* ============================================================
-   Render
+   RENDER
 ============================================================ */
 
 function renderProducts(screen) {
@@ -635,37 +744,46 @@ function renderProducts(screen) {
     }
 
 
-    const search =
-        PRODUCTS_STATE.searchText
+    const query =
+        STATE.searchText
             .toLocaleLowerCase('fa-IR');
 
 
     let products =
-        PRODUCTS_STATE.products;
+        STATE.products;
 
 
-    if (search) {
+    if (query) {
 
         products =
             products.filter(
                 product => {
 
                     const name =
-                        String(product.name || '')
-                            .toLocaleLowerCase('fa-IR');
+                        String(
+                            product.name || ''
+                        )
+                        .toLocaleLowerCase('fa-IR');
+
 
                     const barcode =
-                        String(product.barcode || '')
-                            .toLocaleLowerCase('fa-IR');
+                        String(
+                            product.barcode || ''
+                        )
+                        .toLocaleLowerCase('fa-IR');
+
 
                     const category =
-                        String(product.category || '')
-                            .toLocaleLowerCase('fa-IR');
+                        String(
+                            product.category || ''
+                        )
+                        .toLocaleLowerCase('fa-IR');
+
 
                     return (
-                        name.includes(search) ||
-                        barcode.includes(search) ||
-                        category.includes(search)
+                        name.includes(query) ||
+                        barcode.includes(query) ||
+                        category.includes(query)
                     );
 
                 }
@@ -694,13 +812,14 @@ function renderProducts(screen) {
             </strong>
 
             <span>
-                ${formatNumber(products.length)} کالا
+                ${number(products.length)}
+                کالا
             </span>
 
         </div>
 
         ${
-            search
+            query
                 ? `
                     <span class="products-search-result">
                         نتیجه جست‌وجو
@@ -729,7 +848,7 @@ function renderProducts(screen) {
 
             <div class="placeholder-icon">
                 ${
-                    search
+                    query
                         ? '🔎'
                         : '📦'
                 }
@@ -737,7 +856,7 @@ function renderProducts(screen) {
 
             <h3>
                 ${
-                    search
+                    query
                         ? 'کالایی پیدا نشد'
                         : 'هنوز کالایی ثبت نشده است'
                 }
@@ -745,7 +864,7 @@ function renderProducts(screen) {
 
             <p>
                 ${
-                    search
+                    query
                         ? 'عبارت جست‌وجو را تغییر دهید.'
                         : 'برای شروع اولین کالای فروشگاه را اضافه کنید.'
                 }
@@ -775,7 +894,7 @@ function renderProducts(screen) {
 
 
 /* ============================================================
-   Product Card
+   PRODUCT CARD
 ============================================================ */
 
 function createProductCard(product) {
@@ -790,10 +909,6 @@ function createProductCard(product) {
 
     const id =
         Number(product.id);
-
-
-    const price =
-        Number(product.salePrice) || 0;
 
 
     const stock =
@@ -835,21 +950,25 @@ function createProductCard(product) {
                 📦
             </div>
 
+
             <div class="product-card-info">
 
                 <h3>
                     ${escapeHTML(
-                        product.name || 'بدون نام'
+                        product.name ||
+                        'بدون نام'
                     )}
                 </h3>
 
                 <span>
                     ${escapeHTML(
-                        product.category || 'بدون دسته‌بندی'
+                        product.category ||
+                        'بدون دسته‌بندی'
                     )}
                 </span>
 
             </div>
+
 
             <div class="product-stock-badge ${stockClass}">
                 ${stockText}
@@ -882,7 +1001,9 @@ function createProductCard(product) {
                 </span>
 
                 <strong>
-                    ${formatPrice(price)}
+                    ${price(
+                        product.salePrice
+                    )}
                     تومان
                 </strong>
 
@@ -896,7 +1017,7 @@ function createProductCard(product) {
                 </span>
 
                 <strong>
-                    ${formatNumber(stock)}
+                    ${number(stock)}
                 </strong>
 
             </div>
@@ -914,6 +1035,7 @@ function createProductCard(product) {
             >
                 ✏️ ویرایش
             </button>
+
 
             <button
                 type="button"
@@ -935,25 +1057,30 @@ function createProductCard(product) {
 
 
 /* ============================================================
-   Save
+   SAVE
 ============================================================ */
 
-export async function saveProductFromForm(screen) {
+async function saveProductFromForm(screen) {
 
     const barcodeInput =
         $('#product-barcode', screen);
 
+
     const nameInput =
         $('#product-name', screen);
+
 
     const categoryInput =
         $('#product-category', screen);
 
+
     const priceInput =
         $('#product-price', screen);
 
+
     const stockInput =
         $('#product-stock', screen);
+
 
     const saveButton =
         $('#save-product-button', screen);
@@ -965,32 +1092,43 @@ export async function saveProductFromForm(screen) {
         !priceInput ||
         !stockInput
     ) {
+
+        showToast(
+            'فرم کالا کامل نیست.',
+            'danger'
+        );
+
         return;
+
     }
 
 
-    clearProductMessage(screen);
+    clearMessage(screen);
 
 
     const barcode =
         barcodeInput.value.trim();
 
+
     const name =
         nameInput.value.trim();
+
 
     const category =
         categoryInput
             ? categoryInput.value.trim()
             : '';
 
+
     const priceText =
         priceInput.value.trim();
+
 
     const stockText =
         stockInput.value.trim();
 
 
-    const price =
+    const salePrice =
         Number(priceText);
 
 
@@ -1002,7 +1140,7 @@ export async function saveProductFromForm(screen) {
 
     if (!barcode) {
 
-        showProductMessage(
+        showMessage(
             screen,
             '⚠️ بارکد را وارد کنید.',
             false
@@ -1017,7 +1155,7 @@ export async function saveProductFromForm(screen) {
 
     if (!name) {
 
-        showProductMessage(
+        showMessage(
             screen,
             '⚠️ نام کالا را وارد کنید.',
             false
@@ -1032,11 +1170,11 @@ export async function saveProductFromForm(screen) {
 
     if (
         priceText === '' ||
-        !Number.isFinite(price) ||
-        price < 0
+        !Number.isFinite(salePrice) ||
+        salePrice < 0
     ) {
 
-        showProductMessage(
+        showMessage(
             screen,
             '⚠️ قیمت فروش را صحیح وارد کنید.',
             false
@@ -1054,7 +1192,7 @@ export async function saveProductFromForm(screen) {
         stock < 0
     ) {
 
-        showProductMessage(
+        showMessage(
             screen,
             '⚠️ موجودی را صحیح وارد کنید.',
             false
@@ -1069,10 +1207,11 @@ export async function saveProductFromForm(screen) {
 
     if (saveButton) {
 
-        saveButton.disabled = true;
+        saveButton.disabled =
+            true;
 
         saveButton.textContent =
-            PRODUCTS_STATE.editingId !== null
+            STATE.editingId !== null
                 ? 'در حال ذخیره...'
                 : 'در حال افزودن...';
 
@@ -1086,19 +1225,21 @@ export async function saveProductFromForm(screen) {
 
 
         if (
-            PRODUCTS_STATE.editingId !== null
+            STATE.editingId !== null
         ) {
 
             const existing =
-                PRODUCTS_STATE.products.find(
+                STATE.products.find(
                     product =>
                         Number(product.id) ===
-                        PRODUCTS_STATE.editingId
+                        STATE.editingId
                 );
 
 
             if (!existing) {
-                throw new Error('Product not found');
+                throw new Error(
+                    'Product not found'
+                );
             }
 
 
@@ -1107,11 +1248,12 @@ export async function saveProductFromForm(screen) {
                 ...existing,
 
                 barcode,
+
                 name,
+
                 category,
 
-                salePrice:
-                    price,
+                salePrice,
 
                 stock,
 
@@ -1121,9 +1263,9 @@ export async function saveProductFromForm(screen) {
             });
 
 
-            showProductMessage(
+            showMessage(
                 screen,
-                '✅ تغییرات کالا با موفقیت ذخیره شد.',
+                '✅ تغییرات کالا ذخیره شد.',
                 true
             );
 
@@ -1132,11 +1274,12 @@ export async function saveProductFromForm(screen) {
             await addProduct({
 
                 barcode,
+
                 name,
+
                 category,
 
-                salePrice:
-                    price,
+                salePrice,
 
                 stock,
 
@@ -1149,35 +1292,27 @@ export async function saveProductFromForm(screen) {
             });
 
 
-            showProductMessage(
+            showMessage(
                 screen,
-                '✅ کالا با موفقیت ذخیره شد.',
+                '✅ کالا با موفقیت اضافه شد.',
                 true
             );
 
         }
 
 
-        PRODUCTS_STATE.editingId =
+        STATE.editingId =
             null;
 
 
-        resetProductForm(screen);
-
-
-        const form =
-            $('#product-form-container', screen);
-
-        if (form) {
-            form.style.display = 'none';
-        }
+        closeForm(screen);
 
 
         await loadProducts(screen);
 
 
-        showProductsToast(
-            'اطلاعات کالا با موفقیت ذخیره شد.',
+        showToast(
+            'اطلاعات کالا ذخیره شد.',
             'success'
         );
 
@@ -1185,17 +1320,18 @@ export async function saveProductFromForm(screen) {
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: save product error',
+            'SupermarketPOS: save product error:',
             error
         );
 
 
         if (
             error &&
-            error.name === 'ConstraintError'
+            error.name ===
+                'ConstraintError'
         ) {
 
-            showProductMessage(
+            showMessage(
                 screen,
                 '⚠️ این بارکد قبلاً ثبت شده است.',
                 false
@@ -1203,7 +1339,7 @@ export async function saveProductFromForm(screen) {
 
         } else {
 
-            showProductMessage(
+            showMessage(
                 screen,
                 '❌ ذخیره کالا انجام نشد.',
                 false
@@ -1215,7 +1351,8 @@ export async function saveProductFromForm(screen) {
 
         if (saveButton) {
 
-            saveButton.disabled = false;
+            saveButton.disabled =
+                false;
 
             saveButton.textContent =
                 'ذخیره کالا';
@@ -1228,24 +1365,31 @@ export async function saveProductFromForm(screen) {
 
 
 /* ============================================================
-   Edit
+   EDIT
 ============================================================ */
 
-function openEditProduct(screen, id) {
+function editProduct(screen, id) {
 
     const product =
-        PRODUCTS_STATE.products.find(
+        STATE.products.find(
             item =>
                 Number(item.id) === id
         );
 
 
     if (!product) {
+
+        showToast(
+            'کالا پیدا نشد.',
+            'danger'
+        );
+
         return;
+
     }
 
 
-    PRODUCTS_STATE.editingId =
+    STATE.editingId =
         id;
 
 
@@ -1258,11 +1402,36 @@ function openEditProduct(screen, id) {
     }
 
 
+    const barcode =
+        $('#product-barcode', screen);
+
+
+    const name =
+        $('#product-name', screen);
+
+
+    const category =
+        $('#product-category', screen);
+
+
+    const priceInput =
+        $('#product-price', screen);
+
+
+    const stock =
+        $('#product-stock', screen);
+
+
     const title =
         form.querySelector('h3');
 
+
     const description =
         form.querySelector('p');
+
+
+    const saveButton =
+        $('#save-product-button', screen);
 
 
     if (title) {
@@ -1277,29 +1446,10 @@ function openEditProduct(screen, id) {
     }
 
 
-    const saveButton =
-        $('#save-product-button', screen);
-
     if (saveButton) {
         saveButton.textContent =
             'ذخیره تغییرات';
     }
-
-
-    const barcode =
-        $('#product-barcode', screen);
-
-    const name =
-        $('#product-name', screen);
-
-    const category =
-        $('#product-category', screen);
-
-    const price =
-        $('#product-price', screen);
-
-    const stock =
-        $('#product-stock', screen);
 
 
     if (barcode) {
@@ -1325,8 +1475,8 @@ function openEditProduct(screen, id) {
     }
 
 
-    if (price) {
-        price.value =
+    if (priceInput) {
+        priceInput.value =
             Number(product.salePrice) || 0;
     }
 
@@ -1337,7 +1487,7 @@ function openEditProduct(screen, id) {
     }
 
 
-    clearProductMessage(screen);
+    clearMessage(screen);
 
 
     form.style.display =
@@ -1352,13 +1502,13 @@ function openEditProduct(screen, id) {
 
 
 /* ============================================================
-   Delete
+   DELETE
 ============================================================ */
 
-async function handleDeleteProduct(screen, id) {
+async function removeProduct(screen, id) {
 
     const product =
-        PRODUCTS_STATE.products.find(
+        STATE.products.find(
             item =>
                 Number(item.id) === id
         );
@@ -1385,22 +1535,10 @@ async function handleDeleteProduct(screen, id) {
         await deleteProduct(id);
 
 
-        if (
-            PRODUCTS_STATE.editingId === id
-        ) {
-
-            PRODUCTS_STATE.editingId =
-                null;
-
-            resetProductForm(screen);
-
-        }
-
-
         await loadProducts(screen);
 
 
-        showProductsToast(
+        showToast(
             'کالا با موفقیت حذف شد.',
             'success'
         );
@@ -1409,12 +1547,12 @@ async function handleDeleteProduct(screen, id) {
     } catch (error) {
 
         console.error(
-            'SupermarketPOS: delete product error',
+            'SupermarketPOS: delete error:',
             error
         );
 
 
-        showProductsToast(
+        showToast(
             'حذف کالا انجام نشد.',
             'danger'
         );
@@ -1425,32 +1563,50 @@ async function handleDeleteProduct(screen, id) {
 
 
 /* ============================================================
-   Reset Form
+   RESET
 ============================================================ */
 
-function resetProductForm(screen) {
+function resetForm(screen) {
+
+    STATE.editingId =
+        null;
+
+
+    const form =
+        $('#product-form-container', screen);
+
 
     const barcode =
         $('#product-barcode', screen);
 
+
     const name =
         $('#product-name', screen);
+
 
     const category =
         $('#product-category', screen);
 
-    const price =
+
+    const priceInput =
         $('#product-price', screen);
+
 
     const stock =
         $('#product-stock', screen);
 
 
+    const saveButton =
+        $('#save-product-button', screen);
+
+
     if (barcode) {
 
-        barcode.value = '';
+        barcode.value =
+            '';
 
-        barcode.readOnly = false;
+        barcode.readOnly =
+            false;
 
     }
 
@@ -1465,18 +1621,14 @@ function resetProductForm(screen) {
     }
 
 
-    if (price) {
-        price.value = '';
+    if (priceInput) {
+        priceInput.value = '';
     }
 
 
     if (stock) {
         stock.value = '';
     }
-
-
-    const form =
-        $('#product-form-container', screen);
 
 
     if (form) {
@@ -1502,28 +1654,24 @@ function resetProductForm(screen) {
     }
 
 
-    const saveButton =
-        $('#save-product-button', screen);
-
-
     if (saveButton) {
         saveButton.textContent =
             'ذخیره کالا';
     }
 
 
-    clearProductMessage(screen);
-
-
-    PRODUCTS_STATE.editingId =
-        null;
+    clearMessage(screen);
 
 }
 
 
-function closeProductForm(screen) {
+/* ============================================================
+   CLOSE FORM
+============================================================ */
 
-    resetProductForm(screen);
+function closeForm(screen) {
+
+    resetForm(screen);
 
 
     const form =
@@ -1531,17 +1679,18 @@ function closeProductForm(screen) {
 
 
     if (form) {
-        form.style.display = 'none';
+        form.style.display =
+            'none';
     }
 
 }
 
 
 /* ============================================================
-   Messages
+   MESSAGE
 ============================================================ */
 
-function showProductMessage(
+function showMessage(
     screen,
     message,
     success = true
@@ -1570,7 +1719,7 @@ function showProductMessage(
 }
 
 
-function clearProductMessage(screen) {
+function clearMessage(screen) {
 
     const box =
         $('#product-form-message', screen);
@@ -1584,6 +1733,7 @@ function clearProductMessage(screen) {
     box.textContent =
         '';
 
+
     box.className =
         'product-form-message';
 
@@ -1591,7 +1741,7 @@ function clearProductMessage(screen) {
 
 
 /* ============================================================
-   Backup
+   BACKUP
 ============================================================ */
 
 function setupBackup(screen) {
@@ -1613,6 +1763,7 @@ function setupBackup(screen) {
 
                 button.disabled =
                     true;
+
 
                 button.textContent =
                     'در حال آماده‌سازی...';
@@ -1683,7 +1834,7 @@ function setupBackup(screen) {
                 URL.revokeObjectURL(url);
 
 
-                showProductsToast(
+                showToast(
                     'پشتیبان با موفقیت آماده شد.',
                     'success'
                 );
@@ -1697,7 +1848,7 @@ function setupBackup(screen) {
                 );
 
 
-                showProductsToast(
+                showToast(
                     'پشتیبان‌گیری انجام نشد.',
                     'danger'
                 );
@@ -1719,13 +1870,14 @@ function setupBackup(screen) {
 
 
 /* ============================================================
-   Restore
+   RESTORE
 ============================================================ */
 
 function setupRestore(screen) {
 
     const button =
         $('#restore-button', screen);
+
 
     const input =
         $('#restore-file-input', screen);
@@ -1740,7 +1892,8 @@ function setupRestore(screen) {
         'click',
         () => {
 
-            input.value = '';
+            input.value =
+                '';
 
             input.click();
 
@@ -1790,7 +1943,7 @@ function setupRestore(screen) {
 
                 const confirmed =
                     window.confirm(
-                        `این فایل شامل ${formatNumber(
+                        `این فایل شامل ${number(
                             backup.products.length
                         )} کالا است.\n\nاطلاعات موجود با فایل پشتیبان ادغام می‌شود.\n\nآیا ادامه می‌دهید؟`
                     );
@@ -1809,6 +1962,7 @@ function setupRestore(screen) {
                     try {
 
                         await addProduct({
+
                             barcode:
                                 product.barcode,
 
@@ -1839,13 +1993,19 @@ function setupRestore(screen) {
 
                     } catch (error) {
 
+                        /*
+                           Duplicate barcode:
+                           update existing product.
+                        */
+
                         if (
+                            error &&
                             error.name ===
-                            'ConstraintError'
+                                'ConstraintError'
                         ) {
 
                             const existing =
-                                PRODUCTS_STATE.products.find(
+                                STATE.products.find(
                                     item =>
                                         String(
                                             item.barcode
@@ -1899,7 +2059,7 @@ function setupRestore(screen) {
                 await loadProducts(screen);
 
 
-                showProductsToast(
+                showToast(
                     'بازیابی اطلاعات با موفقیت انجام شد.',
                     'success'
                 );
@@ -1913,7 +2073,7 @@ function setupRestore(screen) {
                 );
 
 
-                showProductsToast(
+                showToast(
                     'فایل پشتیبان معتبر نیست یا بازیابی انجام نشد.',
                     'danger'
                 );
@@ -1927,10 +2087,10 @@ function setupRestore(screen) {
 
 
 /* ============================================================
-   Toast
+   TOAST
 ============================================================ */
 
-function showProductsToast(
+function showToast(
     message,
     type = 'success'
 ) {
@@ -1944,12 +2104,18 @@ function showProductsToast(
     if (!toast) {
 
         toast =
-            document.createElement('div');
+            document.createElement(
+                'div'
+            );
+
 
         toast.id =
             'app-toast';
 
-        document.body.appendChild(toast);
+
+        document.body.appendChild(
+            toast
+        );
 
     }
 
@@ -1994,23 +2160,24 @@ function showProductsToast(
 
 
 /* ============================================================
-   Compatibility Exports
+   Compatibility
 ============================================================ */
 
 export function setupProductsForm(screen) {
 
-    if (!screen) {
-        return;
-    }
+    /*
+       Form is initialized by
+       initializeProductsScreen().
+    */
 
 }
 
 
 export function addProductsSearch(screen) {
 
-    if (!screen) {
-        return;
-    }
+    /*
+       Search is created by
+       buildProductsUI().
+    */
 
 }
-``
