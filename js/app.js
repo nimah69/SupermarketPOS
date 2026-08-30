@@ -1,7 +1,7 @@
 // js/app.js
 // SupermarketPOS
 // Main Application
-// Complete Replacement
+// Clean Modal System
 
 'use strict';
 
@@ -19,8 +19,8 @@ import {
 
 
 /* ============================================================
-   State
-   ============================================================ */
+   Application State
+============================================================ */
 
 const APP_STATE = {
 
@@ -31,6 +31,10 @@ const APP_STATE = {
 };
 
 
+/* ============================================================
+   DOM
+============================================================ */
+
 const DOM = {
 
     app: null
@@ -39,354 +43,114 @@ const DOM = {
 
 
 /* ============================================================
-   Escape HTML
-   ============================================================ */
+   Database Status
+============================================================ */
 
-function escapeHTML(value) {
-
-    return String(value)
-
-        .replaceAll(
-            '&',
-            '&amp;'
-        )
-
-        .replaceAll(
-            '<',
-            '&lt;'
-        )
-
-        .replaceAll(
-            '>',
-            '&gt;'
-        )
-
-        .replaceAll(
-            '"',
-            '&quot;'
-        )
-
-        .replaceAll(
-            "'",
-            '&#039;'
-        );
-
-}
-
-
-/* ============================================================
-   Toast
-   ============================================================ */
-
-let toastTimer = null;
-
-
-export function showAppMessage(
+function showDatabaseStatus(
     message,
-    type = 'success'
+    success = true
 ) {
 
-    const toast =
+    let status =
         document.getElementById(
-            'app-toast'
-        );
-
-    const messageElement =
-        document.getElementById(
-            'app-toast-message'
-        );
-
-    const iconElement =
-        document.getElementById(
-            'app-toast-icon'
+            'database-test-status'
         );
 
 
-    if (!toast || !messageElement) {
-        return;
-    }
+    if (!status) {
+
+        status =
+            document.createElement(
+                'div'
+            );
+
+        status.id =
+            'database-test-status';
 
 
-    if (toastTimer) {
-
-        clearTimeout(
-            toastTimer
-        );
-
-    }
-
-
-    toast.className =
-        `app-toast app-toast-${type}`;
-
-
-    messageElement.textContent =
-        message;
-
-
-    if (iconElement) {
-
-        iconElement.textContent =
-            type === 'danger'
-                ? '!'
-                : type === 'info'
-                    ? 'i'
-                    : '✓';
-
-    }
-
-
-    toast.classList.remove(
-        'app-toast-hide'
-    );
-
-
-    toastTimer =
-        setTimeout(
-            () => {
-
-                toast.classList.add(
-                    'app-toast-hide'
-                );
-
-            },
-            2800
-        );
-
-}
-
-
-/* ============================================================
-   Global Modal
-   ============================================================ */
-
-export function showAppConfirm(
-    options = {}
-) {
-
-    return new Promise(
-        resolve => {
-
-            const modal =
-                document.getElementById(
-                    'app-modal'
-                );
-
-
-            if (!modal) {
-
-                resolve(false);
-
-                return;
-            }
-
-
-            const dialog =
-                modal.querySelector(
-                    '.app-modal-dialog'
-                );
-
-
-            const icon =
-                document.getElementById(
-                    'app-modal-icon'
-                );
-
-
-            const title =
-                document.getElementById(
-                    'app-modal-title'
-                );
-
-
-            const message =
-                document.getElementById(
-                    'app-modal-message'
-                );
-
-
-            const cancel =
-                document.getElementById(
-                    'app-modal-cancel'
-                );
-
-
-            const confirm =
-                document.getElementById(
-                    'app-modal-confirm'
-                );
-
-
-            if (
-                !dialog ||
-                !icon ||
-                !title ||
-                !message ||
-                !cancel ||
-                !confirm
-            ) {
-
-                resolve(false);
-
-                return;
-            }
-
-
-            const type =
-                options.type ||
-                'info';
-
-
-            dialog.className =
-                `app-modal-dialog ${type}`;
-
-
-            icon.textContent =
-                options.icon ||
-                '❔';
-
-
-            title.textContent =
-                options.title ||
-                'تأیید عملیات';
-
-
-            message.textContent =
-                options.message ||
-                'آیا از انجام این عملیات مطمئن هستید؟';
-
-
-            cancel.textContent =
-                options.cancelText ||
-                'انصراف';
-
-
-            confirm.textContent =
-                options.confirmText ||
-                'تأیید';
-
-
-            modal.classList.add(
-                'is-open'
+        const home =
+            document.querySelector(
+                '.home-screen'
             );
 
 
-            modal.setAttribute(
-                'aria-hidden',
-                'false'
-            );
+        if (home) {
 
-
-            let finished = false;
-
-
-            function finish(result) {
-
-                if (finished) {
-                    return;
-                }
-
-
-                finished = true;
-
-
-                modal.classList.remove(
-                    'is-open'
-                );
-
-
-                modal.setAttribute(
-                    'aria-hidden',
-                    'true'
-                );
-
-
-                cancel.onclick =
-                    null;
-
-                confirm.onclick =
-                    null;
-
-
-                resolve(result);
-
-            }
-
-
-            cancel.onclick =
-                () => {
-
-                    finish(false);
-
-                };
-
-
-            confirm.onclick =
-                () => {
-
-                    finish(true);
-
-                };
-
-
-            const backdrop =
-                modal.querySelector(
-                    '.app-modal-backdrop'
-                );
-
-
-            if (backdrop) {
-
-                backdrop.onclick =
-                    () => {
-
-                        finish(false);
-
-                    };
-
-            }
-
-
-            modal.onkeydown =
-                event => {
-
-                    if (
-                        event.key ===
-                        'Escape'
-                    ) {
-
-                        finish(false);
-
-                    }
-
-                };
-
-
-            setTimeout(
-                () => {
-
-                    confirm.focus();
-
-                },
-                30
+            home.appendChild(
+                status
             );
 
         }
-    );
+
+    }
+
+
+    status.className =
+        `database-status ${
+            success
+                ? 'database-status-success'
+                : 'database-status-danger'
+        }`;
+
+
+    status.textContent =
+        message;
 
 }
 
 
 /* ============================================================
    Header
-   ============================================================ */
+============================================================ */
 
 function setupHeaderStatus() {
 
-    const online =
+    const headerStatus =
         document.querySelector(
+            '.header-status'
+        );
+
+
+    if (!headerStatus) {
+        return;
+    }
+
+
+    const ready =
+        headerStatus.querySelector(
+            '.status-ready'
+        );
+
+
+    const online =
+        headerStatus.querySelector(
             '.status-online'
         );
+
+
+    if (ready) {
+
+        ready.innerHTML = `
+
+            <span class="status-icon">
+                ✓
+            </span>
+
+            <div class="status-info">
+
+                <span class="status-label">
+                    وضعیت
+                </span>
+
+                <strong>
+                    آماده به کار
+                </strong>
+
+            </div>
+
+        `;
+
+    }
 
 
     if (online) {
@@ -400,7 +164,7 @@ function setupHeaderStatus() {
             <div class="status-info">
 
                 <span class="status-label">
-                    پایگاه داده
+                    اتصال
                 </span>
 
                 <strong>
@@ -417,87 +181,8 @@ function setupHeaderStatus() {
 
 
 /* ============================================================
-   Database Status
-   ============================================================ */
-
-function showDatabaseStatus(
-    message,
-    success = true
-) {
-
-    const existing =
-        document.getElementById(
-            'database-test-status'
-        );
-
-
-    if (existing) {
-
-        existing.remove();
-
-    }
-
-
-    const status =
-        document.createElement(
-            'div'
-        );
-
-
-    status.id =
-        'database-test-status';
-
-
-    status.style.cssText = `
-
-        margin-top:14px;
-
-        padding:12px 14px;
-
-        border-radius:12px;
-
-        font-size:11px;
-
-        text-align:center;
-
-        border:1px solid;
-
-        background:
-            ${success ? '#ecfdf5' : '#fef2f2'};
-
-        color:
-            ${success ? '#047857' : '#b91c1c'};
-
-        border-color:
-            ${success ? '#a7f3d0' : '#fecaca'};
-
-    `;
-
-
-    status.textContent =
-        message;
-
-
-    const home =
-        document.querySelector(
-            '.home-screen'
-        );
-
-
-    if (home) {
-
-        home.appendChild(
-            status
-        );
-
-    }
-
-}
-
-
-/* ============================================================
-   Hide Screens
-   ============================================================ */
+   Screens
+============================================================ */
 
 function hideSecondaryScreens() {
 
@@ -531,10 +216,6 @@ function hideSecondaryScreens() {
 }
 
 
-/* ============================================================
-   Home
-   ============================================================ */
-
 function showHomeScreen() {
 
     hideSecondaryScreens();
@@ -558,7 +239,7 @@ function showHomeScreen() {
 
 /* ============================================================
    Sales
-   ============================================================ */
+============================================================ */
 
 function openSalesScreen() {
 
@@ -637,8 +318,13 @@ function openSalesScreen() {
     initializeSalesScreen(
         sales,
         {
+
             databaseReady:
-                APP_STATE.databaseReady
+                APP_STATE.databaseReady,
+
+            onBack:
+                showHomeScreen
+
         }
     );
 
@@ -647,7 +333,7 @@ function openSalesScreen() {
 
 /* ============================================================
    Products
-   ============================================================ */
+============================================================ */
 
 async function openProductsScreen() {
 
@@ -721,8 +407,8 @@ async function openProductsScreen() {
 
 
 /* ============================================================
-   Create Products Screen
-   ============================================================ */
+   Products Screen
+============================================================ */
 
 function createProductsScreen() {
 
@@ -863,7 +549,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label>
+                    <label for="product-barcode">
                         بارکد
                     </label>
 
@@ -880,7 +566,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label>
+                    <label for="product-name">
                         نام کالا
                     </label>
 
@@ -896,7 +582,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label>
+                    <label for="product-category">
                         دسته‌بندی
                     </label>
 
@@ -912,7 +598,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label>
+                    <label for="product-price">
                         قیمت فروش
                     </label>
 
@@ -930,7 +616,7 @@ function createProductsScreen() {
 
                 <div class="form-field">
 
-                    <label>
+                    <label for="product-stock">
                         موجودی
                     </label>
 
@@ -970,6 +656,7 @@ function createProductsScreen() {
                 <div
                     id="product-form-message"
                     class="product-form-message"
+                    aria-live="polite"
                 ></div>
 
             </div>
@@ -1032,7 +719,7 @@ function createProductsScreen() {
 
 /* ============================================================
    Product Form
-   ============================================================ */
+============================================================ */
 
 function setupProductForm(screen) {
 
@@ -1147,9 +834,7 @@ function setupProductForm(screen) {
             );
 
 
-            if (
-                !APP_STATE.databaseReady
-            ) {
+            if (!APP_STATE.databaseReady) {
 
                 showProductMessage(
                     screen,
@@ -1212,17 +897,13 @@ function setupProductForm(screen) {
 
 
             const price =
-                Number(
-                    priceText
-                );
+                Number(priceText);
 
 
             const stock =
                 stockText === ''
                     ? 0
-                    : Number(
-                        stockText
-                    );
+                    : Number(stockText);
 
 
             if (!barcode) {
@@ -1236,6 +917,7 @@ function setupProductForm(screen) {
                 barcodeInput.focus();
 
                 return;
+
             }
 
 
@@ -1250,6 +932,7 @@ function setupProductForm(screen) {
                 nameInput.focus();
 
                 return;
+
             }
 
 
@@ -1268,6 +951,7 @@ function setupProductForm(screen) {
                 priceInput.focus();
 
                 return;
+
             }
 
 
@@ -1285,6 +969,7 @@ function setupProductForm(screen) {
                 stockInput.focus();
 
                 return;
+
             }
 
 
@@ -1331,7 +1016,7 @@ function setupProductForm(screen) {
 
                 showProductMessage(
                     screen,
-                    '✓ کالا با موفقیت ذخیره شد.',
+                    '✅ کالا با موفقیت ذخیره شد.',
                     true
                 );
 
@@ -1363,7 +1048,7 @@ function setupProductForm(screen) {
             } catch (error) {
 
                 console.error(
-                    'Product save error:',
+                    'SupermarketPOS: خطا در ذخیره کالا.',
                     error
                 );
 
@@ -1371,7 +1056,7 @@ function setupProductForm(screen) {
                 if (
                     error &&
                     error.name ===
-                    'ConstraintError'
+                        'ConstraintError'
                 ) {
 
                     showProductMessage(
@@ -1390,12 +1075,10 @@ function setupProductForm(screen) {
 
                 }
 
-
             } finally {
 
                 saveButton.disabled =
                     false;
-
 
                 saveButton.textContent =
                     'ذخیره کالا';
@@ -1409,8 +1092,8 @@ function setupProductForm(screen) {
 
 
 /* ============================================================
-   Load Products
-   ============================================================ */
+   Products Loading
+============================================================ */
 
 async function loadProducts(screen) {
 
@@ -1457,7 +1140,7 @@ async function loadProducts(screen) {
     } catch (error) {
 
         console.error(
-            'Products load error:',
+            'SupermarketPOS: خطا در خواندن کالاها.',
             error
         );
 
@@ -1489,7 +1172,7 @@ async function loadProducts(screen) {
 
 /* ============================================================
    Render Products
-   ============================================================ */
+============================================================ */
 
 function renderProducts(
     screen,
@@ -1537,6 +1220,7 @@ function renderProducts(
         `;
 
         return;
+
     }
 
 
@@ -1557,8 +1241,7 @@ function renderProducts(
         </strong>
 
         <span>
-            ${products.length.toLocaleString('fa-IR')}
-            کالا
+            ${products.length.toLocaleString('fa-IR')} کالا
         </span>
 
     `;
@@ -1633,8 +1316,7 @@ function renderProducts(
 
                         <strong>
                             ${escapeHTML(
-                                product.barcode ||
-                                '-'
+                                product.barcode || '-'
                             )}
                         </strong>
 
@@ -1684,7 +1366,7 @@ function renderProducts(
 
 /* ============================================================
    Backup
-   ============================================================ */
+============================================================ */
 
 function setupBackup(screen) {
 
@@ -1770,7 +1452,7 @@ function setupBackup(screen) {
 
 
                 showAppMessage(
-                    'پشتیبان با موفقیت ایجاد شد.',
+                    'پشتیبان با موفقیت آماده شد.',
                     'success'
                 );
 
@@ -1808,7 +1490,7 @@ function setupBackup(screen) {
 
 /* ============================================================
    Restore
-   ============================================================ */
+============================================================ */
 
 function setupRestore(screen) {
 
@@ -1891,7 +1573,7 @@ function setupRestore(screen) {
                             'بازیابی اطلاعات',
 
                         message:
-                            `فایل شامل ${backup.products.length.toLocaleString('fa-IR')} کالا است.\n\nکالاهای موجود با اطلاعات فایل ادغام می‌شوند.`,
+                            `این فایل شامل ${backup.products.length.toLocaleString('fa-IR')} کالا است.\n\nاطلاعات کالاهای موجود با اطلاعات فایل پشتیبان ادغام می‌شود.`,
 
                         icon:
                             '📂',
@@ -1900,7 +1582,10 @@ function setupRestore(screen) {
                             'info',
 
                         confirmText:
-                            'بازیابی'
+                            'بازیابی',
+
+                        cancelText:
+                            'انصراف'
 
                     });
 
@@ -1939,11 +1624,6 @@ function setupRestore(screen) {
                     'danger'
                 );
 
-            } finally {
-
-                input.value =
-                    '';
-
             }
 
         }
@@ -1954,12 +1634,12 @@ function setupRestore(screen) {
 
 /* ============================================================
    Product Messages
-   ============================================================ */
+============================================================ */
 
 function showProductMessage(
     screen,
     message,
-    success
+    success = true
 ) {
 
     const box =
@@ -1973,16 +1653,16 @@ function showProductMessage(
     }
 
 
-    box.textContent =
-        message;
-
-
     box.className =
         `product-form-message ${
             success
                 ? 'message-success'
                 : 'message-danger'
         }`;
+
+
+    box.textContent =
+        message;
 
 }
 
@@ -2013,8 +1693,382 @@ function clearProductMessage(
 
 
 /* ============================================================
+   NEW GLOBAL MODAL
+============================================================ */
+
+function showAppConfirm(
+    options = {}
+) {
+
+    return new Promise(
+        resolve => {
+
+            const oldModal =
+                document.getElementById(
+                    'app-confirm-modal'
+                );
+
+
+            if (oldModal) {
+
+                oldModal.remove();
+
+            }
+
+
+            const modal =
+                document.createElement(
+                    'div'
+                );
+
+
+            modal.id =
+                'app-confirm-modal';
+
+
+            modal.className =
+                'app-confirm-overlay';
+
+
+            const type =
+                options.type === 'danger'
+                    ? 'danger'
+                    : 'info';
+
+
+            modal.innerHTML = `
+
+                <div
+                    class="app-confirm-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="app-confirm-title"
+                >
+
+                    <div class="app-confirm-icon ${type}">
+                        ${options.icon || '❔'}
+                    </div>
+
+
+                    <div class="app-confirm-content">
+
+                        <h2 id="app-confirm-title">
+                            ${escapeHTML(
+                                options.title ||
+                                'تأیید عملیات'
+                            )}
+                        </h2>
+
+                        <p>
+                            ${escapeHTML(
+                                options.message ||
+                                ''
+                            ).replaceAll(
+                                '\n',
+                                '<br>'
+                            )}
+                        </p>
+
+                    </div>
+
+
+                    <div class="app-confirm-actions">
+
+                        <button
+                            type="button"
+                            class="app-confirm-cancel"
+                            id="app-confirm-cancel"
+                        >
+                            ${escapeHTML(
+                                options.cancelText ||
+                                'انصراف'
+                            )}
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="app-confirm-submit ${type}"
+                            id="app-confirm-submit"
+                        >
+                            ${escapeHTML(
+                                options.confirmText ||
+                                'تأیید'
+                            )}
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            document.body.appendChild(
+                modal
+            );
+
+
+            const cancel =
+                modal.querySelector(
+                    '#app-confirm-cancel'
+                );
+
+
+            const confirm =
+                modal.querySelector(
+                    '#app-confirm-submit'
+                );
+
+
+            let closed =
+                false;
+
+
+            function close(
+                result
+            ) {
+
+                if (closed) {
+                    return;
+                }
+
+
+                closed =
+                    true;
+
+
+                modal.classList.add(
+                    'app-confirm-closing'
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        modal.remove();
+
+                        resolve(
+                            result
+                        );
+
+                    },
+                    160
+                );
+
+            }
+
+
+            cancel.addEventListener(
+                'click',
+                () => {
+
+                    close(
+                        false
+                    );
+
+                }
+            );
+
+
+            confirm.addEventListener(
+                'click',
+                () => {
+
+                    close(
+                        true
+                    );
+
+                }
+            );
+
+
+            modal.addEventListener(
+                'click',
+                event => {
+
+                    if (
+                        event.target ===
+                        modal
+                    ) {
+
+                        close(
+                            false
+                        );
+
+                    }
+
+                }
+            );
+
+
+            document.addEventListener(
+                'keydown',
+                function escapeHandler(
+                    event
+                ) {
+
+                    if (
+                        event.key ===
+                        'Escape'
+                    ) {
+
+                        document.removeEventListener(
+                            'keydown',
+                            escapeHandler
+                        );
+
+
+                        close(
+                            false
+                        );
+
+                    }
+
+                }
+            );
+
+
+            requestAnimationFrame(
+                () => {
+
+                    modal.classList.add(
+                        'app-confirm-visible'
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            if (confirm) {
+                                confirm.focus();
+                            }
+
+                        },
+                        80
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   Toast
+============================================================ */
+
+function showAppMessage(
+    message,
+    type = 'success'
+) {
+
+    let toast =
+        document.getElementById(
+            'app-toast'
+        );
+
+
+    if (!toast) {
+
+        toast =
+            document.createElement(
+                'div'
+            );
+
+
+        toast.id =
+            'app-toast';
+
+
+        document.body.appendChild(
+            toast
+        );
+
+    }
+
+
+    toast.className =
+        `app-toast app-toast-${type}`;
+
+
+    toast.textContent =
+        message;
+
+
+    requestAnimationFrame(
+        () => {
+
+            toast.classList.add(
+                'app-toast-visible'
+            );
+
+        }
+    );
+
+
+    clearTimeout(
+        toast._hideTimer
+    );
+
+
+    toast._hideTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    'app-toast-visible'
+                );
+
+            },
+            2800
+        );
+
+}
+
+
+/* ============================================================
+   Escape HTML
+============================================================ */
+
+function escapeHTML(value) {
+
+    return String(value)
+
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
+
+}
+
+
+/* ============================================================
    Navigation
-   ============================================================ */
+============================================================ */
 
 function setupNavigation() {
 
@@ -2045,6 +2099,7 @@ function setupNavigation() {
                         openSalesScreen();
 
                         return;
+
                     }
 
 
@@ -2056,14 +2111,13 @@ function setupNavigation() {
                         openProductsScreen();
 
                         return;
+
                     }
 
 
                     if (
-                        action ===
-                        'reports' ||
-                        action ===
-                        'settings'
+                        action === 'reports' ||
+                        action === 'settings'
                     ) {
 
                         showAppMessage(
@@ -2084,7 +2138,7 @@ function setupNavigation() {
 
 /* ============================================================
    Database
-   ============================================================ */
+============================================================ */
 
 async function setupDatabase() {
 
@@ -2098,7 +2152,7 @@ async function setupDatabase() {
 
 
         showDatabaseStatus(
-            '✓ پایگاه داده با موفقیت آماده شد',
+            '✓ پایگاه داده آماده است',
             true
         );
 
@@ -2110,13 +2164,13 @@ async function setupDatabase() {
 
 
         showDatabaseStatus(
-            '❌ خطا در راه‌اندازی پایگاه داده',
+            '✕ خطا در راه‌اندازی پایگاه داده',
             false
         );
 
 
         console.error(
-            'Database error:',
+            'SupermarketPOS: Database error',
             error
         );
 
@@ -2127,14 +2181,16 @@ async function setupDatabase() {
 
 /* ============================================================
    Initialize
-   ============================================================ */
+============================================================ */
 
 async function initializeApp() {
 
     if (
         APP_STATE.initialized
     ) {
+
         return;
+
     }
 
 
@@ -2165,7 +2221,7 @@ async function initializeApp() {
 
 /* ============================================================
    Bootstrap
-   ============================================================ */
+============================================================ */
 
 if (
     document.readyState ===
