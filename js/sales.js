@@ -1,7 +1,7 @@
 // js/sales.js
 // SupermarketPOS
 // Sales / POS Module
-// Complete Replacement
+// Clean Sales Version
 
 'use strict';
 
@@ -24,7 +24,7 @@ const SALES_STATE = {
 
 /* ============================================================
    Helpers
-   ============================================================ */
+============================================================ */
 
 function $(
     selector,
@@ -34,6 +34,7 @@ function $(
     return root.querySelector(
         selector
     );
+
 }
 
 
@@ -93,7 +94,7 @@ function escapeHTML(value) {
 
 /* ============================================================
    Initialize
-   ============================================================ */
+============================================================ */
 
 export function initializeSalesScreen(
     screen,
@@ -113,15 +114,19 @@ export function initializeSalesScreen(
         !SALES_STATE.initialized
     ) {
 
-        SALES_STATE.cart = [];
+        SALES_STATE.cart =
+            [];
+
 
         buildSalesScreen(
             screen
         );
 
+
         bindSalesEvents(
             screen
         );
+
 
         SALES_STATE.initialized =
             true;
@@ -137,10 +142,12 @@ export function initializeSalesScreen(
 
 
 /* ============================================================
-   Build
-   ============================================================ */
+   Build Sales Screen
+============================================================ */
 
-function buildSalesScreen(screen) {
+function buildSalesScreen(
+    screen
+) {
 
     screen.innerHTML = `
 
@@ -200,7 +207,10 @@ function buildSalesScreen(screen) {
 
                     </div>
 
-                    <span class="sales-card-icon">
+                    <span
+                        class="sales-card-icon"
+                        aria-hidden="true"
+                    >
                         🔎
                     </span>
 
@@ -232,6 +242,7 @@ function buildSalesScreen(screen) {
                 <div
                     id="sales-search-message"
                     class="sales-message"
+                    aria-live="polite"
                 ></div>
 
             </section>
@@ -241,27 +252,26 @@ function buildSalesScreen(screen) {
 
             <section class="sales-card sales-cart-card">
 
-                <div class="sales-search-card">
+                <div class="sales-card-header">
 
-                    <div class="sales-card-header">
+                    <div>
 
-                        <div>
+                        <h3>
+                            سبد خرید
+                        </h3>
 
-                            <h3>
-                                سبد خرید
-                            </h3>
-
-                            <p id="sales-cart-count">
-                                ۰ کالا
-                            </p>
-
-                        </div>
-
-                        <span class="sales-card-icon">
-                            🛍️
-                        </span>
+                        <p id="sales-cart-count">
+                            ۰ کالا
+                        </p>
 
                     </div>
+
+                    <span
+                        class="sales-card-icon"
+                        aria-hidden="true"
+                    >
+                        🛍️
+                    </span>
 
                 </div>
 
@@ -286,7 +296,9 @@ function buildSalesScreen(screen) {
                             تعداد کالا
                         </span>
 
-                        <strong id="sales-total-quantity">
+                        <strong
+                            id="sales-total-quantity"
+                        >
                             ۰
                         </strong>
 
@@ -332,6 +344,7 @@ function buildSalesScreen(screen) {
                 <div
                     id="sales-checkout-message"
                     class="sales-message sales-checkout-message"
+                    aria-live="polite"
                 ></div>
 
             </section>
@@ -339,26 +352,33 @@ function buildSalesScreen(screen) {
         </div>
 
     `;
+
 }
 
 
 /* ============================================================
    Events
-   ============================================================ */
+============================================================ */
 
-function bindSalesEvents(screen) {
+function bindSalesEvents(
+    screen
+) {
 
     const input =
         $('#sales-barcode-input', screen);
 
+
     const addButton =
         $('#sales-add-button', screen);
+
 
     const submitButton =
         $('#sales-submit-button', screen);
 
+
     const clearButton =
         $('#sales-clear-button', screen);
+
 
     const closeButton =
         $('#sales-close-button', screen);
@@ -371,7 +391,8 @@ function bindSalesEvents(screen) {
             event => {
 
                 if (
-                    event.key === 'Enter'
+                    event.key ===
+                    'Enter'
                 ) {
 
                     event.preventDefault();
@@ -454,7 +475,7 @@ function bindSalesEvents(screen) {
 
 /* ============================================================
    Add Product
-   ============================================================ */
+============================================================ */
 
 async function addProductByBarcode(
     screen
@@ -462,6 +483,7 @@ async function addProductByBarcode(
 
     const input =
         $('#sales-barcode-input', screen);
+
 
     const button =
         $('#sales-add-button', screen);
@@ -489,9 +511,12 @@ async function addProductByBarcode(
             false
         );
 
+
         input.focus();
 
+
         return;
+
     }
 
 
@@ -505,13 +530,17 @@ async function addProductByBarcode(
             false
         );
 
+
         return;
+
     }
 
 
     if (button) {
 
-        button.disabled = true;
+        button.disabled =
+            true;
+
 
         button.textContent =
             'بررسی...';
@@ -535,9 +564,12 @@ async function addProductByBarcode(
                 false
             );
 
+
             input.select();
 
+
             return;
+
         }
 
 
@@ -553,9 +585,12 @@ async function addProductByBarcode(
                 false
             );
 
+
             input.select();
 
+
             return;
+
         }
 
 
@@ -570,7 +605,8 @@ async function addProductByBarcode(
         if (existing) {
 
             if (
-                existing.quantity >= stock
+                existing.quantity >=
+                stock
             ) {
 
                 showSalesMessage(
@@ -579,11 +615,14 @@ async function addProductByBarcode(
                     false
                 );
 
+
                 return;
+
             }
 
 
-            existing.quantity += 1;
+            existing.quantity +=
+                1;
 
         } else {
 
@@ -614,7 +653,8 @@ async function addProductByBarcode(
         }
 
 
-        input.value = '';
+        input.value =
+            '';
 
 
         refreshSalesScreen(
@@ -639,6 +679,7 @@ async function addProductByBarcode(
             error
         );
 
+
         showSalesMessage(
             screen,
             '❌ خطایی هنگام جستجوی کالا رخ داد.',
@@ -653,6 +694,7 @@ async function addProductByBarcode(
             button.disabled =
                 false;
 
+
             button.textContent =
                 'افزودن';
 
@@ -665,7 +707,7 @@ async function addProductByBarcode(
 
 /* ============================================================
    Quantity
-   ============================================================ */
+============================================================ */
 
 function changeCartQuantity(
     screen,
@@ -683,7 +725,8 @@ function changeCartQuantity(
 
 
     const next =
-        item.quantity + delta;
+        item.quantity +
+        delta;
 
 
     if (next <= 0) {
@@ -693,11 +736,14 @@ function changeCartQuantity(
             1
         );
 
+
         refreshSalesScreen(
             screen
         );
 
+
         return;
+
     }
 
 
@@ -712,7 +758,9 @@ function changeCartQuantity(
             false
         );
 
+
         return;
+
     }
 
 
@@ -729,7 +777,7 @@ function changeCartQuantity(
 
 /* ============================================================
    Remove
-   ============================================================ */
+============================================================ */
 
 function removeCartItem(
     screen,
@@ -767,12 +815,15 @@ function removeCartItem(
 
 /* ============================================================
    Clear Cart
-   ============================================================ */
+============================================================ */
 
-function clearCart(screen) {
+function clearCart(
+    screen
+) {
 
     if (
-        SALES_STATE.cart.length === 0
+        SALES_STATE.cart.length ===
+        0
     ) {
 
         showSalesMessage(
@@ -781,11 +832,14 @@ function clearCart(screen) {
             false
         );
 
+
         return;
+
     }
 
 
-    SALES_STATE.cart = [];
+    SALES_STATE.cart =
+        [];
 
 
     refreshSalesScreen(
@@ -803,13 +857,16 @@ function clearCart(screen) {
 
 
 /* ============================================================
-   Render
-   ============================================================ */
+   Render Cart
+============================================================ */
 
-function renderCart(screen) {
+function renderCart(
+    screen
+) {
 
     const list =
         $('#sales-cart-list', screen);
+
 
     const count =
         $('#sales-cart-count', screen);
@@ -820,11 +877,13 @@ function renderCart(screen) {
     }
 
 
-    list.innerHTML = '';
+    list.innerHTML =
+        '';
 
 
     if (
-        SALES_STATE.cart.length === 0
+        SALES_STATE.cart.length ===
+        0
     ) {
 
         list.innerHTML = `
@@ -857,6 +916,7 @@ function renderCart(screen) {
 
 
         return;
+
     }
 
 
@@ -865,7 +925,10 @@ function renderCart(screen) {
 
 
     SALES_STATE.cart.forEach(
-        (item,index) => {
+        (
+            item,
+            index
+        ) => {
 
             const card =
                 document.createElement(
@@ -893,16 +956,22 @@ function renderCart(screen) {
                     <div class="sales-cart-product-info">
 
                         <h4>
-                            ${escapeHTML(item.name)}
+                            ${escapeHTML(
+                                item.name
+                            )}
                         </h4>
 
                         <span>
                             بارکد:
-                            ${escapeHTML(item.barcode)}
+                            ${escapeHTML(
+                                item.barcode
+                            )}
                         </span>
 
                         <strong>
-                            ${formatPrice(item.salePrice)}
+                            ${formatPrice(
+                                item.salePrice
+                            )}
                             تومان
                         </strong>
 
@@ -920,6 +989,7 @@ function renderCart(screen) {
                             class="sales-quantity-button"
                             data-action="decrease"
                             data-index="${index}"
+                            aria-label="کاهش تعداد"
                         >
                             −
                         </button>
@@ -927,7 +997,9 @@ function renderCart(screen) {
                         <strong
                             class="sales-quantity-number"
                         >
-                            ${formatNumber(item.quantity)}
+                            ${formatNumber(
+                                item.quantity
+                            )}
                         </strong>
 
                         <button
@@ -935,6 +1007,7 @@ function renderCart(screen) {
                             class="sales-quantity-button"
                             data-action="increase"
                             data-index="${index}"
+                            aria-label="افزایش تعداد"
                         >
                             +
                         </button>
@@ -943,7 +1016,9 @@ function renderCart(screen) {
 
 
                     <strong class="sales-line-total">
-                        ${formatPrice(lineTotal)}
+                        ${formatPrice(
+                            lineTotal
+                        )}
                         تومان
                     </strong>
 
@@ -1000,9 +1075,11 @@ function renderCart(screen) {
 
 /* ============================================================
    Cart Events
-   ============================================================ */
+============================================================ */
 
-function bindCartEvents(screen) {
+function bindCartEvents(
+    screen
+) {
 
     const list =
         $('#sales-cart-list', screen);
@@ -1038,7 +1115,8 @@ function bindCartEvents(screen) {
 
 
             if (
-                action === 'increase'
+                action ===
+                'increase'
             ) {
 
                 changeCartQuantity(
@@ -1051,7 +1129,8 @@ function bindCartEvents(screen) {
 
 
             if (
-                action === 'decrease'
+                action ===
+                'decrease'
             ) {
 
                 changeCartQuantity(
@@ -1064,7 +1143,8 @@ function bindCartEvents(screen) {
 
 
             if (
-                action === 'remove'
+                action ===
+                'remove'
             ) {
 
                 removeCartItem(
@@ -1081,12 +1161,15 @@ function bindCartEvents(screen) {
 
 /* ============================================================
    Checkout
-   ============================================================ */
+============================================================ */
 
-async function submitSale(screen) {
+async function submitSale(
+    screen
+) {
 
     if (
-        SALES_STATE.cart.length === 0
+        SALES_STATE.cart.length ===
+        0
     ) {
 
         showSalesMessage(
@@ -1095,7 +1178,9 @@ async function submitSale(screen) {
             false
         );
 
+
         return;
+
     }
 
 
@@ -1109,7 +1194,9 @@ async function submitSale(screen) {
             false
         );
 
+
         return;
+
     }
 
 
@@ -1119,7 +1206,9 @@ async function submitSale(screen) {
 
     if (button) {
 
-        button.disabled = true;
+        button.disabled =
+            true;
+
 
         button.textContent =
             'در حال ثبت فروش...';
@@ -1197,7 +1286,8 @@ async function submitSale(screen) {
         );
 
 
-        SALES_STATE.cart = [];
+        SALES_STATE.cart =
+            [];
 
 
         refreshSalesScreen(
@@ -1234,6 +1324,7 @@ async function submitSale(screen) {
             button.disabled =
                 false;
 
+
             button.textContent =
                 '✓ ثبت فروش';
 
@@ -1246,9 +1337,11 @@ async function submitSale(screen) {
 
 /* ============================================================
    Refresh
-   ============================================================ */
+============================================================ */
 
-function refreshSalesScreen(screen) {
+function refreshSalesScreen(
+    screen
+) {
 
     renderCart(
         screen
@@ -1269,12 +1362,15 @@ function refreshSalesScreen(screen) {
 
 /* ============================================================
    Summary
-   ============================================================ */
+============================================================ */
 
-function renderSummary(screen) {
+function renderSummary(
+    screen
+) {
 
     const quantityElement =
         $('#sales-total-quantity', screen);
+
 
     const priceElement =
         $('#sales-total-price', screen);
@@ -1320,7 +1416,9 @@ function renderSummary(screen) {
     if (priceElement) {
 
         priceElement.textContent =
-            `${formatPrice(totalPrice)} تومان`;
+            `${formatPrice(
+                totalPrice
+            )} تومان`;
 
     }
 
@@ -1329,7 +1427,7 @@ function renderSummary(screen) {
 
 /* ============================================================
    Messages
-   ============================================================ */
+============================================================ */
 
 function showSalesMessage(
     screen,
@@ -1360,7 +1458,9 @@ function showSalesMessage(
 }
 
 
-function clearSalesMessage(screen) {
+function clearSalesMessage(
+    screen
+) {
 
     const box =
         $('#sales-search-message', screen);
@@ -1383,7 +1483,7 @@ function clearSalesMessage(screen) {
 
 /* ============================================================
    Close
-   ============================================================ */
+============================================================ */
 
 function closeSalesScreen() {
 
