@@ -458,8 +458,10 @@ export async function deleteProduct(id) {
             }
 
             const stock = Number(product.stock);
-            if (Number.isFinite(stock) && stock > 0) {
-                failure = new Error('برای حذف، ابتدا موجودی کالا باید صفر شود.');
+            // Only allow deletion when stock is explicitly a valid zero.
+            // Unknown, fractional, negative, or positive stock must be reviewed first.
+            if (!Number.isFinite(stock) || stock !== 0) {
+                failure = new Error('برای حذف، ابتدا موجودی معتبر کالا را صفر کنید.');
                 failure.name = 'ProductHasStockError';
                 transaction.abort();
                 return;
@@ -489,16 +491,50 @@ export async function createSale(
     items
 ) {
 
-    if (
-        !sale ||
-        !Array.isArray(items) ||
-        items.length === 0
-    ) {
-
-        throw new Error(
-            'Invalid sale'
-        );
+    if (!sale || typeof sale !== 'object' || !Array.isArray(items) || items.length === 0) {
+        throw new Error('اطلاعات فروش نامعتبر است.');
     }
+
+    // Validate and normalize all line items before opening a transaction.
+    // This prevents malformed prices/quantities from being written and avoids
+    // duplicate product rows causing an incorrect stock decrement.
+    const seenProductIds = new Set();
+    const normalizedItems = items.map((item) => {
+        if (!item || typeof item !== 'object') {
+            throw new Error('اطلاعات یکی از اقلام فروش نامعتبر است.');
+        }
+
+        const productId = item.productId;
+        const quantity = Number(item.quantity);
+        const salePrice = Number(item.salePrice);
+
+        if (productId === undefined || productId === null || seenProductIds.has(productId)) {
+            throw new Error('شناسه کالا نامعتبر یا تکراری است.');
+        }
+        seenProductIds.add(productId);
+
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            throw new Error('تعداد هر کالا باید عدد صحیح و بیشتر از صفر باشد.');
+        }
+        if (!Number.isFinite(salePrice) || salePrice < 0) {
+            throw new Error('قیمت ثبت‌شده برای یکی از کالاها نامعتبر است.');
+        }
+
+        return {
+            ...item,
+            productId,
+            quantity,
+            salePrice,
+            lineTotal: quantity * salePrice
+        };
+    });
+
+    const normalizedSale = {
+        ...sale,
+        totalQuantity: normalizedItems.reduce((sum, item) => sum + item.quantity, 0),
+        totalPrice: normalizedItems.reduce((sum, item) => sum + item.lineTotal, 0),
+        timestamp: sale.timestamp || new Date().toISOString()
+    };
 
     const db =
         await openDatabase();
@@ -533,13 +569,7 @@ export async function createSale(
 
 
             const saleRequest =
-                salesStore.add({
-                    ...sale,
-
-                    timestamp:
-                        sale.timestamp ||
-                        new Date().toISOString()
-                });
+                salesStore.add(normalizedSale);
 
 
             saleRequest.onsuccess =
@@ -550,23 +580,10 @@ export async function createSale(
 
 
                     for (
-                        const item of items
+                        const item of normalizedItems
                     ) {
 
-                        const quantity =
-                            Number(
-                                item.quantity
-                            ) || 0;
-
-
-                        if (
-                            quantity <= 0
-                        ) {
-
-                            transaction.abort();
-
-                            return;
-                        }
+                        const quantity = item.quantity;
 
 
                         const itemRequest =
@@ -583,20 +600,11 @@ export async function createSale(
                                 name:
                                     item.name,
 
-                                salePrice:
-                                    Number(
-                                        item.salePrice
-                                    ) || 0,
+                                salePrice: item.salePrice,
 
                                 quantity,
 
-                                lineTotal:
-                                    quantity *
-                                    (
-                                        Number(
-                                            item.salePrice
-                                        ) || 0
-                                    )
+                                lineTotal: item.lineTotal
                             });
 
 
@@ -630,15 +638,11 @@ export async function createSale(
                                 }
 
 
-                                const currentStock =
-                                    Number(
-                                        product.stock
-                                    ) || 0;
-
+                                const currentStock = Number(product.stock);
 
                                 if (
-                                    currentStock <
-                                    quantity
+                                    !Number.isInteger(currentStock) ||
+                                    currentStock < quantity
                                 ) {
 
                                     transaction.abort();
@@ -690,7 +694,7 @@ export async function createSale(
                 () => {
 
                     resolve({
-                        ...sale,
+                        ...normalizedSale,
                         id: saleRequest.result
                     });
 
