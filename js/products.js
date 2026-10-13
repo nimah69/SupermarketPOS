@@ -1506,7 +1506,8 @@ export async function saveProductFromForm(
 
     if (
         !Number.isFinite(stock) ||
-        stock < 0
+        stock < 0 ||
+        !Number.isInteger(stock)
     ) {
 
         showProductMessage(
