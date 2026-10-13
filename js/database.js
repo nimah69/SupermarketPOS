@@ -280,52 +280,63 @@ function requestToPromise(request) {
    Add Product
    ============================================================ */
 
+function normalizeAndValidateProduct(product) {
+    if (!product || typeof product !== 'object') {
+        throw new Error('اطلاعات کالا نامعتبر است.');
+    }
+
+    const barcode = String(product.barcode ?? '').trim();
+    const name = String(product.name ?? '').trim();
+    const category = String(product.category ?? '').trim();
+    // Reject missing values before numeric conversion: Number(null) and
+    // Number('') both become 0 and could otherwise silently accept bad input.
+    if (
+        product.salePrice === null ||
+        product.salePrice === undefined ||
+        String(product.salePrice).trim() === ''
+    ) {
+        throw new Error('قیمت فروش الزامی است.');
+    }
+    if (
+        product.stock === null ||
+        product.stock === undefined ||
+        String(product.stock).trim() === ''
+    ) {
+        throw new Error('موجودی الزامی است.');
+    }
+
+    const salePrice = Number(product.salePrice);
+    const stock = Number(product.stock);
+
+    if (!barcode) {
+        throw new Error('بارکد کالا الزامی است.');
+    }
+    if (!name) {
+        throw new Error('نام کالا الزامی است.');
+    }
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+        throw new Error('قیمت فروش باید عددی معتبر و غیرمنفی باشد.');
+    }
+    if (!Number.isFinite(stock) || stock < 0 || !Number.isInteger(stock)) {
+        throw new Error('موجودی باید عدد صحیح و غیرمنفی باشد.');
+    }
+
+    return {
+        ...product,
+        barcode,
+        name,
+        category,
+        salePrice,
+        stock
+    };
+}
+
 export async function addProduct(product) {
-
-    const db =
-        await openDatabase();
-
-    const transaction =
-        db.transaction(
-            STORE_PRODUCTS,
-            'readwrite'
-        );
-
-    const store =
-        transaction.objectStore(
-            STORE_PRODUCTS
-        );
-
-    const request =
-        store.add({
-            ...product,
-
-            barcode:
-                String(
-                    product.barcode || ''
-                ).trim(),
-
-            name:
-                String(
-                    product.name || ''
-                ).trim(),
-
-            category:
-                String(
-                    product.category || ''
-                ).trim(),
-
-            salePrice:
-                Number(
-                    product.salePrice
-                ) || 0,
-
-            stock:
-                Number(
-                    product.stock
-                ) || 0
-        });
-
+    const cleanProduct = normalizeAndValidateProduct(product);
+    const db = await openDatabase();
+    const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+    const store = transaction.objectStore(STORE_PRODUCTS);
+    const request = store.add(cleanProduct);
     return requestToPromise(request);
 }
 
@@ -421,37 +432,16 @@ export async function getAllProducts() {
    Update Product
    ============================================================ */
 
-export async function updateProduct(
-    product
-) {
-
-    if (
-        !product ||
-        product.id === undefined
-    ) {
-
-        throw new Error(
-            'Invalid product'
-        );
+export async function updateProduct(product) {
+    if (!product || product.id === undefined || product.id === null) {
+        throw new Error('شناسه کالا نامعتبر است.');
     }
 
-    const db =
-        await openDatabase();
-
-    const transaction =
-        db.transaction(
-            STORE_PRODUCTS,
-            'readwrite'
-        );
-
-    const store =
-        transaction.objectStore(
-            STORE_PRODUCTS
-        );
-
-    const request =
-        store.put(product);
-
+    const cleanProduct = normalizeAndValidateProduct(product);
+    const db = await openDatabase();
+    const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+    const store = transaction.objectStore(STORE_PRODUCTS);
+    const request = store.put(cleanProduct);
     return requestToPromise(request);
 }
 
@@ -461,24 +451,57 @@ export async function updateProduct(
    ============================================================ */
 
 export async function deleteProduct(id) {
+    if (id === undefined || id === null) {
+        throw new Error('شناسه کالا نامعتبر است.');
+    }
 
-    const db =
-        await openDatabase();
+    const db = await openDatabase();
 
-    const transaction =
-        db.transaction(
-            STORE_PRODUCTS,
-            'readwrite'
-        );
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+        const store = transaction.objectStore(STORE_PRODUCTS);
+        let failure = null;
 
-    const store =
-        transaction.objectStore(
-            STORE_PRODUCTS
-        );
+        const getRequest = store.get(id);
 
-    return requestToPromise(
-        store.delete(id)
-    );
+        getRequest.onsuccess = () => {
+            const product = getRequest.result;
+
+            if (!product) {
+                failure = new Error('کالا پیدا نشد.');
+                failure.name = 'ProductNotFoundError';
+                transaction.abort();
+                return;
+            }
+
+            const stock = Number(product.stock);
+            // Only allow deletion when stock is explicitly a valid zero.
+            // Missing, blank, fractional, negative, or positive stock must be reviewed first.
+            if (
+                product.stock === null ||
+                product.stock === undefined ||
+                String(product.stock).trim() === '' ||
+                !Number.isFinite(stock) ||
+                stock !== 0
+            ) {
+                failure = new Error('برای حذف، ابتدا موجودی معتبر کالا را صفر کنید.');
+                failure.name = 'ProductHasStockError';
+                transaction.abort();
+                return;
+            }
+
+            store.delete(id);
+        };
+
+        getRequest.onerror = () => {
+            failure = getRequest.error || new Error('خواندن کالا برای حذف ناموفق بود.');
+            try { transaction.abort(); } catch {}
+        };
+
+        transaction.oncomplete = () => resolve(true);
+        transaction.onerror = () => reject(failure || transaction.error || new Error('حذف کالا انجام نشد.'));
+        transaction.onabort = () => reject(failure || transaction.error || new Error('حذف کالا لغو شد.'));
+    });
 }
 
 
@@ -491,16 +514,69 @@ export async function createSale(
     items
 ) {
 
-    if (
-        !sale ||
-        !Array.isArray(items) ||
-        items.length === 0
-    ) {
-
-        throw new Error(
-            'Invalid sale'
-        );
+    if (!sale || typeof sale !== 'object' || !Array.isArray(items) || items.length === 0) {
+        throw new Error('اطلاعات فروش نامعتبر است.');
     }
+
+    // Validate and normalize all line items before opening a transaction.
+    // This prevents malformed prices/quantities from being written and avoids
+    // duplicate product rows causing an incorrect stock decrement.
+    const seenProductIds = new Set();
+    const normalizedItems = items.map((item) => {
+        if (!item || typeof item !== 'object') {
+            throw new Error('اطلاعات یکی از اقلام فروش نامعتبر است.');
+        }
+
+        const productId = item.productId;
+        const quantity = Number(item.quantity);
+
+        if (
+            item.salePrice === null ||
+            item.salePrice === undefined ||
+            String(item.salePrice).trim() === ''
+        ) {
+            throw new Error('قیمت ثبت‌شده برای یکی از اقلام فروش الزامی است.');
+        }
+        const salePrice = Number(item.salePrice);
+
+        if (!Number.isInteger(productId) || productId <= 0 || seenProductIds.has(productId)) {
+            throw new Error('شناسه کالا نامعتبر یا تکراری است.');
+        }
+        seenProductIds.add(productId);
+
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            throw new Error('تعداد هر کالا باید عدد صحیح و بیشتر از صفر باشد.');
+        }
+        if (!Number.isFinite(salePrice) || salePrice < 0) {
+            throw new Error('قیمت ثبت‌شده برای یکی از کالاها نامعتبر است.');
+        }
+
+        const lineTotal = quantity * salePrice;
+        if (!Number.isFinite(lineTotal)) {
+            throw new Error('مبلغ یکی از اقلام فروش بیش از حد مجاز است.');
+        }
+
+        return {
+            ...item,
+            productId,
+            quantity,
+            salePrice,
+            lineTotal
+        };
+    });
+
+    const totalQuantity = normalizedItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = normalizedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    if (!Number.isSafeInteger(totalQuantity) || !Number.isFinite(totalPrice)) {
+        throw new Error('جمع تعداد یا مبلغ فروش نامعتبر است.');
+    }
+
+    const normalizedSale = {
+        ...sale,
+        totalQuantity,
+        totalPrice,
+        timestamp: sale.timestamp || new Date().toISOString()
+    };
 
     const db =
         await openDatabase();
@@ -535,13 +611,7 @@ export async function createSale(
 
 
             const saleRequest =
-                salesStore.add({
-                    ...sale,
-
-                    timestamp:
-                        sale.timestamp ||
-                        new Date().toISOString()
-                });
+                salesStore.add(normalizedSale);
 
 
             saleRequest.onsuccess =
@@ -552,23 +622,10 @@ export async function createSale(
 
 
                     for (
-                        const item of items
+                        const item of normalizedItems
                     ) {
 
-                        const quantity =
-                            Number(
-                                item.quantity
-                            ) || 0;
-
-
-                        if (
-                            quantity <= 0
-                        ) {
-
-                            transaction.abort();
-
-                            return;
-                        }
+                        const quantity = item.quantity;
 
 
                         const itemRequest =
@@ -585,20 +642,11 @@ export async function createSale(
                                 name:
                                     item.name,
 
-                                salePrice:
-                                    Number(
-                                        item.salePrice
-                                    ) || 0,
+                                salePrice: item.salePrice,
 
                                 quantity,
 
-                                lineTotal:
-                                    quantity *
-                                    (
-                                        Number(
-                                            item.salePrice
-                                        ) || 0
-                                    )
+                                lineTotal: item.lineTotal
                             });
 
 
@@ -632,15 +680,11 @@ export async function createSale(
                                 }
 
 
-                                const currentStock =
-                                    Number(
-                                        product.stock
-                                    ) || 0;
-
+                                const currentStock = Number(product.stock);
 
                                 if (
-                                    currentStock <
-                                    quantity
+                                    !Number.isInteger(currentStock) ||
+                                    currentStock < quantity
                                 ) {
 
                                     transaction.abort();
@@ -692,7 +736,7 @@ export async function createSale(
                 () => {
 
                     resolve({
-                        ...sale,
+                        ...normalizedSale,
                         id: saleRequest.result
                     });
 
@@ -820,141 +864,69 @@ export async function getProductsForBackup() {
    Restore / Merge
    ============================================================ */
 
-export async function restoreProductsMerge(
-    products
-) {
-
-    if (
-        !Array.isArray(products)
-    ) {
-
-        throw new Error(
-            'Invalid products'
-        );
+export async function restoreProductsMerge(products) {
+    if (!Array.isArray(products)) {
+        throw new Error('فایل پشتیبان معتبر نیست؛ فهرست کالاها پیدا نشد.');
     }
 
-    const db =
-        await openDatabase();
+    // Validate the entire backup before opening a write transaction. One bad
+    // record must not result in a partial or silently corrupted restore.
+    const seenBarcodes = new Set();
+    const normalizedProducts = products.map((product) => {
+        const clean = normalizeAndValidateProduct(product);
 
-    return new Promise(
-        (resolve, reject) => {
-
-            const transaction =
-                db.transaction(
-                    STORE_PRODUCTS,
-                    'readwrite'
-                );
-
-            const store =
-                transaction.objectStore(
-                    STORE_PRODUCTS
-                );
-
-            const index =
-                store.index(
-                    'barcode'
-                );
-
-
-            products.forEach(
-                product => {
-
-                    if (
-                        !product ||
-                        !product.barcode
-                    ) {
-                        return;
-                    }
-
-
-                    const barcode =
-                        String(
-                            product.barcode
-                        ).trim();
-
-
-                    const request =
-                        index.get(
-                            barcode
-                        );
-
-
-                    request.onsuccess =
-                        () => {
-
-                            const existing =
-                                request.result;
-
-
-                            const cleanProduct = {
-
-                                barcode,
-
-                                name:
-                                    String(
-                                        product.name || ''
-                                    ).trim(),
-
-                                category:
-                                    String(
-                                        product.category || ''
-                                    ).trim(),
-
-                                salePrice:
-                                    Number(
-                                        product.salePrice
-                                    ) || 0,
-
-                                stock:
-                                    Number(
-                                        product.stock
-                                    ) || 0,
-
-                                createdAt:
-                                    product.createdAt ||
-                                    new Date().toISOString(),
-
-                                updatedAt:
-                                    new Date().toISOString()
-
-                            };
-
-
-                            if (existing) {
-
-                                cleanProduct.id =
-                                    existing.id;
-
-                            }
-
-
-                            store.put(
-                                cleanProduct
-                            );
-
-                        };
-
-                }
-            );
-
-
-            transaction.oncomplete =
-                () => {
-
-                    resolve(true);
-
-                };
-
-
-            transaction.onerror =
-                () => {
-
-                    reject(
-                        transaction.error
-                    );
-
-                };
-
+        if (seenBarcodes.has(clean.barcode)) {
+            throw new Error('فایل پشتیبان دارای بارکد تکراری است: ' + clean.barcode);
         }
-    );
+        seenBarcodes.add(clean.barcode);
+
+        return {
+            barcode: clean.barcode,
+            name: clean.name,
+            category: clean.category,
+            salePrice: clean.salePrice,
+            stock: clean.stock,
+            createdAt: clean.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+    });
+
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+        const store = transaction.objectStore(STORE_PRODUCTS);
+        const index = store.index('barcode');
+        let added = 0;
+        let skippedExisting = 0;
+
+        normalizedProducts.forEach((product) => {
+            const request = index.get(product.barcode);
+
+            request.onsuccess = () => {
+                // Merge is deliberately additive: never overwrite current
+                // names, prices, or live stock with potentially old backup data.
+                if (request.result) {
+                    skippedExisting += 1;
+                    return;
+                }
+
+                store.add(product);
+                added += 1;
+            };
+        });
+
+        transaction.oncomplete = () => resolve({
+            added,
+            skippedExisting
+        });
+
+        transaction.onerror = () => reject(
+            transaction.error || new Error('بازیابی فایل پشتیبان انجام نشد.')
+        );
+
+        transaction.onabort = () => reject(
+            transaction.error || new Error('بازیابی فایل پشتیبان لغو شد.')
+        );
+    });
 }
