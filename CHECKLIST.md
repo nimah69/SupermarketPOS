@@ -16,7 +16,7 @@ Branch workflow: changes are made on a feature branch first. Do not merge into `
 - [ ] Verify cart touch/click behavior on Android.
 - [ ] Verify sale creation atomically decrements stock and reports the right totals.
 - [ ] Verify malformed sale data is rejected without changing stock or sales history.
-- [ ] Confirm the JavaScript syntax workflow passes on the latest commit.
+- [x] Confirm the JavaScript syntax workflow passes on the latest JavaScript changes.
 - [ ] Review diff and merge only after verification.
 
 ## Phase 2 — Point-of-sale testing
