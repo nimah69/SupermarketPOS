@@ -508,7 +508,7 @@ export async function createSale(
         const quantity = Number(item.quantity);
         const salePrice = Number(item.salePrice);
 
-        if (productId === undefined || productId === null || seenProductIds.has(productId)) {
+        if (!Number.isInteger(productId) || productId <= 0 || seenProductIds.has(productId)) {
             throw new Error('شناسه کالا نامعتبر یا تکراری است.');
         }
         seenProductIds.add(productId);
@@ -520,19 +520,30 @@ export async function createSale(
             throw new Error('قیمت ثبت‌شده برای یکی از کالاها نامعتبر است.');
         }
 
+        const lineTotal = quantity * salePrice;
+        if (!Number.isFinite(lineTotal)) {
+            throw new Error('مبلغ یکی از اقلام فروش بیش از حد مجاز است.');
+        }
+
         return {
             ...item,
             productId,
             quantity,
             salePrice,
-            lineTotal: quantity * salePrice
+            lineTotal
         };
     });
 
+    const totalQuantity = normalizedItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = normalizedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    if (!Number.isSafeInteger(totalQuantity) || !Number.isFinite(totalPrice)) {
+        throw new Error('جمع تعداد یا مبلغ فروش نامعتبر است.');
+    }
+
     const normalizedSale = {
         ...sale,
-        totalQuantity: normalizedItems.reduce((sum, item) => sum + item.quantity, 0),
-        totalPrice: normalizedItems.reduce((sum, item) => sum + item.lineTotal, 0),
+        totalQuantity,
+        totalPrice,
         timestamp: sale.timestamp || new Date().toISOString()
     };
 
