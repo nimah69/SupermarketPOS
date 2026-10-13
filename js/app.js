@@ -191,17 +191,18 @@ async function openReportsScreen() {
 function setupNavigation() {
     // Use event delegation on the whole document
     const handler = function (event) {
-        // Find the closest element with data-action attribute
+        // Only handle the main navigation actions here.
+        // Other data-action values belong to controls such as cart buttons.
         const target = event.target.closest('[data-action]');
         if (!target) return;
 
-        // Prevent default action (especially for touch)
+        const action = target.getAttribute('data-action');
+        const navigationActions = ['sales', 'products', 'reports', 'settings'];
+        if (!navigationActions.includes(action)) return;
+
+        // Prevent duplicate native navigation only for recognized menu actions.
         event.preventDefault();
 
-        const action = target.getAttribute('data-action');
-        if (!action) return;
-
-        // Execute the appropriate action
         switch (action) {
             case 'sales':
                 openSalesScreen();
@@ -215,8 +216,6 @@ function setupNavigation() {
             case 'settings':
                 showAppMessage('بخش تنظیمات در مرحله بعد فعال می‌شود.', 'info');
                 break;
-            default:
-                console.warn('Unknown action:', action);
         }
     };
 
