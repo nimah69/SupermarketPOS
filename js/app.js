@@ -14,7 +14,7 @@ import {
 
 import {
     initializeSalesScreen
-} from './sales.js';
+} from './sales.js?v=20261014-keyboard2';
 
 import {
     initializeProductsScreen

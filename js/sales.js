@@ -392,6 +392,11 @@ function bindSalesEvents(
 
     if (input) {
 
+        // Force a text keyboard on mobile, even if a cached/older attribute remains.
+        input.type = "text";
+        input.setAttribute("inputmode", "text");
+        input.setAttribute("enterkeyhint", "search");
+
         input.addEventListener(
             'keydown',
             event => {
