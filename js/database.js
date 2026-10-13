@@ -864,141 +864,69 @@ export async function getProductsForBackup() {
    Restore / Merge
    ============================================================ */
 
-export async function restoreProductsMerge(
-    products
-) {
-
-    if (
-        !Array.isArray(products)
-    ) {
-
-        throw new Error(
-            'Invalid products'
-        );
+export async function restoreProductsMerge(products) {
+    if (!Array.isArray(products)) {
+        throw new Error('فایل پشتیبان معتبر نیست؛ فهرست کالاها پیدا نشد.');
     }
 
-    const db =
-        await openDatabase();
+    // Validate the entire backup before opening a write transaction. One bad
+    // record must not result in a partial or silently corrupted restore.
+    const seenBarcodes = new Set();
+    const normalizedProducts = products.map((product) => {
+        const clean = normalizeAndValidateProduct(product);
 
-    return new Promise(
-        (resolve, reject) => {
-
-            const transaction =
-                db.transaction(
-                    STORE_PRODUCTS,
-                    'readwrite'
-                );
-
-            const store =
-                transaction.objectStore(
-                    STORE_PRODUCTS
-                );
-
-            const index =
-                store.index(
-                    'barcode'
-                );
-
-
-            products.forEach(
-                product => {
-
-                    if (
-                        !product ||
-                        !product.barcode
-                    ) {
-                        return;
-                    }
-
-
-                    const barcode =
-                        String(
-                            product.barcode
-                        ).trim();
-
-
-                    const request =
-                        index.get(
-                            barcode
-                        );
-
-
-                    request.onsuccess =
-                        () => {
-
-                            const existing =
-                                request.result;
-
-
-                            const cleanProduct = {
-
-                                barcode,
-
-                                name:
-                                    String(
-                                        product.name || ''
-                                    ).trim(),
-
-                                category:
-                                    String(
-                                        product.category || ''
-                                    ).trim(),
-
-                                salePrice:
-                                    Number(
-                                        product.salePrice
-                                    ) || 0,
-
-                                stock:
-                                    Number(
-                                        product.stock
-                                    ) || 0,
-
-                                createdAt:
-                                    product.createdAt ||
-                                    new Date().toISOString(),
-
-                                updatedAt:
-                                    new Date().toISOString()
-
-                            };
-
-
-                            if (existing) {
-
-                                cleanProduct.id =
-                                    existing.id;
-
-                            }
-
-
-                            store.put(
-                                cleanProduct
-                            );
-
-                        };
-
-                }
-            );
-
-
-            transaction.oncomplete =
-                () => {
-
-                    resolve(true);
-
-                };
-
-
-            transaction.onerror =
-                () => {
-
-                    reject(
-                        transaction.error
-                    );
-
-                };
-
+        if (seenBarcodes.has(clean.barcode)) {
+            throw new Error('فایل پشتیبان دارای بارکد تکراری است: ' + clean.barcode);
         }
-    );
+        seenBarcodes.add(clean.barcode);
+
+        return {
+            barcode: clean.barcode,
+            name: clean.name,
+            category: clean.category,
+            salePrice: clean.salePrice,
+            stock: clean.stock,
+            createdAt: clean.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+    });
+
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+        const store = transaction.objectStore(STORE_PRODUCTS);
+        const index = store.index('barcode');
+        let added = 0;
+        let skippedExisting = 0;
+
+        normalizedProducts.forEach((product) => {
+            const request = index.get(product.barcode);
+
+            request.onsuccess = () => {
+                // Merge is deliberately additive: never overwrite current
+                // names, prices, or live stock with potentially old backup data.
+                if (request.result) {
+                    skippedExisting += 1;
+                    return;
+                }
+
+                store.add(product);
+                added += 1;
+            };
+        });
+
+        transaction.oncomplete = () => resolve({
+            added,
+            skippedExisting
+        });
+
+        transaction.onerror = () => reject(
+            transaction.error || new Error('بازیابی فایل پشتیبان انجام نشد.')
+        );
+
+        transaction.onabort = () => reject(
+            transaction.error || new Error('بازیابی فایل پشتیبان لغو شد.')
+        );
+    });
 }
