@@ -1681,27 +1681,21 @@ function showReportsError(
     screen,
     message
 ) {
-
     const containers = [
-
         '#reports-top-products',
-
         '#reports-daily-sales',
-
         '#reports-sales-list'
-
     ];
 
+    containers.forEach((selector) => {
+        const element = $(selector, screen);
 
-    containers.forEach(
-        selector => {
-
-            const element =
-                $(selector, screen);
-
-
-            if (element) {
-
-                element.innerHTML = `
-
-                    <div class="reports-empty reports
+        if (element) {
+            element.innerHTML = `
+                <div class="reports-empty reports-error">
+                    ${escapeHTML(message)}
+                </div>
+            `;
+        }
+    });
+}
