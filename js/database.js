@@ -288,6 +288,23 @@ function normalizeAndValidateProduct(product) {
     const barcode = String(product.barcode ?? '').trim();
     const name = String(product.name ?? '').trim();
     const category = String(product.category ?? '').trim();
+    // Reject missing values before numeric conversion: Number(null) and
+    // Number('') both become 0 and could otherwise silently accept bad input.
+    if (
+        product.salePrice === null ||
+        product.salePrice === undefined ||
+        String(product.salePrice).trim() === ''
+    ) {
+        throw new Error('قیمت فروش الزامی است.');
+    }
+    if (
+        product.stock === null ||
+        product.stock === undefined ||
+        String(product.stock).trim() === ''
+    ) {
+        throw new Error('موجودی الزامی است.');
+    }
+
     const salePrice = Number(product.salePrice);
     const stock = Number(product.stock);
 
@@ -506,6 +523,14 @@ export async function createSale(
 
         const productId = item.productId;
         const quantity = Number(item.quantity);
+
+        if (
+            item.salePrice === null ||
+            item.salePrice === undefined ||
+            String(item.salePrice).trim() === ''
+        ) {
+            throw new Error('قیمت ثبت‌شده برای یکی از اقلام فروش الزامی است.');
+        }
         const salePrice = Number(item.salePrice);
 
         if (!Number.isInteger(productId) || productId <= 0 || seenProductIds.has(productId)) {
