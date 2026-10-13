@@ -476,8 +476,14 @@ export async function deleteProduct(id) {
 
             const stock = Number(product.stock);
             // Only allow deletion when stock is explicitly a valid zero.
-            // Unknown, fractional, negative, or positive stock must be reviewed first.
-            if (!Number.isFinite(stock) || stock !== 0) {
+            // Missing, blank, fractional, negative, or positive stock must be reviewed first.
+            if (
+                product.stock === null ||
+                product.stock === undefined ||
+                String(product.stock).trim() === '' ||
+                !Number.isFinite(stock) ||
+                stock !== 0
+            ) {
                 failure = new Error('برای حذف، ابتدا موجودی معتبر کالا را صفر کنید.');
                 failure.name = 'ProductHasStockError';
                 transaction.abort();
