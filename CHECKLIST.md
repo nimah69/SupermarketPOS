@@ -9,12 +9,14 @@ Branch workflow: changes are made on a feature branch first. Do not merge into `
 - [x] Validate required barcode/name and non-negative price/whole-number stock in database product writes.
 - [x] Avoid navigation touch handler interfering with non-navigation `data-action` controls.
 - [x] Validate sale quantities/prices and calculate sale totals from line items in the database layer.
+- [x] Repair the pre-existing truncated reports error handler found by automated syntax checks.
 - [x] Reject duplicate product IDs within one sale to prevent incorrect stock decrement.
 - [ ] Verify product deletion guard in a real browser.
 - [ ] Verify product validation and duplicate-barcode behavior.
 - [ ] Verify cart touch/click behavior on Android.
 - [ ] Verify sale creation atomically decrements stock and reports the right totals.
 - [ ] Verify malformed sale data is rejected without changing stock or sales history.
+- [ ] Confirm the JavaScript syntax workflow passes on the latest commit.
 - [ ] Review diff and merge only after verification.
 
 ## Phase 2 — Point-of-sale testing
