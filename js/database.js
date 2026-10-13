@@ -280,52 +280,46 @@ function requestToPromise(request) {
    Add Product
    ============================================================ */
 
+function normalizeAndValidateProduct(product) {
+    if (!product || typeof product !== 'object') {
+        throw new Error('اطلاعات کالا نامعتبر است.');
+    }
+
+    const barcode = String(product.barcode ?? '').trim();
+    const name = String(product.name ?? '').trim();
+    const category = String(product.category ?? '').trim();
+    const salePrice = Number(product.salePrice);
+    const stock = Number(product.stock);
+
+    if (!barcode) {
+        throw new Error('بارکد کالا الزامی است.');
+    }
+    if (!name) {
+        throw new Error('نام کالا الزامی است.');
+    }
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+        throw new Error('قیمت فروش باید عددی معتبر و غیرمنفی باشد.');
+    }
+    if (!Number.isFinite(stock) || stock < 0 || !Number.isInteger(stock)) {
+        throw new Error('موجودی باید عدد صحیح و غیرمنفی باشد.');
+    }
+
+    return {
+        ...product,
+        barcode,
+        name,
+        category,
+        salePrice,
+        stock
+    };
+}
+
 export async function addProduct(product) {
-
-    const db =
-        await openDatabase();
-
-    const transaction =
-        db.transaction(
-            STORE_PRODUCTS,
-            'readwrite'
-        );
-
-    const store =
-        transaction.objectStore(
-            STORE_PRODUCTS
-        );
-
-    const request =
-        store.add({
-            ...product,
-
-            barcode:
-                String(
-                    product.barcode || ''
-                ).trim(),
-
-            name:
-                String(
-                    product.name || ''
-                ).trim(),
-
-            category:
-                String(
-                    product.category || ''
-                ).trim(),
-
-            salePrice:
-                Number(
-                    product.salePrice
-                ) || 0,
-
-            stock:
-                Number(
-                    product.stock
-                ) || 0
-        });
-
+    const cleanProduct = normalizeAndValidateProduct(product);
+    const db = await openDatabase();
+    const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+    const store = transaction.objectStore(STORE_PRODUCTS);
+    const request = store.add(cleanProduct);
     return requestToPromise(request);
 }
 
@@ -421,37 +415,16 @@ export async function getAllProducts() {
    Update Product
    ============================================================ */
 
-export async function updateProduct(
-    product
-) {
-
-    if (
-        !product ||
-        product.id === undefined
-    ) {
-
-        throw new Error(
-            'Invalid product'
-        );
+export async function updateProduct(product) {
+    if (!product || product.id === undefined || product.id === null) {
+        throw new Error('شناسه کالا نامعتبر است.');
     }
 
-    const db =
-        await openDatabase();
-
-    const transaction =
-        db.transaction(
-            STORE_PRODUCTS,
-            'readwrite'
-        );
-
-    const store =
-        transaction.objectStore(
-            STORE_PRODUCTS
-        );
-
-    const request =
-        store.put(product);
-
+    const cleanProduct = normalizeAndValidateProduct(product);
+    const db = await openDatabase();
+    const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+    const store = transaction.objectStore(STORE_PRODUCTS);
+    const request = store.put(cleanProduct);
     return requestToPromise(request);
 }
 
@@ -461,24 +434,49 @@ export async function updateProduct(
    ============================================================ */
 
 export async function deleteProduct(id) {
+    if (id === undefined || id === null) {
+        throw new Error('شناسه کالا نامعتبر است.');
+    }
 
-    const db =
-        await openDatabase();
+    const db = await openDatabase();
 
-    const transaction =
-        db.transaction(
-            STORE_PRODUCTS,
-            'readwrite'
-        );
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_PRODUCTS, 'readwrite');
+        const store = transaction.objectStore(STORE_PRODUCTS);
+        let failure = null;
 
-    const store =
-        transaction.objectStore(
-            STORE_PRODUCTS
-        );
+        const getRequest = store.get(id);
 
-    return requestToPromise(
-        store.delete(id)
-    );
+        getRequest.onsuccess = () => {
+            const product = getRequest.result;
+
+            if (!product) {
+                failure = new Error('کالا پیدا نشد.');
+                failure.name = 'ProductNotFoundError';
+                transaction.abort();
+                return;
+            }
+
+            const stock = Number(product.stock);
+            if (Number.isFinite(stock) && stock > 0) {
+                failure = new Error('برای حذف، ابتدا موجودی کالا باید صفر شود.');
+                failure.name = 'ProductHasStockError';
+                transaction.abort();
+                return;
+            }
+
+            store.delete(id);
+        };
+
+        getRequest.onerror = () => {
+            failure = getRequest.error || new Error('خواندن کالا برای حذف ناموفق بود.');
+            try { transaction.abort(); } catch {}
+        };
+
+        transaction.oncomplete = () => resolve(true);
+        transaction.onerror = () => reject(failure || transaction.error || new Error('حذف کالا انجام نشد.'));
+        transaction.onabort = () => reject(failure || transaction.error || new Error('حذف کالا لغو شد.'));
+    });
 }
 
 
