@@ -7,6 +7,7 @@
 
 import {
     getProductByBarcode,
+    getAllProducts,
     createSale
 } from './database.js';
 
@@ -16,6 +17,8 @@ const SALES_STATE = {
     initialized: false,
 
     cart: [],
+
+    searchResults: [],
 
     databaseReady: false
 
@@ -225,7 +228,7 @@ function buildSalesScreen(
                         class="sales-barcode-input"
                         inputmode="numeric"
                         autocomplete="off"
-                        placeholder="بارکد کالا..."
+                        placeholder="بارکد یا نام کالا..."
                     >
 
                     <button
@@ -425,6 +428,17 @@ function bindSalesEvents(
     }
 
 
+    const searchMessage = $('#sales-search-message', screen);
+    if (searchMessage) {
+        searchMessage.addEventListener('click', event => {
+            const resultButton = event.target.closest('[data-search-result-index]');
+            if (!resultButton) return;
+            const index = Number(resultButton.getAttribute('data-search-result-index'));
+            const product = SALES_STATE.searchResults[index];
+            if (product) addProductToCart(product, screen);
+        });
+    }
+
     if (submitButton) {
 
         submitButton.addEventListener(
@@ -480,230 +494,130 @@ function bindSalesEvents(
 async function addProductByBarcode(
     screen
 ) {
+    const input = $('#sales-barcode-input', screen);
+    const button = $('#sales-add-button', screen);
+    if (!input) return;
 
-    const input =
-        $('#sales-barcode-input', screen);
+    const query = input.value.trim();
+    clearSalesMessage(screen);
 
-
-    const button =
-        $('#sales-add-button', screen);
-
-
-    if (!input) {
-        return;
-    }
-
-
-    const barcode =
-        input.value.trim();
-
-
-    clearSalesMessage(
-        screen
-    );
-
-
-    if (!barcode) {
-
-        showSalesMessage(
-            screen,
-            '⚠️ ابتدا بارکد کالا را وارد کنید.',
-            false
-        );
-
-
+    if (!query) {
+        showSalesMessage(screen, '⚠️ بارکد یا نام کالا را وارد کنید.', false);
         input.focus();
-
-
         return;
-
     }
 
-
-    if (
-        !SALES_STATE.databaseReady
-    ) {
-
-        showSalesMessage(
-            screen,
-            '❌ پایگاه داده آماده نیست.',
-            false
-        );
-
-
+    if (!SALES_STATE.databaseReady) {
+        showSalesMessage(screen, '❌ پایگاه داده آماده نیست.', false);
         return;
-
     }
-
 
     if (button) {
-
-        button.disabled =
-            true;
-
-
-        button.textContent =
-            'بررسی...';
-
+        button.disabled = true;
+        button.textContent = 'جستجو...';
     }
-
 
     try {
-
-        const product =
-            await getProductByBarcode(
-                barcode
-            );
-
-
-        if (!product) {
-
-            showSalesMessage(
-                screen,
-                '❌ کالایی با این بارکد پیدا نشد.',
-                false
-            );
-
-
-            input.select();
-
-
+        // Keep barcode scanning as the first and fastest lookup path.
+        let product = await getProductByBarcode(query);
+        if (product) {
+            addProductToCart(product, screen);
             return;
-
         }
 
+        const normalize = value => String(value ?? '')
+            .trim()
+            .toLocaleLowerCase('fa-IR')
+            .replace(/[يى]/g, 'ی')
+            .replace(/ك/g, 'ک')
+            .replace(/[\u064B-\u065F\u0670]/g, '');
 
-        const stock =
-            Number(product.stock) || 0;
-
-
-        if (stock <= 0) {
-
-            showSalesMessage(
-                screen,
-                `⚠️ موجودی «${product.name}» تمام شده است.`,
-                false
-            );
-
-
-            input.select();
-
-
-            return;
-
-        }
-
-
-        const existing =
-            SALES_STATE.cart.find(
-                item =>
-                    String(item.productId) ===
-                    String(product.id)
-            );
-
-
-        if (existing) {
-
-            if (
-                existing.quantity >=
-                stock
-            ) {
-
-                showSalesMessage(
-                    screen,
-                    `⚠️ موجودی «${product.name}» فقط ${formatNumber(stock)} عدد است.`,
-                    false
-                );
-
-
-                return;
-
-            }
-
-
-            existing.quantity +=
-                1;
-
-        } else {
-
-            SALES_STATE.cart.push({
-
-                productId:
-                    product.id,
-
-                barcode:
-                    product.barcode,
-
-                name:
-                    product.name,
-
-                salePrice:
-                    Number(
-                        product.salePrice
-                    ) || 0,
-
-                availableStock:
-                    stock,
-
-                quantity:
-                    1
-
-            });
-
-        }
-
-
-        input.value =
-            '';
-
-
-        refreshSalesScreen(
-            screen
+        const normalizedQuery = normalize(query);
+        const allProducts = await getAllProducts();
+        const matches = allProducts.filter(item =>
+            normalize(item.name).includes(normalizedQuery) ||
+            normalize(item.barcode).includes(normalizedQuery)
         );
 
+        if (matches.length === 0) {
+            showSalesMessage(screen, '❌ کالایی با این بارکد یا نام پیدا نشد.', false);
+            input.select();
+            return;
+        }
 
-        showSalesMessage(
-            screen,
-            `✓ «${product.name}» به سبد اضافه شد.`,
-            true
-        );
+        if (matches.length === 1) {
+            addProductToCart(matches[0], screen);
+            return;
+        }
 
-
-        input.focus();
-
-
+        SALES_STATE.searchResults = matches.slice(0, 12);
+        const box = $('#sales-search-message', screen);
+        if (box) {
+            box.className = 'sales-message sales-message-results';
+            box.innerHTML = '<div class="sales-results-heading">چند کالا پیدا شد؛ کالای موردنظر را انتخاب کنید:</div>' +
+                SALES_STATE.searchResults.map((item, index) => `
+                    <button type="button" class="sales-search-result" data-search-result-index="${index}">
+                        <span class="sales-search-result-name">${escapeHTML(item.name)}</span>
+                        <span class="sales-search-result-meta">بارکد: ${escapeHTML(item.barcode)} · ${formatPrice(item.salePrice)} تومان · موجودی: ${formatNumber(item.stock)}</span>
+                    </button>
+                `).join('') +
+                (matches.length > 12 ? '<div class="sales-results-note">۱۲ نتیجه اول نمایش داده شد؛ نام کالا را دقیق‌تر وارد کنید.</div>' : '');
+        }
     } catch (error) {
-
-        console.error(
-            'Sales add product error:',
-            error
-        );
-
-
-        showSalesMessage(
-            screen,
-            '❌ خطایی هنگام جستجوی کالا رخ داد.',
-            false
-        );
-
-
+        console.error('Sales product search error:', error);
+        showSalesMessage(screen, '❌ هنگام جست‌وجوی کالا خطایی رخ داد.', false);
     } finally {
-
         if (button) {
-
-            button.disabled =
-                false;
-
-
-            button.textContent =
-                'افزودن';
-
+            button.disabled = false;
+            button.textContent = 'جستجو';
         }
-
     }
-
 }
 
+function addProductToCart(product, screen) {
+    const input = $('#sales-barcode-input', screen);
+    const stock = Number(product.stock);
+
+    if (!Number.isInteger(stock) || stock <= 0) {
+        showSalesMessage(screen, `⚠️ موجودی «${product.name}» تمام شده یا نامعتبر است.`, false);
+        return;
+    }
+
+    const salePrice = Number(product.salePrice);
+    if (!Number.isFinite(salePrice) || salePrice < 0) {
+        showSalesMessage(screen, `⚠️ قیمت «${product.name}» نامعتبر است.`, false);
+        return;
+    }
+
+    const existing = SALES_STATE.cart.find(item =>
+        String(item.productId) === String(product.id)
+    );
+
+    if (existing) {
+        if (existing.quantity >= Math.min(stock, Number(existing.availableStock))) {
+            showSalesMessage(screen, `⚠️ موجودی «${product.name}» فقط ${formatNumber(stock)} عدد است.`, false);
+            return;
+        }
+        existing.quantity += 1;
+    } else {
+        SALES_STATE.cart.push({
+            productId: product.id,
+            barcode: product.barcode,
+            name: product.name,
+            salePrice,
+            availableStock: stock,
+            quantity: 1
+        });
+    }
+
+    SALES_STATE.searchResults = [];
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    refreshSalesScreen(screen);
+    showSalesMessage(screen, `✓ «${product.name}» به سبد اضافه شد.`, true);
+}
 
 /* ============================================================
    Quantity
