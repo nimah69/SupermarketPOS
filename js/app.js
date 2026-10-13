@@ -219,13 +219,12 @@ function setupNavigation() {
         }
     };
 
-    // Remove any previous listeners to avoid duplicates
+    // A click event is synthesized for taps on modern mobile browsers.
+    // Avoid a separate touchstart handler: it can trigger navigation twice
+    // and can interfere with buttons that also use data-action attributes.
     document.removeEventListener('click', handler);
     document.removeEventListener('touchstart', handler);
-
-    // Attach both click and touchstart for mobile support
     document.addEventListener('click', handler);
-    document.addEventListener('touchstart', handler, { passive: false });
 
     // Also, verify that at least one menu item exists, else warn the user
     const menuItems = document.querySelectorAll('[data-action]');
