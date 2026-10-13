@@ -1796,9 +1796,15 @@ async function handleDeleteProduct(
             error
         );
 
+        const message =
+            error && error.name === 'ProductHasStockError'
+                ? 'این کالا موجودی دارد؛ ابتدا موجودی آن را صفر کنید.'
+                : error && error.name === 'ProductNotFoundError'
+                    ? 'کالا پیدا نشد؛ فهرست را تازه‌سازی کنید.'
+                    : 'حذف کالا انجام نشد.';
 
         showProductsToast(
-            'حذف کالا انجام نشد.',
+            message,
             'danger'
         );
 
