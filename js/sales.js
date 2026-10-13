@@ -226,7 +226,10 @@ function buildSalesScreen(
                         type="text"
                         id="sales-barcode-input"
                         class="sales-barcode-input"
-                        inputmode="numeric"
+                        inputmode="text"
+                        enterkeyhint="search"
+                        autocapitalize="off"
+                        spellcheck="false"
                         autocomplete="off"
                         placeholder="بارکد یا نام کالا..."
                     >
