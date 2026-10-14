@@ -2847,3 +2847,245 @@ main {
     font-size: 10px;
     color: #64748b;
 }
+
+
+/* ============================================================
+   UI polish — mobile-first, accessible visual refinement
+   Scope: presentation only; no application logic changes.
+============================================================ */
+
+:root {
+    --bg: #f3f6f5;
+    --surface: #ffffff;
+    --surface-soft: #f7faf9;
+    --border: #e1e8e5;
+    --text: #172522;
+    --muted: #63736e;
+    --primary: #0f766e;
+    --primary-dark: #115e59;
+    --success: #15803d;
+    --danger: #dc2626;
+    --warning: #b45309;
+    --shadow: 0 8px 24px rgba(18, 44, 38, 0.055);
+    --radius: 18px;
+}
+
+body {
+    background:
+        radial-gradient(ellipse at top, rgba(15, 118, 110, 0.045), transparent 42%),
+        var(--bg);
+    color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    touch-action: manipulation;
+    transition:
+        background-color 0.16s ease,
+        border-color 0.16s ease,
+        box-shadow 0.16s ease,
+        transform 0.12s ease;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(15, 118, 110, 0.28);
+    outline-offset: 2px;
+}
+
+.app-header {
+    background: linear-gradient(125deg, #102a27 0%, #17443c 100%);
+    box-shadow: 0 4px 18px rgba(16, 42, 39, 0.12);
+}
+
+.brand-icon {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.welcome-card,
+.menu-card,
+.sales-header,
+.sales-card {
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+}
+
+.welcome-card {
+    background: linear-gradient(115deg, #ffffff 0%, #f7fbf9 100%);
+}
+
+.welcome-icon,
+.sales-title-icon,
+.sales-icon {
+    background: #e6f5f1;
+}
+
+.products-icon {
+    background: #eaf7ed;
+}
+
+.reports-icon {
+    background: #fff4e5;
+}
+
+.settings-icon {
+    background: #eef0ff;
+}
+
+.menu-card {
+    border-radius: 18px;
+    min-height: 148px;
+}
+
+.menu-card:focus-visible {
+    outline: 3px solid rgba(15, 118, 110, 0.28);
+    outline-offset: 3px;
+}
+
+.sales-card {
+    border-radius: 18px;
+}
+
+.sales-barcode-input,
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+    border-color: #cbd7d2;
+}
+
+.sales-barcode-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.sales-add-button,
+.sales-submit-button,
+.products-submit-button,
+button.primary,
+.btn-primary {
+    background: var(--primary);
+}
+
+.sales-add-button:hover,
+.sales-submit-button:hover,
+.products-submit-button:hover,
+button.primary:hover,
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.sales-add-button:active,
+.sales-submit-button:active,
+.products-submit-button:active,
+button.primary:active,
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+.sales-cart-item,
+.sales-search-result {
+    border-color: var(--border);
+    border-radius: 13px;
+}
+
+.sales-quantity-button:hover {
+    background: #e8f4f1;
+}
+
+.sales-remove-button:hover {
+    background: #feecec;
+    border-color: #fecaca;
+}
+
+.database-status-success,
+.sales-message-success {
+    color: #166534;
+    background: #edf9f0;
+    border-color: #b9e6c5;
+}
+
+.database-status-danger,
+.sales-message-danger {
+    color: #991b1b;
+    background: #fff1f1;
+    border-color: #fecaca;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .menu-card:hover {
+        transform: translateY(-2px);
+        border-color: #b7d9d1;
+        box-shadow: 0 12px 28px rgba(18, 44, 38, 0.09);
+    }
+
+    .sales-search-result:hover {
+        background: #f1faf7;
+        border-color: #b7d9d1;
+    }
+}
+
+@media (max-width: 380px) {
+    .header-content,
+    main {
+        width: min(100% - 20px, 1100px);
+    }
+
+    .header-content {
+        gap: 8px;
+    }
+
+    .brand {
+        gap: 7px;
+    }
+
+    .brand-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 19px;
+    }
+
+    .brand-text h1 {
+        font-size: 14px;
+    }
+
+    .status-badge {
+        min-width: 0;
+        padding: 6px;
+    }
+
+    .status-icon {
+        display: none;
+    }
+
+    .menu-grid {
+        gap: 10px;
+    }
+
+    .menu-card {
+        min-height: 138px;
+        padding: 13px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
